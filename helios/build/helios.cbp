@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+   <FileVersion major="1" minor="6" />
+   <Project>
+      <Option title="helios" />
+      <Option makefile_is_custom="1" />
+      <Option compiler="gcc" />
+      <Option virtualFolders="CMake Files\;" />
+      <Build>
+      <Target title="all">
+         <Option working_dir="/home/nsplab3/code/helios/build" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/nsplab3/code/helios/build/Makefile&quot;  VERBOSE=1 all" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/nsplab3/code/helios/build/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/nsplab3/code/helios/build/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/nsplab3/code/helios/build/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="helios">
+         <Option output="/home/nsplab3/code/helios/build/helios" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="" />
+         <Option object_output="./" />
+         <Option type="1" />
+         <Option compiler="gcc" />
+         <Compiler>
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/nsplab3/code/helios/build/Makefile&quot;  VERBOSE=1 helios" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/nsplab3/code/helios/build/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/nsplab3/code/helios/build/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/nsplab3/code/helios/build/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="helios/fast">
+         <Option output="/home/nsplab3/code/helios/build/helios" prefix_auto="0" extension_auto="0" />
+         <Option working_dir="" />
+         <Option object_output="./" />
+         <Option type="1" />
+         <Option compiler="gcc" />
+         <Compiler>
+         </Compiler>
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/nsplab3/code/helios/build/Makefile&quot;  VERBOSE=1 helios/fast" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/nsplab3/code/helios/build/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/nsplab3/code/helios/build/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/nsplab3/code/helios/build/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      <Target title="rebuild_cache">
+         <Option working_dir="/home/nsplab3/code/helios/build" />
+         <Option type="4" />
+         <MakeCommands>
+            <Build command="/usr/bin/make -f &quot;/home/nsplab3/code/helios/build/Makefile&quot;  VERBOSE=1 rebuild_cache" />
+            <CompileFile command="/usr/bin/make -f &quot;/home/nsplab3/code/helios/build/Makefile&quot;  VERBOSE=1 &quot;$file&quot;" />
+            <Clean command="/usr/bin/make -f &quot;/home/nsplab3/code/helios/build/Makefile&quot;  VERBOSE=1 clean" />
+            <DistClean command="/usr/bin/make -f &quot;/home/nsplab3/code/helios/build/Makefile&quot;  VERBOSE=1 clean" />
+         </MakeCommands>
+      </Target>
+      </Build>
+      <Unit filename="/home/nsplab3/code/helios/ComputerEEGFilterCursorOnly.cpp">
+      </Unit>
+      <Unit filename="/home/nsplab3/code/helios/ComputerEEGFilterRSE.cpp">
+      </Unit>
+      <Unit filename="/home/nsplab3/code/helios/blkdiag.cpp">
+      </Unit>
+      <Unit filename="/home/nsplab3/code/helios/constructRSEMatrices.cpp">
+      </Unit>
+      <Unit filename="/home/nsplab3/code/helios/generateChannelParameters.cpp">
+      </Unit>
+      <Unit filename="/home/nsplab3/code/helios/main.cpp">
+      </Unit>
+      <Unit filename="/home/nsplab3/code/helios/nextTimeStep.cpp">
+      </Unit>
+      <Unit filename="/home/nsplab3/code/helios/parameters.cpp">
+      </Unit>
+      <Unit filename="/home/nsplab3/code/helios/pelops.cpp">
+      </Unit>
+      <Unit filename="/home/nsplab3/code/helios/randomStartLocation.cpp">
+      </Unit>
+      <Unit filename="/home/nsplab3/code/helios/repslices.cpp">
+      </Unit>
+      <Unit filename="/home/nsplab3/code/helios/tweakbargui.cpp">
+      </Unit>
+      <Unit filename="/home/nsplab3/code/helios/ComputerEEGFilterCursorOnly.h">
+      </Unit>
+      <Unit filename="/home/nsplab3/code/helios/ComputerEEGFilterRSE.h">
+      </Unit>
+      <Unit filename="/home/nsplab3/code/helios/blkdiag.h">
+      </Unit>
+      <Unit filename="/home/nsplab3/code/helios/constructRSEMatrices.h">
+      </Unit>
+      <Unit filename="/home/nsplab3/code/helios/generateChannelParameters.h">
+      </Unit>
+      <Unit filename="/home/nsplab3/code/helios/nextTimeStep.h">
+      </Unit>
+      <Unit filename="/home/nsplab3/code/helios/parameters.h">
+      </Unit>
+      <Unit filename="/home/nsplab3/code/helios/pelops.h">
+      </Unit>
+      <Unit filename="/home/nsplab3/code/helios/randomStartLocation.h">
+      </Unit>
+      <Unit filename="/home/nsplab3/code/helios/repslices.h">
+      </Unit>
+      <Unit filename="/home/nsplab3/code/helios/tweakbargui.h">
+      </Unit>
+      <Unit filename="/home/nsplab3/code/helios/CMakeLists.txt">
+          <Option virtualFolder="CMake Files\" />
+      </Unit>
+   </Project>
+</CodeBlocks_project_file>
