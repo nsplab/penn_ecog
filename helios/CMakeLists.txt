@@ -4,6 +4,7 @@ project(helios)
 
 #set(CMAKE_CXX_FLAGS "-O3 -g -Wall -DNDEBUG")
 set(CMAKE_CXX_FLAGS "-O3 -g -Wall")
+set(CMAKE_CXX_LINK_FLAGS "-lrt")
 
 add_executable(helios main.cpp pelops.cpp blkdiag.cpp ComputerEEGFilterCursorOnly.cpp ComputerEEGFilterRSE.cpp
  constructRSEMatrices.cpp generateChannelParameters.cpp nextTimeStep.cpp parameters.cpp randomStartLocation.cpp
