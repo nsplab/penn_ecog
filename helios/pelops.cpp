@@ -2,6 +2,7 @@
 #include "seqs.h"
 
 #include <iostream>
+#include <unistd.h>
 #include <iomanip>
 #include <armadillo>
 

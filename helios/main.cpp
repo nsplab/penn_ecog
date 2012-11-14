@@ -1,4 +1,5 @@
 #include <iostream>
+#include <unistd.h>
 
 #include <osg/Texture2D>
 #include <osg/ImageStream>
