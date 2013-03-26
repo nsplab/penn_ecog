@@ -14,6 +14,8 @@ socket.connect("ipc:///tmp/hand_position.pipe")
 coefficients = np.array([1.0,0.5,0.333333])
 hand_position = np.array([0.0,0.0,0.0])
 
+# main loop
+
 while True:
 	vec_str = subscriber.recv()
 	vec = vec_str.split(",")

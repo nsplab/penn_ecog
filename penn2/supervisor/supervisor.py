@@ -20,7 +20,7 @@ while run:
 		continue
 
 	if init_obj_pos:
-		# magic number keep the ball and box within reachable distance
+		# magic numbers keep the ball and box within reachable distance
 		ball_pos[0] = random.random() * -5.0
 		ball_pos[1] = random.random() * -2.0 - 4.0
 		ball_pos[2] = random.random() * -4.0 + 2.0
