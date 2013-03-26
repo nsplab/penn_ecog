@@ -4,12 +4,12 @@ import numpy as np
 context = zmq.Context()
 
 subscriber = context.socket(zmq.SUB)
-subscriber.bind("ipc:///tmp/signal.pipe")
+subscriber.connect("ipc:///tmp/signal.pipe")
 subscriber.setsockopt(zmq.SUBSCRIBE, '')
 
 context_p = zmq.Context()
 socket = context_p.socket(zmq.PUSH)
-socket.connect("ipc:///tmp/features.pipe")
+socket.bind("ipc:///tmp/features.pipe")
 
 
 first_value = True
