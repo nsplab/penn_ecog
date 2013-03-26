@@ -17,3 +17,15 @@ In the following scenario the Supervisor module is started first, in case Filter
 
 ![Supervisor-Filter Interaction](../docs/filter_supervisor.png)
 
+* Step 1: Supervisor starts broadcasting [ Trial ID (an integer), Goal Position (float:x,y,z), Hand Position (float:x,y,z), Whether a Training or Test trial is going to start (an integer), trial has NOT been started].
+* Step 2: The Filter process starts and receives the published packet from Supervisor.
+* Step 3: Filter publishes [Trial ID (the latest ID it had seen), float:x,y,z (the amount of movement in the three directions)]
+* Step 4: Supervisor switches the trial status to Started, and keeps broadcasting the same packet as in Step 1. This process continues until the hand position controlled by Filter is close enough to the Goal position. Then Supervisor increments the Trial ID by one and goes to Step 1.
+
+FeatureExtractor-Filter Interaction
+===================================
+
+The FeatureExtractor module continuously broadcasts the timestamped extracted features, [Timestamp (in milliseconds, unsigned integer), number of features (integer), features (float)]
+
+![Supervisor-Filter Interaction](../docs/filter_featureextractor.png)
+
