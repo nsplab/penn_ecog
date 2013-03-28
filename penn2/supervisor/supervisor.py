@@ -1,18 +1,23 @@
-
 import zmq
 import numpy as np
 
 import setpos
 
-# ZMQ connections
-context = zmq.Context()
-hcontext = zmq.Context()
-socket = context.socket(zmq.PUB)
-hsocket = hcontext.socket(zmq.SUB)
+# ZMQ connections, 3 threads
+context = zmq.Context(3)
 
+# socket to publish state to filter modules
+socket = context.socket(zmq.PUB)
 socket.bind("ipc:///tmp/supervisor.pipe")
-hsocket.connect ("ipc:///tmp/hand_position.pipe")
-hsocket.setsockopt(zmq.SUBSCRIBE, '' )
+
+# socket to publish state to graphics modules
+gsocket = context.socket(zmq.PUB)
+gsocket.bind("ipc:///tmp/graphics.pipe")
+
+# socket to receive estimated hand movement from filter
+hsocket = context.socket(zmq.SUB)
+hsocket.connect ("ipc:///tmp/handposition.pipe")
+hsocket.setsockopt(zmq.SUBSCRIBE, '' ) # subscribe with no filter
 
 # parameters
 run = True # keep main loop iterating
@@ -46,13 +51,23 @@ while run:
 		
 	try:
 		res = hsocket.recv(zmq.NOBLOCK)
+		#print "res: "+res[:-2]
 		# if received data
 		if res != zmq.EAGAIN:
-			print res
+			#print res
 			# convert string array to numpy array
-			hand_mov = np.array([float(x) for x in res.split(',')[1:]])
-			print hand_mov
+			hand_mov = np.array([float(x) for x in res[:-2].split(',')])
+			hand_pos[0] = hand_mov[0]
+			hand_pos[1] = hand_mov[1]
+			hand_pos[2] = hand_mov[2]
+			#print hand_mov
 	except:
 		pass
 
+	ball_pos_str = np.char.mod('%f', ball_pos)
+	box_pos_str = np.char.mod('%f', box_pos)
+	hand_pos_str = np.char.mod('%f', hand_pos)
+	graphics_msg=str(",".join(ball_pos_str))+","+str(",".join(box_pos_str))+","+str(",".join(hand_pos_str))
+	print graphics_msg
+	gsocket.send(graphics_msg)
 	

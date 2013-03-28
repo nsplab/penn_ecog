@@ -1,0 +1,38 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/user/code/penn2/penn/penn2/filter/cpp/filter_class.cpp
+filter_class.h
+/home/user/code/penn2/penn/penn2/filter/cpp/filter_class.h
+sstream
+-
+iostream
+-
+
+/home/user/code/penn2/penn/penn2/filter/cpp/filter_class.h
+vector
+-
+zmq.hpp
+-
+
+/home/user/code/penn2/penn/penn2/filter/cpp/main.cpp
+iostream
+-
+naive_filter.h
+/home/user/code/penn2/penn/penn2/filter/cpp/naive_filter.h
+
+/home/user/code/penn2/penn/penn2/filter/cpp/naive_filter.cpp
+naive_filter.h
+/home/user/code/penn2/penn/penn2/filter/cpp/naive_filter.h
+iostream
+-
+
+/home/user/code/penn2/penn/penn2/filter/cpp/naive_filter.h
+filter_class.h
+/home/user/code/penn2/penn/penn2/filter/cpp/filter_class.h
+

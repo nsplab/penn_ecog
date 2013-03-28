@@ -19,6 +19,7 @@ FilterClass::FilterClass() {
   supervisor_subscriber_.setsockopt(ZMQ_SUBSCRIBE, NULL, 0);
   // the target is in 3 dimensions, TODO: fix me
   target_.resize(3);
+  handMovement_.resize(3);
 }
 
 void FilterClass::GrabFeatures() {

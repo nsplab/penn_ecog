@@ -23,6 +23,8 @@ public:
 protected:
   // feature vector
   std::vector<float> features_;
+  // hand movement
+  std::vector<float> handMovement_;
   // training or testing mode
   TrialMode mode_;
   // trial ID sent by supervisor
