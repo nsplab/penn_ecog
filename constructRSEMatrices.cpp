@@ -1,7 +1,9 @@
 #include <constructRSEMatrices.h>
 #include <repslices.h>
 //Equation numbering is according to [1]
-//[1]:
+//[1]:Srinivasan, L., Eden, U. T., Willsky, A. S., & Brown, E. N. (2006). 
+//A state-space analysis for reconstruction of goal-directed movements using neural signals. 
+//Neural computation, 18(10), 2465–94. doi:10.1162/neco.2006.18.10.2465
 RSEMatrixStruct constructRSEMatrices(int T, mat F, mat Q, mat mean_T, \
     mat Pi_T, int nExtraTimeSteps) {
 
