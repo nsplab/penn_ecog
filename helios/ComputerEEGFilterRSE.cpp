@@ -109,6 +109,7 @@ std::map<std::string, mat> ComputerEEGFilterRSE::filter(vec const &obs) {
 
     // The derivative of the observation vector with respect to the state,
     // evaluated at estimated_obs.
+    // Eq. 3.10 (write up)
     mat D_obs = zeros<mat>(pred_x.n_rows, N_CHANNELS);
     for(int c=0; c<N_CHANNELS; c++)
     {
@@ -124,6 +125,7 @@ std::map<std::string, mat> ComputerEEGFilterRSE::filter(vec const &obs) {
     // The double derivative of the observation vector with respect to the
     // state, evaluated at estimated_obs.
     //cout<<"Computing DD_OBS"<<endl;
+    // Eq. 3.13 (write up)
     cube DD_obs = zeros<cube>(pred_x.n_rows, pred_x.n_rows, N_CHANNELS);
     for(int c=0; c<N_CHANNELS; c++)
     {
@@ -140,6 +142,7 @@ std::map<std::string, mat> ComputerEEGFilterRSE::filter(vec const &obs) {
     // What we add to the inverse of the predicted value of the covariance to
     // obtain the updated value.
     //cout<<"Computing cov_adjust"<<endl;
+    // part of Eq. 3.12 (write up)
     mat cov_adjust = zeros(pred_cov.n_rows, pred_cov.n_cols);
     for(int c = 0; c < N_CHANNELS; c++)
     {
@@ -151,6 +154,7 @@ std::map<std::string, mat> ComputerEEGFilterRSE::filter(vec const &obs) {
     //cout<<"Done computing cov_adjust"<<endl;
     //vec test_singular_values = svd(pred_cov);
     //cout<<"singular values of predicted covariance: "<<test_singular_values<<endl;
+    // Eq. 3.12 (write up)
     mat new_cov_inv = inv(pred_cov) + cov_adjust;
     cout<<"Done computing new_cov_inv"<<endl;
 
@@ -174,6 +178,7 @@ std::map<std::string, mat> ComputerEEGFilterRSE::filter(vec const &obs) {
     //cout<<"Computing x_adjust"<<endl;
     mat x_adjust = zeros(pred_x.n_rows, pred_x.n_cols);
     mat innovation = zeros(N_CHANNELS, 1);
+    // part of Eq. 3.11 (write up)
     for(int c = 0; c < N_CHANNELS; c++)
     {
         if(!isnan(estimated_obs(c, 0)))
@@ -185,6 +190,7 @@ std::map<std::string, mat> ComputerEEGFilterRSE::filter(vec const &obs) {
         }
     }
     //cout<<"Done computing x_adjust"<<endl;
+    // Eq. 3.11 (write up)
     mat new_x = pred_x + new_cov * x_adjust;
     //cout<<"Done computing new_x"<<endl;
 

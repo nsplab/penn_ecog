@@ -2,6 +2,8 @@ FILE(REMOVE_RECURSE
   "CMakeFiles/filter.dir/main.cpp.o"
   "CMakeFiles/filter.dir/filter_class.cpp.o"
   "CMakeFiles/filter.dir/naive_filter.cpp.o"
+  "CMakeFiles/filter.dir/reachstateequation.cpp.o"
+  "CMakeFiles/filter.dir/jointrse_filter.cpp.o"
   "filter.pdb"
   "filter"
 )

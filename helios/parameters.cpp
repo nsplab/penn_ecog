@@ -87,6 +87,7 @@ int HOLD_TIME_STEPS = (int) (0.5 / TIME_BIN);
 std::string COV_RESET = "yes";
 
 // The initial covariance on the arm components of the state.
+// page 20
 mat prepareINITIAL_ARM_COV()
 {
      /* mat ans = zeros<mat>(3 + 3 * N_LAGS, 3 + 3 * N_LAGS);

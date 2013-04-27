@@ -138,6 +138,30 @@ filter_class.cpp.s:
 	$(MAKE) -f CMakeFiles/filter.dir/build.make CMakeFiles/filter.dir/filter_class.cpp.s
 .PHONY : filter_class.cpp.s
 
+jointrse_filter.o: jointrse_filter.cpp.o
+.PHONY : jointrse_filter.o
+
+# target to build an object file
+jointrse_filter.cpp.o:
+	$(MAKE) -f CMakeFiles/filter.dir/build.make CMakeFiles/filter.dir/jointrse_filter.cpp.o
+.PHONY : jointrse_filter.cpp.o
+
+jointrse_filter.i: jointrse_filter.cpp.i
+.PHONY : jointrse_filter.i
+
+# target to preprocess a source file
+jointrse_filter.cpp.i:
+	$(MAKE) -f CMakeFiles/filter.dir/build.make CMakeFiles/filter.dir/jointrse_filter.cpp.i
+.PHONY : jointrse_filter.cpp.i
+
+jointrse_filter.s: jointrse_filter.cpp.s
+.PHONY : jointrse_filter.s
+
+# target to generate assembly for a file
+jointrse_filter.cpp.s:
+	$(MAKE) -f CMakeFiles/filter.dir/build.make CMakeFiles/filter.dir/jointrse_filter.cpp.s
+.PHONY : jointrse_filter.cpp.s
+
 main.o: main.cpp.o
 .PHONY : main.o
 
@@ -186,6 +210,30 @@ naive_filter.cpp.s:
 	$(MAKE) -f CMakeFiles/filter.dir/build.make CMakeFiles/filter.dir/naive_filter.cpp.s
 .PHONY : naive_filter.cpp.s
 
+reachstateequation.o: reachstateequation.cpp.o
+.PHONY : reachstateequation.o
+
+# target to build an object file
+reachstateequation.cpp.o:
+	$(MAKE) -f CMakeFiles/filter.dir/build.make CMakeFiles/filter.dir/reachstateequation.cpp.o
+.PHONY : reachstateequation.cpp.o
+
+reachstateequation.i: reachstateequation.cpp.i
+.PHONY : reachstateequation.i
+
+# target to preprocess a source file
+reachstateequation.cpp.i:
+	$(MAKE) -f CMakeFiles/filter.dir/build.make CMakeFiles/filter.dir/reachstateequation.cpp.i
+.PHONY : reachstateequation.cpp.i
+
+reachstateequation.s: reachstateequation.cpp.s
+.PHONY : reachstateequation.s
+
+# target to generate assembly for a file
+reachstateequation.cpp.s:
+	$(MAKE) -f CMakeFiles/filter.dir/build.make CMakeFiles/filter.dir/reachstateequation.cpp.s
+.PHONY : reachstateequation.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -198,12 +246,18 @@ help:
 	@echo "... filter_class.o"
 	@echo "... filter_class.i"
 	@echo "... filter_class.s"
+	@echo "... jointrse_filter.o"
+	@echo "... jointrse_filter.i"
+	@echo "... jointrse_filter.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
 	@echo "... naive_filter.o"
 	@echo "... naive_filter.i"
 	@echo "... naive_filter.s"
+	@echo "... reachstateequation.o"
+	@echo "... reachstateequation.i"
+	@echo "... reachstateequation.s"
 .PHONY : help
 
 

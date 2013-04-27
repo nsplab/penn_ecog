@@ -45,11 +45,13 @@ class ComputerEEGFilterRSE {
                         directionality and then by lag number.
                'covariance': The corresponding covariance matrix for the state
                              vector. */
+        // m: update function
         std::map<std::string, mat> filter(const vec &observations);
         
         /* Primes the ComputerEEGFilter for a new trial. Resets all aspects
            related to the kinematics, but retains channel parameter estimates.
            */
+        //m: time steps and covariances
         mat newTrial(void);
 
         /* Primes the ComputerEEGFilter for a new trial, but with a set start
