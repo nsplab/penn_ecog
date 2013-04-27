@@ -1,6 +1,9 @@
 #include <constructRSEMatrices.h>
 #include <repslices.h>
-
+//Equation numbering is according to [1]
+//[1]:Srinivasan, L., Eden, U. T., Willsky, A. S., & Brown, E. N. (2006). 
+//A state-space analysis for reconstruction of goal-directed movements using neural signals. 
+//Neural computation, 18(10), 2465–94. doi:10.1162/neco.2006.18.10.2465
 RSEMatrixStruct constructRSEMatrices(int T, mat F, mat Q, mat mean_T, \
     mat Pi_T, int nExtraTimeSteps) {
 
@@ -12,12 +15,14 @@ RSEMatrixStruct constructRSEMatrices(int T, mat F, mat Q, mat mean_T, \
     cube Pi_t_T = zeros<cube>(Pi_T.n_rows, Pi_T.n_cols, T + 1);
     cube phi_t_T = zeros<cube>(F.n_rows, F.n_cols, T + 1);
     
+    //Equivalent to equation 2.17
     Pi_t_T.slice(T) = Pi_T + Q;
     phi_t_T.slice(T) = phi_t_T.slice(T).eye();
     
     for(int t = T - 1; t >= 0; t--)
     {
-        Pi_t_T.slice(t) = F_inv * Pi_t_T.slice(t + 1) * F_inv_t + Q;
+        //Equivalent to Equation 2.16 
+        Pi_t_T.slice(t) = F_inv * Pi_t_T.slice(t + 1) * F_inv_t + Q; 
         phi_t_T.slice(t) = F_inv * phi_t_T.slice(t + 1);
     }
     
@@ -59,6 +64,7 @@ RSEMatrixStruct constructRSEMatrices(int T, mat F, mat Q, mat mean_T, \
     cube b = zeros<cube>(mean_T.n_rows, 1, T);
     for(int t = 0; t < T; t++)
     {
+        //equivalent to equation 2.12
         b.slice(t) = Q * inv(Pi_t_T.slice(t)) * phi_t_T.slice(t) * mean_T;
     }
     

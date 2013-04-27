@@ -1,5 +1,4 @@
 
-
 Modules
 =======
 
@@ -12,6 +11,8 @@ The following diagram shows the main modules and the connections between them.
 ---------------------
 
 This modules interfaces the hardware. After grabbing the signal, it publishes the data using ZMQ at "ipc:///tmp/signal.pipe". The format of the messages is comma separated values (CSV), i.e., the value read from the first channel is followed by a comma, then the value of the second channel and so on.
+
+Currently, two signal simulation modules are implemented. one uses stereo vision and the othe other uses kinect.
 
 2. Feature Extraction
 ---------------------
@@ -35,4 +36,16 @@ After reading the features (in the CSV format) from "ipc:///tmp/features.pipe" a
 
 The Graphics module receives the state of the game from "ipc:///tmp/graphics.pipe" published by Supervisor and updates the virtual environment.
 
+How to compile and run
+--------------
+The required external libraries:
+1. ZMQ
+2. Visual Python for the python graphics module
+3. Openscenegraph for the C++ graphics module
+4. openkinect and its python wrapper
+5. opencv 2 or 3 and its python wrapper
 
+To compile C++ modules use cmake, create a build subdirectory and in that directory run:
+cmake ../
+make
+and then binary file is built. To run the modules, the order does not matter, go to each module's directory and run the binary or pyython script. 
