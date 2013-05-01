@@ -2,6 +2,8 @@
 
 using namespace arma;
 
+// todo: replace cube with vector of matrices
+
 jointRSE_filter::jointRSE_filter():
     timeStep_(-1), prevTrialId_(0)
 {
@@ -15,7 +17,7 @@ jointRSE_filter::jointRSE_filter():
     mat reachTarget = zeros<mat>(6, 1);
 
     reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget);
-    rseParams = rseComputer.returnAnswer();
+    reachStateEquation::RSEMatrixStruct rseParams = rseComputer.returnAnswer();
 
     uHistory_ = zeros<mat>(3 * numLags, 1);
 
@@ -69,39 +71,39 @@ void jointRSE_filter::Predict() {
     mat b_current = b_.slice(timeStep_);
 
     // PERFORM THE PREDICTION STEP.
-    mat pred_x = F_current * x + b_current;
-    mat pred_cov = F_current * covariance_ * F_current.t() + Q_current;
+    pred_x_ = F_current * x + b_current;
+    pred_cov_ = F_current * covariance_ * F_current.t() + Q_current;
 }
 
 void jointRSE_filter::Update() {
     // PERFORM THE UPDATE STEP.
-    mat predicted_uHistory = zeros<mat>(uHistory.n_rows, uHistory.n_cols);
-    predicted_uHistory(0, 0) = pred_x(3 * N_LAGS * N_CHANNELS + 3, 0);
-    predicted_uHistory.submat(1, 0, N_LAGS - 1, 0) = \
-            uHistory.submat(0, 0, N_LAGS - 2, 0);
-    predicted_uHistory(N_LAGS, 0) = \
-            pred_x(3 * N_LAGS * N_CHANNELS + 4, 0);
-    predicted_uHistory.submat(N_LAGS + 1, 0, 2 * N_LAGS - 1, 0) = \
-            uHistory.submat(N_LAGS, 0, 2 * N_LAGS - 2, 0);
-    predicted_uHistory(2 * N_LAGS, 0) = \
-            pred_x(3 * N_LAGS * N_CHANNELS + 5, 0);
-    predicted_uHistory.submat(2 * N_LAGS + 1, 0, 3 * N_LAGS - 1, 0) = \
-            uHistory.submat(2 * N_LAGS, 0, 3 * N_LAGS - 2, 0);
+    mat predicted_uHistory = zeros<mat>(uHistory_.n_rows, uHistory_.n_cols);
+    predicted_uHistory(0, 0) = pred_x_(3 * numLags * numChannels + 3, 0);
+    predicted_uHistory.submat(1, 0, numLags - 1, 0) = \
+            uHistory_.submat(0, 0, numLags - 2, 0);
+    predicted_uHistory(numLags, 0) = \
+            pred_x_(3 * numLags * numChannels + 4, 0);
+    predicted_uHistory.submat(numLags + 1, 0, 2 * numLags - 1, 0) = \
+            uHistory_.submat(numLags, 0, 2 * numLags - 2, 0);
+    predicted_uHistory(2 * numLags, 0) = \
+            pred_x_(3 * numLags * numChannels + 5, 0);
+    predicted_uHistory.submat(2 * numLags + 1, 0, 3 * numLags - 1, 0) = \
+            uHistory_.submat(2 * numLags, 0, 3 * numLags - 2, 0);
 
-    mat estimated_obs = channelParametersHat * predicted_uHistory;
+    mat estimated_obs = channelParametersHat_ * predicted_uHistory;
 
     // The derivative of the observation vector with respect to the state,
     // evaluated at estimated_obs.
     // Eq. 3.10 (write up)
-    mat D_obs = zeros<mat>(pred_x.n_rows, N_CHANNELS);
-    for(int c=0; c<N_CHANNELS; c++)
+    mat D_obs = zeros<mat>(pred_x_.n_rows, numChannels);
+    for(int c=0; c<numChannels; c++)
     {
-        D_obs.submat(c * 3 * N_LAGS, c, (c + 1) * 3 * N_LAGS - 1, c) = \
+        D_obs.submat(c * 3 * numLags, c, (c + 1) * 3 * numLags - 1, c) = \
                 predicted_uHistory;
         mat pred_pars;
-        pred_pars << pred_x(c * 3 * N_LAGS, 0) << endr \
-                  << pred_x(c * 3 * N_LAGS + N_LAGS, 0) << endr \
-                  << pred_x(c * 3 * N_LAGS + 2 * N_LAGS, 0) << endr;
+        pred_pars << pred_x_(c * 3 * numLags, 0) << endr \
+                  << pred_x_(c * 3 * numLags + numLags, 0) << endr \
+                  << pred_x_(c * 3 * numLags + 2 * numLags, 0) << endr;
         D_obs.submat(D_obs.n_rows - 3, c, D_obs.n_rows - 1, c) = pred_pars;
     }
 
@@ -109,16 +111,16 @@ void jointRSE_filter::Update() {
     // state, evaluated at estimated_obs.
     //cout<<"Computing DD_OBS"<<endl;
     // Eq. 3.13 (write up)
-    cube DD_obs = zeros<cube>(pred_x.n_rows, pred_x.n_rows, N_CHANNELS);
-    for(int c=0; c<N_CHANNELS; c++)
+    cube DD_obs = zeros<cube>(pred_x_.n_rows, pred_x_.n_rows, numChannels);
+    for(int c=0; c<numChannels; c++)
     {
-        DD_obs(c * 3 * N_LAGS, DD_obs.n_cols - 3, c) = 1;
-        DD_obs(c * 3 * N_LAGS + N_LAGS, DD_obs.n_cols - 2, c) = 1;
-        DD_obs(c * 3 * N_LAGS + 2 * N_LAGS, DD_obs.n_cols - 1, c) = 1;
+        DD_obs(c * 3 * numLags, DD_obs.n_cols - 3, c) = 1;
+        DD_obs(c * 3 * numLags + numLags, DD_obs.n_cols - 2, c) = 1;
+        DD_obs(c * 3 * numLags + 2 * numLags, DD_obs.n_cols - 1, c) = 1;
 
-        DD_obs(DD_obs.n_rows - 3, c * 3 * N_LAGS, c) = 1;
-        DD_obs(DD_obs.n_rows - 2, c * 3 * N_LAGS + N_LAGS, c) = 1;
-        DD_obs(DD_obs.n_rows - 1, c * 3 * N_LAGS + 2 * N_LAGS, c) = 1;
+        DD_obs(DD_obs.n_rows - 3, c * 3 * numLags, c) = 1;
+        DD_obs(DD_obs.n_rows - 2, c * 3 * numLags + numLags, c) = 1;
+        DD_obs(DD_obs.n_rows - 1, c * 3 * numLags + 2 * numLags, c) = 1;
     }
     //cout<<"Done computing DD_OBS"<<endl;
 
@@ -126,22 +128,24 @@ void jointRSE_filter::Update() {
     // obtain the updated value.
     //cout<<"Computing cov_adjust"<<endl;
     // part of Eq. 3.12 (write up)
-    mat cov_adjust = zeros(pred_cov.n_rows, pred_cov.n_cols);
-    for(int c = 0; c < N_CHANNELS; c++)
+    const double baseVariance = 3.0e3;
+    mat channelVariances = baseVariance * ones<mat>(numChannels, 1);
+    mat cov_adjust = zeros(pred_cov_.n_rows, pred_cov_.n_cols);
+    for(int c = 0; c < numChannels; c++)
     {
         if(!isnan(estimated_obs(c, 0)))
             cov_adjust += 1 / channelVariances(c) * \
                 (D_obs.col(c) * trans(D_obs.col(c)) + \
-                (estimated_obs(c, 0) - obs(c)) * DD_obs.slice(c));
+                (estimated_obs(c, 0) - obs_(c)) * DD_obs.slice(c));
     }
     //cout<<"Done computing cov_adjust"<<endl;
     //vec test_singular_values = svd(pred_cov);
     //cout<<"singular values of predicted covariance: "<<test_singular_values<<endl;
     // Eq. 3.12 (write up)
-    mat new_cov_inv = inv(pred_cov) + cov_adjust;
+    mat new_cov_inv = inv(pred_cov_) + cov_adjust;
     cout<<"Done computing new_cov_inv"<<endl;
 
-    /* Check to see if new_cov_inv is well-conditioned. */
+    // Check to see if new_cov_inv is well-conditioned.
     vec singular_values = svd(new_cov_inv);
     mat new_cov;
     double rcond = \
@@ -152,71 +156,79 @@ void jointRSE_filter::Update() {
     {
         std::cout<<"Matrix is ill-conditioned: "<<rcond<<"; using predicted"\
             <<" covariance instead"<<std::endl;
-        new_cov = pred_cov;
+        new_cov = pred_cov_;
     }
     //cout<<"done computing new_cov"<<endl;
 
     // What we add to the predicted value of the state to obtain the updated
     // value.
     //cout<<"Computing x_adjust"<<endl;
-    mat x_adjust = zeros(pred_x.n_rows, pred_x.n_cols);
-    mat innovation = zeros(N_CHANNELS, 1);
+    mat x_adjust = zeros(pred_x_.n_rows, pred_x_.n_cols);
+    mat innovation = zeros(numChannels, 1);
     // part of Eq. 3.11 (write up)
-    for(int c = 0; c < N_CHANNELS; c++)
+    for(int c = 0; c < numChannels; c++)
     {
         if(!isnan(estimated_obs(c, 0)))
         {
             x_adjust += 1 / channelVariances(c) * \
-                (obs(c) - estimated_obs(c, 0)) * D_obs.col(c);
+                (obs_(c) - estimated_obs(c, 0)) * D_obs.col(c);
             innovation(c, 0) = \
-                    (obs(c) - estimated_obs(c, 0)) / channelVariances(c);
+                    (obs_(c) - estimated_obs(c, 0)) / channelVariances(c);
         }
     }
     //cout<<"Done computing x_adjust"<<endl;
     // Eq. 3.11 (write up)
-    mat new_x = pred_x + new_cov * x_adjust;
+    mat new_x = pred_x_ + new_cov * x_adjust;
     //cout<<"Done computing new_x"<<endl;
 
     // UPDATE THE CLASS VARIABLES
     mat new_channelParametersHat = new_x.submat(0, 0, \
-                                                3 * N_LAGS * N_CHANNELS - 1, 0);
-    channelParametersHat = \
-        trans(reshape(new_channelParametersHat, 3 * N_LAGS, N_CHANNELS, 1));
-    pos = new_x.submat(3 * N_LAGS * N_CHANNELS, 0, \
-        3 * N_LAGS * N_CHANNELS + 2, 0);
+                                                3 * numLags * numChannels - 1, 0);
+    channelParametersHat_ = \
+        trans(reshape(new_channelParametersHat, 3 * numLags, numChannels, 1));
+    pos_ = new_x.submat(3 * numLags * numChannels, 0, \
+        3 * numLags * numChannels + 2, 0);
 
-    uHistory = predicted_uHistory;
-    uHistory(0, 0) = new_x(3 * N_LAGS * N_CHANNELS + 3, 0);
-    uHistory(N_LAGS, 0) = new_x(3 * N_LAGS * N_CHANNELS + 4, 0);
-    uHistory(2 * N_LAGS, 0) = new_x(3 * N_LAGS * N_CHANNELS + 5, 0);
+    uHistory_ = predicted_uHistory;
+    uHistory_(0, 0) = new_x(3 * numLags * numChannels + 3, 0);
+    uHistory_(numLags, 0) = new_x(3 * numLags * numChannels + 4, 0);
+    uHistory_(2 * numLags, 0) = new_x(3 * numLags * numChannels + 5, 0);
 
-    if(covReset.compare("yes") == 0)
-        covariance = blkdiag(new_cov.submat(0, 0, 3 * N_LAGS * N_CHANNELS - 1, \
-            3 * N_LAGS * N_CHANNELS - 1), initialArmCov);
-    else if(covReset.compare("posOnly") == 0)
-        covariance = blkdiag(blkdiag(\
-            new_cov.submat(0, 0, 3 * N_LAGS * N_CHANNELS - 1, \
-            3 * N_LAGS * N_CHANNELS - 1), initialArmCov.submat(0, 0, 2, 2)), \
-            new_cov.submat(new_cov.n_rows - 3, new_cov.n_cols - 3, \
-            new_cov.n_rows - 1, new_cov.n_cols - 1));
-    else if(covReset.compare("no"))
-        covariance = new_cov;
+    const double timeBin = 0.01;
+    //if(covReset.compare("yes") == 0)
+        covariance_ = blkdiag(new_cov.submat(0, 0, 3 * numLags * numChannels - 1, \
+            3 * numLags * numChannels - 1), prepareINITIAL_ARM_COV(timeBin));
+    //else if(covReset.compare("posOnly") == 0)
+    //    covariance = blkdiag(blkdiag(\
+    //        new_cov.submat(0, 0, 3 * numLags * numChannels - 1, \
+    //        3 * numLags * numChannels - 1), prepareINITIAL_ARM_COV(timBin).submat(0, 0, 2, 2)), \
+    //        new_cov.submat(new_cov.n_rows - 3, new_cov.n_cols - 3, \
+    //        new_cov.n_rows - 1, new_cov.n_cols - 1));
+    //else if(covReset.compare("no"))
+    //    covariance_ = new_cov;
 }
 
-void jointRSE_filter::InitNewTrial() {
-    pos = startPos;
-    uHistory = zeros<mat>(3 * N_LAGS, 1);
+void jointRSE_filter::InitNewTrial(mat startPos) {
+    pos_ = startPos;
+    uHistory_ = zeros<mat>(3 * numLags, 1);
 
-    covariance = blkdiag(covariance.submat(0, 0, 3 * N_LAGS * N_CHANNELS - 1, \
-        3 * N_LAGS * N_CHANNELS - 1), initialArmCov);
+    const double timeBin = 0.01;
+    covariance_ = blkdiag(covariance_.submat(0, 0, 3 * numLags * numChannels - 1, \
+                                             3 * numLags * numChannels - 1), prepareINITIAL_ARM_COV(timeBin));
 
-    timeStep = -1;
+    timeStep_ = -1;
 }
 
 void jointRSE_filter::Run() {
     GrabFeatures();
+    obs_.resize(features_.size());
+    for (size_t i=0; i<features_.size(); i++) {
+        obs_[i] = features_[i];
+    }
     if (prevTrialId_ != trial_id) {
-        InitNewTrial();
+        mat initPos;
+        initPos<<10<<endr<<8<<endr<<6<<endr;
+        InitNewTrial(initPos);
         prevTrialId_ = trial_id;
     }
     Predict();

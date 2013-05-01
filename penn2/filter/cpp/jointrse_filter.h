@@ -16,9 +16,8 @@ private:
     arma::cube blkdiag(arma::cube A, arma::cube B);
     arma::mat blkdiag(arma::mat A, arma::mat B);
     arma::mat prepareINITIAL_ARM_COV(const double timeBin);
-    void InitNewTrial();
+    void InitNewTrial(arma::mat startPos);
 
-    reachStateEquation::RSEMatrixStruct rseParams;
     // state evolution matrix
     arma::cube F_;
     arma::cube Q_;
@@ -29,6 +28,9 @@ private:
     arma::mat channelParametersHat_;
     size_t prevTrialId_;
     arma::mat pos_;
+    arma::mat pred_x_;
+    arma::mat pred_cov_;
+    arma::vec obs_;
 
     static const int numLags = 5;
     static const int numChannels = 14;
