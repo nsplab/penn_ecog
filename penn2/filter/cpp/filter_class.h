@@ -20,11 +20,19 @@ public:
   // derived classes should implement these two methods
   virtual void Update() = 0;
   virtual void Predict() = 0;
+
+  // auxiliary function to test the filter
+  void Simulate(std::vector<float> features, size_t trial, std::vector<float> target, std::vector<float> initHandPosition);
+  std::vector<float> GetHandState() {return handState_;}
 protected:
   // feature vector
   std::vector<float> features_;
   // hand movement
   std::vector<float> handMovement_;
+  // hand position
+  std::vector<float> handPos_;
+  // hand position
+  std::vector<float> handState_;
   // training or testing mode
   TrialMode mode_;
   // trial ID sent by supervisor

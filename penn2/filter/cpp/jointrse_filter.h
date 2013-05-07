@@ -32,8 +32,9 @@ private:
     arma::mat pred_cov_;
     arma::vec obs_;
 
-    static const int numLags = 5;
-    static const int numChannels = 14;
+    static const int numLags = 2;
+    static const int numChannels = 6;
+    std::ofstream channelParamsFile;
 };
 
 #endif // JOINTRSE_FILTER_H

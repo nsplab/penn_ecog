@@ -7,6 +7,9 @@ using namespace arma;
 jointRSE_filter::jointRSE_filter():
     timeStep_(-1), prevTrialId_(0)
 {
+
+    channelParamsFile.open("channelParams.txt");
+
     pos_ = zeros<mat>(3, 1);
 
     const double timeBin = 0.01;
@@ -21,23 +24,27 @@ jointRSE_filter::jointRSE_filter():
 
     uHistory_ = zeros<mat>(3 * numLags, 1);
 
-    mat FSingleTimeChannels = eye<mat>(3 * numLags, 3 * numLags);
+    mat FSingleTimeChannels = eye<mat>(3 * numLags * numChannels, 3 * numLags * numChannels);
     cube FChannels = repslices(FSingleTimeChannels, maxTimeSteps);
     // Eq. 18
     F_ = blkdiag(FChannels, rseParams.F);
+    cout<<"F_ size: "<<F_.n_rows<<" "<<F_.n_cols<<endl;
 
-    mat QSingleTimeChannels = zeros<mat>(3 * numLags, 3 * numLags);
+    mat QSingleTimeChannels = zeros<mat>(3 * numLags * numChannels, 3 * numLags * numChannels);
     cube QChannels = repslices(QSingleTimeChannels, maxTimeSteps);
     // Eq.19
     Q_ = blkdiag(QChannels, rseParams.Q);
 
     const double channelCov = 1.0e-2;
-    mat initialChannelCov = channelCov * eye<mat>(3 * numLags, 3 * numLags);
+    mat initialChannelCov = channelCov * eye<mat>(3 * numLags * numChannels, 3 * numLags * numChannels);
     covariance_ = prepareINITIAL_ARM_COV(timeBin);
     covariance_ = blkdiag(initialChannelCov, covariance_);
 
-    b_ = zeros<cube>(numChannels * FChannels.n_rows + rseParams.b.n_rows, 1, maxTimeSteps);
-    b_.subcube(numChannels * FChannels.n_rows, 0, 0, b_.n_rows-1, b_.n_cols-1, b_.n_slices - 1) = rseParams.b;
+    //b_ = zeros<cube>(numChannels * FChannels.n_rows + rseParams.b.n_rows, 1, maxTimeSteps);
+    //b_.subcube(numChannels * FChannels.n_rows, 0, 0, b_.n_rows-1, b_.n_cols-1, b_.n_slices - 1) = rseParams.b;
+
+    b_ = zeros<cube>(FChannels.n_rows + rseParams.b.n_rows, 1, maxTimeSteps);
+    b_.subcube(FChannels.n_rows, 0, 0, b_.n_rows-1, b_.n_cols-1, b_.n_slices - 1) = rseParams.b;
 
     channelParametersHat_ = zeros<mat>(numChannels, 3 * numLags);
 }
@@ -73,23 +80,35 @@ void jointRSE_filter::Predict() {
     // PERFORM THE PREDICTION STEP.
     pred_x_ = F_current * x + b_current;
     pred_cov_ = F_current * covariance_ * F_current.t() + Q_current;
+
+    /*cout<<"Q_current size: "<<Q_current.n_rows<<" "<<Q_current.n_cols<<endl;
+    cout<<"b_current size: "<<b_current.n_rows<<" "<<b_current.n_cols<<endl;
+    cout<<"x_ size: "<<x.n_rows<<" "<<x.n_cols<<endl;
+    cout<<"F size: "<<F_current.n_rows<<" "<<F_current.n_cols<<endl;
+    cout<<"covariance_ size: "<<covariance_.n_rows<<" "<<covariance_.n_cols<<endl;
+    cout<<"pred_x_ size: "<<pred_x_.n_rows<<" "<<pred_x_.n_cols<<endl;
+    cout<<"pred_cov_ size: "<<pred_cov_.n_rows<<" "<<pred_cov_.n_cols<<endl;*/
 }
 
 void jointRSE_filter::Update() {
+    /// TODO: currently observation (eq 1.1) depends only on velocity, should change this to consider position as well
+
     // PERFORM THE UPDATE STEP.
     mat predicted_uHistory = zeros<mat>(uHistory_.n_rows, uHistory_.n_cols);
     predicted_uHistory(0, 0) = pred_x_(3 * numLags * numChannels + 3, 0);
-    predicted_uHistory.submat(1, 0, numLags - 1, 0) = \
+    predicted_uHistory.submat(1, 0, numLags - 1, 0) =
             uHistory_.submat(0, 0, numLags - 2, 0);
-    predicted_uHistory(numLags, 0) = \
+    predicted_uHistory(numLags, 0) =
             pred_x_(3 * numLags * numChannels + 4, 0);
-    predicted_uHistory.submat(numLags + 1, 0, 2 * numLags - 1, 0) = \
+    predicted_uHistory.submat(numLags + 1, 0, 2 * numLags - 1, 0) =
             uHistory_.submat(numLags, 0, 2 * numLags - 2, 0);
-    predicted_uHistory(2 * numLags, 0) = \
+    predicted_uHistory(2 * numLags, 0) =
             pred_x_(3 * numLags * numChannels + 5, 0);
-    predicted_uHistory.submat(2 * numLags + 1, 0, 3 * numLags - 1, 0) = \
+    predicted_uHistory.submat(2 * numLags + 1, 0, 3 * numLags - 1, 0) =
             uHistory_.submat(2 * numLags, 0, 3 * numLags - 2, 0);
 
+    // eq. 1.1 in write up
+    // u (mu) eq. 3.11 in write up is estimated_obs
     mat estimated_obs = channelParametersHat_ * predicted_uHistory;
 
     // The derivative of the observation vector with respect to the state,
@@ -98,11 +117,11 @@ void jointRSE_filter::Update() {
     mat D_obs = zeros<mat>(pred_x_.n_rows, numChannels);
     for(int c=0; c<numChannels; c++)
     {
-        D_obs.submat(c * 3 * numLags, c, (c + 1) * 3 * numLags - 1, c) = \
+        D_obs.submat(c * 3 * numLags, c, (c + 1) * 3 * numLags - 1, c) =
                 predicted_uHistory;
         mat pred_pars;
-        pred_pars << pred_x_(c * 3 * numLags, 0) << endr \
-                  << pred_x_(c * 3 * numLags + numLags, 0) << endr \
+        pred_pars << pred_x_(c * 3 * numLags, 0) << endr
+                  << pred_x_(c * 3 * numLags + numLags, 0) << endr
                   << pred_x_(c * 3 * numLags + 2 * numLags, 0) << endr;
         D_obs.submat(D_obs.n_rows - 3, c, D_obs.n_rows - 1, c) = pred_pars;
     }
@@ -128,33 +147,37 @@ void jointRSE_filter::Update() {
     // obtain the updated value.
     //cout<<"Computing cov_adjust"<<endl;
     // part of Eq. 3.12 (write up)
-    const double baseVariance = 3.0e3;
+    const double baseVariance = 0.9;
     mat channelVariances = baseVariance * ones<mat>(numChannels, 1);
     mat cov_adjust = zeros(pred_cov_.n_rows, pred_cov_.n_cols);
     for(int c = 0; c < numChannels; c++)
     {
         if(!isnan(estimated_obs(c, 0)))
-            cov_adjust += 1 / channelVariances(c) * \
-                (D_obs.col(c) * trans(D_obs.col(c)) + \
+            cov_adjust += 1 / channelVariances(c) *
+                (D_obs.col(c) * trans(D_obs.col(c)) +
                 (estimated_obs(c, 0) - obs_(c)) * DD_obs.slice(c));
     }
     //cout<<"Done computing cov_adjust"<<endl;
     //vec test_singular_values = svd(pred_cov);
     //cout<<"singular values of predicted covariance: "<<test_singular_values<<endl;
     // Eq. 3.12 (write up)
+    //cout<<"pred_cov_: "<<pred_cov_<<endl;
+    //cout<<"covariance_: "<<covariance_<<endl;
+    //cout<<"cov size "<<covariance_.n_rows<<" "<<covariance_.n_cols<<endl;
+
     mat new_cov_inv = inv(pred_cov_) + cov_adjust;
     cout<<"Done computing new_cov_inv"<<endl;
 
     // Check to see if new_cov_inv is well-conditioned.
     vec singular_values = svd(new_cov_inv);
     mat new_cov;
-    double rcond = \
+    double rcond =
         singular_values(0) / singular_values(singular_values.n_elem - 1);
     if(rcond >= 1.0e-8)
         new_cov = inv(new_cov_inv);
     else
     {
-        std::cout<<"Matrix is ill-conditioned: "<<rcond<<"; using predicted"\
+        std::cout<<"Matrix is ill-conditioned: "<<rcond<<"; using predicted"
             <<" covariance instead"<<std::endl;
         new_cov = pred_cov_;
     }
@@ -170,11 +193,12 @@ void jointRSE_filter::Update() {
     {
         if(!isnan(estimated_obs(c, 0)))
         {
-            x_adjust += 1 / channelVariances(c) * \
+            x_adjust += 1 / channelVariances(c) *
                 (obs_(c) - estimated_obs(c, 0)) * D_obs.col(c);
-            innovation(c, 0) = \
+            innovation(c, 0) =
                     (obs_(c) - estimated_obs(c, 0)) / channelVariances(c);
         }
+        cout<<"novel_"<<c<<": "<<(obs_(c) -  estimated_obs(c, 0))<<endl;
     }
     //cout<<"Done computing x_adjust"<<endl;
     // Eq. 3.11 (write up)
@@ -182,12 +206,23 @@ void jointRSE_filter::Update() {
     //cout<<"Done computing new_x"<<endl;
 
     // UPDATE THE CLASS VARIABLES
-    mat new_channelParametersHat = new_x.submat(0, 0, \
+    mat new_channelParametersHat = new_x.submat(0, 0,
                                                 3 * numLags * numChannels - 1, 0);
-    channelParametersHat_ = \
+    channelParametersHat_ =
         trans(reshape(new_channelParametersHat, 3 * numLags, numChannels, 1));
-    pos_ = new_x.submat(3 * numLags * numChannels, 0, \
+    channelParamsFile<<channelParametersHat_<<endl;
+
+    // extract position from updated state vector
+    pos_ = new_x.submat(3 * numLags * numChannels, 0,
         3 * numLags * numChannels + 2, 0);
+
+    // to test
+    vec handState = new_x.submat(3 * numLags * numChannels, 0,
+            3 * numLags * numChannels + 5, 0);
+
+    handState_ = conv_to< std::vector<float> >::from(handState);
+
+    cout<<"pos_: "<<pos_<<endl;
 
     uHistory_ = predicted_uHistory;
     uHistory_(0, 0) = new_x(3 * numLags * numChannels + 3, 0);
@@ -196,13 +231,13 @@ void jointRSE_filter::Update() {
 
     const double timeBin = 0.01;
     //if(covReset.compare("yes") == 0)
-        covariance_ = blkdiag(new_cov.submat(0, 0, 3 * numLags * numChannels - 1, \
+        covariance_ = blkdiag(new_cov.submat(0, 0, 3 * numLags * numChannels - 1,
             3 * numLags * numChannels - 1), prepareINITIAL_ARM_COV(timeBin));
     //else if(covReset.compare("posOnly") == 0)
-    //    covariance = blkdiag(blkdiag(\
-    //        new_cov.submat(0, 0, 3 * numLags * numChannels - 1, \
-    //        3 * numLags * numChannels - 1), prepareINITIAL_ARM_COV(timBin).submat(0, 0, 2, 2)), \
-    //        new_cov.submat(new_cov.n_rows - 3, new_cov.n_cols - 3, \
+    //    covariance = blkdiag(blkdiag(
+    //        new_cov.submat(0, 0, 3 * numLags * numChannels - 1,
+    //        3 * numLags * numChannels - 1), prepareINITIAL_ARM_COV(timBin).submat(0, 0, 2, 2)),
+    //        new_cov.submat(new_cov.n_rows - 3, new_cov.n_cols - 3,
     //        new_cov.n_rows - 1, new_cov.n_cols - 1));
     //else if(covReset.compare("no"))
     //    covariance_ = new_cov;
@@ -220,15 +255,20 @@ void jointRSE_filter::InitNewTrial(mat startPos) {
 }
 
 void jointRSE_filter::Run() {
-    GrabFeatures();
+    //GrabFeatures();
     obs_.resize(features_.size());
     for (size_t i=0; i<features_.size(); i++) {
         obs_[i] = features_[i];
     }
+    // re-initialize filter at start of new trial
     if (prevTrialId_ != trial_id) {
-        mat initPos;
-        initPos<<10<<endr<<8<<endr<<6<<endr;
-        InitNewTrial(initPos);
+        cout<<"new trial started"<<endl;
+        pos_.resize(handPos_.size());
+        for (size_t i=0; i<handPos_.size(); i++) {
+            pos_[i] = handPos_[i];
+        }
+
+        InitNewTrial(pos_);
         prevTrialId_ = trial_id;
     }
     Predict();
@@ -251,7 +291,7 @@ cube jointRSE_filter::blkdiag(cube A, cube B) {
     cube C = zeros<cube>(A.n_rows + B.n_rows, A.n_cols + B.n_cols, A.n_slices);
 
     C.subcube(0, 0, 0, A.n_rows - 1, A.n_cols - 1, A.n_slices - 1) = A;
-    C.subcube(A.n_rows, A.n_cols, 0, C.n_rows - 1, C.n_cols - 1, \
+    C.subcube(A.n_rows, A.n_cols, 0, C.n_rows - 1, C.n_cols - 1,
         C.n_slices - 1) = B;
 
     return C;

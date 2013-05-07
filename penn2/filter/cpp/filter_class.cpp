@@ -82,3 +82,10 @@ void FilterClass::PublishHandMovement(const vector<float>& hand_movement) {
   memcpy((char *) zmq_message.data(), message.str().c_str(), message.str().length());
   publisher_.send(zmq_message);
 }
+
+void FilterClass::Simulate(vector<float> features, size_t trial, vector<float> target, std::vector<float> initHandPosition) {
+    features_ = features;
+    trial_id = trial;
+    target_ = target;
+    handPos_ = initHandPosition;
+}

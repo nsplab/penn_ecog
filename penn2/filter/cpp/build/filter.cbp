@@ -68,6 +68,8 @@
       </Unit>
       <Unit filename="/home/user/code/penn2/penn/penn2/filter/cpp/reachstateequation.cpp">
       </Unit>
+      <Unit filename="/home/user/code/penn2/penn/penn2/filter/cpp/tests.cpp">
+      </Unit>
       <Unit filename="/home/user/code/penn2/penn/penn2/filter/cpp/filter_class.h">
       </Unit>
       <Unit filename="/home/user/code/penn2/penn/penn2/filter/cpp/jointrse_filter.h">
@@ -75,6 +77,8 @@
       <Unit filename="/home/user/code/penn2/penn/penn2/filter/cpp/naive_filter.h">
       </Unit>
       <Unit filename="/home/user/code/penn2/penn/penn2/filter/cpp/reachstateequation.h">
+      </Unit>
+      <Unit filename="/home/user/code/penn2/penn/penn2/filter/cpp/tests.h">
       </Unit>
       <Unit filename="/home/user/code/penn2/penn/penn2/filter/cpp/CMakeLists.txt">
           <Option virtualFolder="CMake Files\" />
