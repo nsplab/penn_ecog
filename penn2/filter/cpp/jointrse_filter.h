@@ -6,7 +6,7 @@
 
 class jointRSE_filter : public FilterClass {
 public:
-    jointRSE_filter();
+    jointRSE_filter(size_t dim, bool velocityParams=true, bool positionParams=true, bool useRSE=true, bool log=false);
     void Update();
     void Predict();
     // man loop function
@@ -17,6 +17,8 @@ private:
     arma::mat blkdiag(arma::mat A, arma::mat B);
     arma::mat prepareINITIAL_ARM_COV(const double timeBin);
     void InitNewTrial(arma::mat startPos);
+
+    void LogInnovation(arma::vec obs, arma::mat estimatedObs);
 
     // state evolution matrix
     arma::cube F_;
@@ -32,9 +34,18 @@ private:
     arma::mat pred_cov_;
     arma::vec obs_;
 
-    static const int numLags = 2;
-    static const int numChannels = 6;
+    size_t dim_;
+    bool velocityParams_;
+    bool positionParams_;
+
+    arma::cube DD_obs_;
+
+    static const size_t numLags = 2;
+    static const size_t numChannels = 6;
     std::ofstream channelParamsFile;
+    std::ofstream innovationFile;
+
+    bool log_;
 };
 
 #endif // JOINTRSE_FILTER_H
