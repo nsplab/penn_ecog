@@ -16,7 +16,7 @@ gsocket.bind("ipc:///tmp/graphics.pipe")
 
 # socket to receive estimated hand movement from filter
 hsocket = context.socket(zmq.SUB)
-hsocket.connect ("ipc:///tmp/handposition.pipe")
+hsocket.connect ("ipc:///tmp/hand_position.pipe")
 hsocket.setsockopt(zmq.SUBSCRIBE, '' ) # subscribe with no filter
 
 # parameters
