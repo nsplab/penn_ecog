@@ -25,7 +25,7 @@ The Feature Extraction module receives the output of the Signal Acquisition modu
 
 This modules decides when a new trial starts and whether it is a training or test trial. Each trial has a unique ID. Supervisor publishes the trial ID, goal position, hand position, whether it is a training or test trial, and whether the trial has started at "ipc:///tmp/status.pipe". Supervisor at "ipc:///tmp/graphics.pipe" publishes the positions of the hand, the ball, and the target box, and the score/level.
 
-3. Filter
+4. Filter
 ---------------------
 
 After reading the features (in the CSV format) from "ipc:///tmp/features.pipe" and the trial ID from Supervisor, this module publishes the predicted arm movement in the three dimensions at "ipc:///tmp/hand_position.pipe" (in the CSV format). Supervisor knows whether Filter is lagging behind by checking the trial ID published by Filter. 
