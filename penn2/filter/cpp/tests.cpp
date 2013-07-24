@@ -136,7 +136,7 @@ void testJointFilter() {
         }
     }
 
-    system("matlab -nodesktop -r \"plot_innovation;quit;\"");
+    system("matlab -nosplash -nodesktop -r \"plot_innovation;quit;\"");
 }
 
 
