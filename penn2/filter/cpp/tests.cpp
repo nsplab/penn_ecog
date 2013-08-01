@@ -72,16 +72,61 @@ void testJointFilter() {
     ofstream filtTraject("filtTrajectory.txt");
 
     vector<float> target(3);
-    vector<float> features(6);
+    vector<float> features(jointRSE_filter::numChannels);
     target[0] = 0; target[1] = 0; target[2] = 0;
 
     mat obsMat;
-    obsMat<<0.0<<0.0<<0.0<<0.0<<0.0<<0.0<<endr
-          <<0.0<<0.0<<0.0<<0.0<<0.0<<0.0<<endr
-          <<0.0<<0.0<<0.0<<0.0<<0.0<<0.0<<endr
-          <<0.0<<0.0<<0.0<<-3.0<<0.0<<0.0<<endr
-          <<0.0<<0.0<<0.0<<0.0<<4.0<<0.0<<endr
-          <<0.0<<0.0<<0.0<<0.0<<0.0<<2.5<<endr;
+    // velocity
+    //obsMat<<0.0<<0.0<<0.0<<1.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<2.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<0.0<<3.0<<endr
+    //      <<0.0<<0.0<<0.0<<-3.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<2.0<<4.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<1.0<<1.5<<2.5<<endr
+    //      <<0.0<<0.0<<0.0<<1.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<1.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<0.0<<1.0<<endr
+    //      <<0.0<<0.0<<0.0<<1.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<1.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<0.0<<1.0<<endr
+    //      <<0.0<<0.0<<0.0<<1.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<1.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<0.0<<1.0<<endr;
+    //obsMat<<0.0<<0.0<<0.0<<1.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<1.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<0.0<<1.0<<endr
+    //      <<0.0<<0.0<<0.0<<1.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<1.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<0.0<<1.0<<endr
+    //      <<0.0<<0.0<<0.0<<1.0<<1.0<<1.0<<endr;
+    //obsMat<<0.0<<0.0<<0.0<<1.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<2.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<0.0<<5.0<<endr
+    //      <<0.0<<0.0<<0.0<<-3.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<4.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<0.0<<2.5<<endr;
+    // position
+    //obsMat<<-3.0<<0.0<<0.0<<0.0<<0.0<<0.0<<endr
+    //      <<0.0<<4.0<<0.0<<0.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<2.5<<0.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<0.0<<0.0<<endr;
+    obsMat<<1.0<<0.0<<0.0<<0.0<<0.0<<0.0<<endr
+          <<0.0<<1.0<<0.0<<0.0<<0.0<<0.0<<endr
+          <<0.0<<0.0<<1.0<<0.0<<0.0<<0.0<<endr
+          <<1.0<<0.0<<0.0<<0.0<<0.0<<0.0<<endr
+          <<0.0<<1.0<<0.0<<0.0<<0.0<<0.0<<endr
+          <<0.0<<0.0<<1.0<<0.0<<0.0<<0.0<<endr
+          <<1.0<<1.0<<1.0<<0.0<<0.0<<0.0<<endr;
+
+    //obsMat << 1.8339 << 3.5784 <<-0.2050 << 0.7172 <<-0.7873 << 0.3252 << endr
+    //       <<-2.2588 << 2.7694 <<-0.1241 << 1.6302 << 0.8884 <<-0.7549 << endr
+    //       << 0.8622 <<-1.3499 << 1.4897 << 0.4889 <<-1.1471 << 1.3703 << endr
+    //       << 0.3188 << 3.0349 << 1.4090 << 1.0347 <<-1.0689 <<-1.7115 << endr
+    //       <<-1.3077 << 0.7254 << 1.4172 << 0.7269 <<-0.8095 <<-0.1022 << endr
+    //       <<-0.4336 <<-0.0631 << 0.6715 <<-0.3034 <<-2.9443 <<-0.2414 << endr
+    //       << 0.3426 << 0.7147 <<-1.2075 << 0.2939 << 1.4384 << 0.3192 << endr;
 
     const double timeBin = 0.01;
     const double maxTimeSteps = 3.0/timeBin;
@@ -90,9 +135,9 @@ void testJointFilter() {
     reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget);
     reachStateEquation::RSEMatrixStruct rseParams = rseComputer.returnAnswer();
 
-    jointRSE_filter filter(3,true,false,true,true);
+    jointRSE_filter filter(3,false,true,true,true);
 
-    for (size_t trial=1; trial<40; trial++) {
+    for (size_t trial=1; trial<=40; trial++) {
         cout<<"trial: "<<trial<<endl;
         // random point on sphere as initial hand position
         // http://mathworld.wolfram.com/SpherePointPicking.html
@@ -117,7 +162,8 @@ void testJointFilter() {
             for (size_t i=0; i<handState.n_rows; i++)
                 origTraject<<handState(i)<<" ";
             origTraject<<";"<<endl;
-            vec noise = randn<vec>(6);
+            vec noise = 0.0*randn<vec>(jointRSE_filter::numChannels);
+            //vec noise = zeros<vec>(numChannels);
             cout<<"noise: "<<noise<<endl;
             vec noiseHandState = handState;
             for (size_t i=0; i<noiseHandState.n_rows; i++)
