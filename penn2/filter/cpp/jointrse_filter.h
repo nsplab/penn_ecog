@@ -6,6 +6,9 @@
 
 class jointRSE_filter : public FilterClass {
 public:
+    static const size_t numLags = 1;
+    static const size_t numChannels = 7;
+
     jointRSE_filter(size_t dim, bool velocityParams=true, bool positionParams=true, bool useRSE=true, bool log=false);
     void Update();
     void Predict();
@@ -37,11 +40,10 @@ private:
     size_t dim_;
     bool velocityParams_;
     bool positionParams_;
+    size_t numSetsOfParams_;
 
     arma::cube DD_obs_;
 
-    static const size_t numLags = 2;
-    static const size_t numChannels = 6;
     std::ofstream channelParamsFile;
     std::ofstream innovationFile;
 
