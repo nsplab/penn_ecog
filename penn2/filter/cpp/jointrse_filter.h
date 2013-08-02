@@ -7,7 +7,7 @@
 class jointRSE_filter : public FilterClass {
 public:
     static const size_t numLags = 1;
-    static const size_t numChannels = 7;
+    static const size_t numChannels = 1;
 
     jointRSE_filter(size_t dim, bool velocityParams=true, bool positionParams=true, bool useRSE=true, bool log=false);
     void Update();
@@ -33,6 +33,7 @@ private:
     arma::mat channelParametersHat_;
     size_t prevTrialId_;
     arma::mat pos_;
+    arma::mat prev_u_;
     arma::mat pred_x_;
     arma::mat pred_cov_;
     arma::vec obs_;
@@ -46,6 +47,7 @@ private:
 
     std::ofstream channelParamsFile;
     std::ofstream innovationFile;
+    std::ofstream covarianceFile;
 
     bool log_;
 };
