@@ -240,9 +240,6 @@ void testJointFilter() {
                 noisTraject<<noiseHandState(i)<<" ";
             noisTraject<<";"<<endl;
             mat obs = obsMat * noiseHandState + noise;
-            void print_mat(mat);
-            cout << "obs: \n";
-            print_mat(obs);
             // pass noise
             features = conv_to< std::vector<float> >::from(obs);
             cout << "features: \n";
