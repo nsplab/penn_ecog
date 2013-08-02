@@ -15,9 +15,6 @@ public:
     // man loop function
     void Run();
 private:
-    arma::cube repslices(arma::mat matrix, int n_slices);
-    arma::cube blkdiag(arma::cube A, arma::cube B);
-    arma::mat blkdiag(arma::mat A, arma::mat B);
     arma::mat prepareINITIAL_ARM_COV(const double timeBin);
     void InitNewTrial(arma::mat startPos);
 

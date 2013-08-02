@@ -15,7 +15,6 @@ public:
     // are expected to be affected by Gaussian noise in each time step.
     arma::mat prepareQ_ARM_UNDIRECTED(size_t dim);
     arma::mat prepareREACH_TARGET_COVARIANCE(size_t dim);
-    arma::cube repslices(arma::mat matrix, int n_slices);
     struct RSEMatrixStruct {
         arma::cube F, Q, b;
     };

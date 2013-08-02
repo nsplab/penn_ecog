@@ -1,4 +1,5 @@
 #include "reachstateequation.h"
+#include "matrix.h"
 
 // Equation number s relative to "Dynamic Analysis of Naive Adaptive Brain-Machine Interfaces"
 using namespace arma;
@@ -116,14 +117,3 @@ mat reachStateEquation::prepareREACH_TARGET_COVARIANCE(size_t dim)
     return ans;
 }
 
-
-cube reachStateEquation::repslices(mat matrix, int n_slices)
-{
-    cube answer = zeros<cube>(matrix.n_rows, matrix.n_cols, n_slices);
-    for(int i = 0; i < n_slices; i++)
-    {
-        answer.slice(i) = matrix;
-    }
-
-   return answer;
-}
