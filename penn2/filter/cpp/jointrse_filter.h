@@ -9,7 +9,7 @@ public:
     static const size_t numLags = 1;
     static const size_t numChannels = 1;
 
-    jointRSE_filter(size_t dim, bool velocityParams=true, bool positionParams=true, bool useRSE=true, bool log=false);
+    jointRSE_filter(size_t dim, bool velocityParams=true, bool positionParams=true, bool affineParam=true, bool useRSE=true, bool log=false);
     void Update();
     void Predict();
     // man loop function
@@ -38,6 +38,7 @@ private:
     size_t dim_;
     bool velocityParams_;
     bool positionParams_;
+    bool affineParam_;
     size_t numSetsOfParams_;
 
     arma::cube DD_obs_;

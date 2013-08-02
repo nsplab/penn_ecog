@@ -171,9 +171,9 @@ void testJointFilter() {
     reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget, dim);
     reachStateEquation::RSEMatrixStruct rseParams = rseComputer.returnAnswer();
 
-    jointRSE_filter filter(dim,true,false,true,true);
+    jointRSE_filter filter(dim,true,true,true,true,true);
 
-    for (size_t trial=1; trial<=10; trial++) {
+    for (size_t trial=1; trial<=1000; trial++) {
         cout<<"trial: "<<trial<<endl;
         // random point on sphere as initial hand position
         // http://mathworld.wolfram.com/SpherePointPicking.html
@@ -232,7 +232,7 @@ void testJointFilter() {
                 origTraject<<handState(i)<<" ";
             cout<<"handState: "<<handState<<endl;
             origTraject<<";"<<endl;
-            vec noise = 0.0*randn<vec>(jointRSE_filter::numChannels);
+            vec noise = 0.0*randn<vec>(jointRSE_filter::numChannels) + 5.21;
             //vec noise = zeros<vec>(numChannels);
             cout<<"noise: "<<noise<<endl;
             vec noiseHandState = handState;
