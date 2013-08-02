@@ -7,14 +7,14 @@
 class reachStateEquation
 {
 public:
-    reachStateEquation(size_t maxTimeSteps, size_t reachTimeSteps, arma::mat reachTarget);
+    reachStateEquation(size_t maxTimeSteps, size_t reachTimeSteps, arma::mat reachTarget, size_t dim = 3);
     // system evolution matrix that decribes how the kinematic components are
     // expected to evolve over time.
-    arma::mat prepareF_ARM_UNDIRECTED();
+    arma::mat prepareF_ARM_UNDIRECTED(size_t dim);
     // increment covariance matrix that describes how the kinematics of the arm
     // are expected to be affected by Gaussian noise in each time step.
-    arma::mat prepareQ_ARM_UNDIRECTED();
-    arma::mat prepareREACH_TARGET_COVARIANCE();
+    arma::mat prepareQ_ARM_UNDIRECTED(size_t dim);
+    arma::mat prepareREACH_TARGET_COVARIANCE(size_t dim);
     arma::cube repslices(arma::mat matrix, int n_slices);
     struct RSEMatrixStruct {
         arma::cube F, Q, b;

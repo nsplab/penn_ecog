@@ -1,12 +1,13 @@
 #include "reachstateequation.h"
 
+// Equation number s relative to "Dynamic Analysis of Naive Adaptive Brain-Machine Interfaces"
 using namespace arma;
 
-reachStateEquation::reachStateEquation(size_t maxTimeSteps, size_t reachTimeSteps, mat reachTarget)
+reachStateEquation::reachStateEquation(size_t maxTimeSteps, size_t reachTimeSteps, mat reachTarget, size_t dim)
 {
     size_t nExtraTimeSteps = maxTimeSteps - reachTimeSteps;
 
-    mat F = prepareF_ARM_UNDIRECTED();
+    mat F = prepareF_ARM_UNDIRECTED(dim);
 
     // Precompute the inverse and inverse transpose of F.
     vec singular_values_test = svd(F);
@@ -14,14 +15,14 @@ reachStateEquation::reachStateEquation(size_t maxTimeSteps, size_t reachTimeStep
     mat F_inv = inv(F);
     mat F_inv_t = trans(F_inv);
 
-    mat Pi_T = prepareREACH_TARGET_COVARIANCE();
+    mat Pi_T = prepareREACH_TARGET_COVARIANCE(dim);
 
     // Precompute all the Pi(t, reachTimeSteps) and phi(t, reachTimeSteps) values.
     cube Pi_t_T = zeros<cube>(Pi_T.n_rows, Pi_T.n_cols, reachTimeSteps + 1);
     cube phi_t_T = zeros<cube>(F.n_rows, F.n_cols, reachTimeSteps + 1);
     phi_t_T.slice(reachTimeSteps) = phi_t_T.slice(reachTimeSteps).eye();
 
-    mat Q = prepareQ_ARM_UNDIRECTED();
+    mat Q = prepareQ_ARM_UNDIRECTED(dim);
 
     // Eq. 15
     Pi_t_T.slice(reachTimeSteps) = Pi_T + Q;
@@ -76,42 +77,41 @@ reachStateEquation::reachStateEquation(size_t maxTimeSteps, size_t reachTimeStep
 }
 
 // Eq. 10
-mat reachStateEquation::prepareF_ARM_UNDIRECTED()
+mat reachStateEquation::prepareF_ARM_UNDIRECTED(size_t dim)
 {
-    mat ans = eye<mat>(6, 6);
-    ans(0, 3) = timeBin;
-    ans(1, 4) = timeBin;
-    ans(2, 5) = timeBin;
+    mat ans = eye<mat>(2 * dim, 2 * dim);
+    for (size_t i = 0; i < dim; i++) {
+        ans(i, dim + i) = timeBin;
+    }
 
     return ans;
 }
 
 // Eq. 11
-mat reachStateEquation::prepareQ_ARM_UNDIRECTED()
+mat reachStateEquation::prepareQ_ARM_UNDIRECTED(size_t dim)
 {
     double velInc = 1.0e-4 / timeBin;
+    velInc = 1.0e-3;
 
-    mat ans = zeros<mat>(6, 6);
-    ans(3, 3) = velInc;
-    ans(4, 4) = velInc;
-    ans(5, 5) = velInc;
+    mat ans = zeros<mat>(2 * dim, 2 * dim);
+    for (size_t i = 0; i < dim; i++) {
+        ans(dim + i, dim + i) = velInc;
+    }
 
     return ans;
 }
 
 // Eq. 24
-mat reachStateEquation::prepareREACH_TARGET_COVARIANCE()
+mat reachStateEquation::prepareREACH_TARGET_COVARIANCE(size_t dim)
 {
     double finalPosCov = 1.0e-6;
     double finalVelCov = 1.0e-8;
 
-    mat ans = zeros<mat>(6, 6);
-    ans(0, 0) = finalPosCov;
-    ans(1, 1) = finalPosCov;
-    ans(2, 2) = finalPosCov;
-    ans(3, 3) = finalVelCov;
-    ans(4, 4) = finalVelCov;
-    ans(5, 5) = finalVelCov;
+    mat ans = zeros<mat>(2 * dim, 2 * dim);
+    for (size_t i = 0; i < dim; i++) {
+        ans(i, i) = finalPosCov;
+        ans(dim + i, dim + i) = finalVelCov;
+    }
 
     return ans;
 }
