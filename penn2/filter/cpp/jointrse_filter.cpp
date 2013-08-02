@@ -5,8 +5,8 @@ using namespace arma;
 
 // todo: replace cube with vector of matrices
 
-jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionParams, bool affineParam, bool useRSE, bool log):
-    timeStep_(-1), prevTrialId_(0), dim_(dim), velocityParams_(velocityParams), positionParams_(positionParams), affineParam_(affineParam), log_(log)
+jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionParams, bool affineParam, bool useRSE, bool timeInvariant, bool log):
+    timeStep_(-1), prevTrialId_(0), dim_(dim), velocityParams_(velocityParams), positionParams_(positionParams), affineParam_(affineParam), timeInvariant_(timeInvariant), log_(log)
 {
 
     // make sure at least one of set of parameters is used in filter
@@ -30,22 +30,40 @@ jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionP
     // dim*2: position+velocity
     mat reachTarget = zeros<mat>(dim*2, 1);
 
-    reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget, dim);
-    reachStateEquation::RSEMatrixStruct rseParams = rseComputer.returnAnswer();
+
+    RSEMatrixStruct rseParams;
+    if (timeInvariant_) {
+        const double alpha = 0.18;
+        const double beta = 0.1;
+        const double gamma = 0.1;
+        mat Q = zeros<mat>(2 * dim, 2 * dim);
+        for (size_t i = 0; i < dim; i++) {
+            Q(i, i) = alpha;
+            Q(dim + i, dim + i) = beta;
+        }
+        mat R = gamma * eye<mat>(dim, dim);
+
+        timeInvariantRSE rseComputer(reachTarget, Q, R, dim);
+        rseParams = rseComputer.returnAnswer();
+    }
+    else {
+        reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget, dim);
+        rseParams = rseComputer.returnAnswer();
+    }
 
     // uHistory: history of kinematic params
     uHistory_ = zeros<mat>(dim * numSetsOfParams_ * numLags + affineParam_, 1);
 
     mat FSingleTimeChannels = eye<mat>(dim * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels,
                                        dim * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels);
-    cube FChannels = repslices(FSingleTimeChannels, maxTimeSteps);
+    cube FChannels = repslices(FSingleTimeChannels, timeInvariant_ ? 1 : maxTimeSteps);
     // Eq. 18
     F_ = blkdiag(FChannels, rseParams.F);
     cout<<"F_ size: "<<F_.n_rows<<" "<<F_.n_cols<<endl;
 
     mat QSingleTimeChannels = zeros<mat>(dim * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels,
                                          dim * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels);
-    cube QChannels = repslices(QSingleTimeChannels, maxTimeSteps);
+    cube QChannels = repslices(QSingleTimeChannels, timeInvariant_ ? 1 : maxTimeSteps);
     // Eq.19
     Q_ = blkdiag(QChannels, rseParams.Q);
 
@@ -58,7 +76,7 @@ jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionP
     //b_ = zeros<cube>(numChannels * FChannels.n_rows + rseParams.b.n_rows, 1, maxTimeSteps);
     //b_.subcube(numChannels * FChannels.n_rows, 0, 0, b_.n_rows-1, b_.n_cols-1, b_.n_slices - 1) = rseParams.b;
 
-    b_ = zeros<cube>(FChannels.n_rows + rseParams.b.n_rows, 1, maxTimeSteps);
+    b_ = zeros<cube>(FChannels.n_rows + rseParams.b.n_rows, 1, timeInvariant_ ? 1 : maxTimeSteps);
 
     // TODO                      v---should this be FChannels.n_cols?
     b_.subcube(FChannels.n_rows, 0, 0, b_.n_rows-1, b_.n_cols-1, b_.n_slices - 1) = rseParams.b;
@@ -90,9 +108,9 @@ void jointRSE_filter::Predict() {
     //cout<<"initialized state"<<endl;
 
     // Select the correct matrices.
-    mat F_current = F_.slice(timeStep_);
-    mat Q_current = Q_.slice(timeStep_);
-    mat b_current = b_.slice(timeStep_);
+    mat F_current = F_.slice(timeInvariant_ ? 0 : timeStep_);
+    mat Q_current = Q_.slice(timeInvariant_ ? 0 : timeStep_);
+    mat b_current = b_.slice(timeInvariant_ ? 0 : timeStep_);
 
     // PERFORM THE PREDICTION STEP.
     pred_x_ = F_current * x + b_current;

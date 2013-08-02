@@ -75,6 +75,10 @@ reachStateEquation::reachStateEquation(size_t maxTimeSteps, size_t reachTimeStep
     answer_.F = new_F;
     answer_.Q = new_Q;
     answer_.b = b;
+    //cout << "new_F:\n" << new_F << "\n";
+    //cout << "new_Q:\n" << new_Q << "\n";
+    //cout << "b:\n" << b << "\n";
+    //exit(0);
 }
 
 // Eq. 10
@@ -104,6 +108,119 @@ mat reachStateEquation::prepareQ_ARM_UNDIRECTED(size_t dim)
 
 // Eq. 24
 mat reachStateEquation::prepareREACH_TARGET_COVARIANCE(size_t dim)
+{
+    double finalPosCov = 1.0e-6;
+    double finalVelCov = 1.0e-8;
+
+    mat ans = zeros<mat>(2 * dim, 2 * dim);
+    for (size_t i = 0; i < dim; i++) {
+        ans(i, i) = finalPosCov;
+        ans(dim + i, dim + i) = finalVelCov;
+    }
+
+    return ans;
+}
+
+
+
+
+
+
+// TODO: actually consider reachTarget
+timeInvariantRSE::timeInvariantRSE(mat reachTarget, mat Q, mat R, size_t dim)
+{
+    mat A = prepareF_ARM_UNDIRECTED(dim);
+    for (size_t i = 0; i < dim; i++) {
+        // Perfect filter would ignore previous velocity
+        A(dim + i, dim + i) = 0;
+    }
+    cout << "A:\n" << A << "\n";
+    mat B = zeros(2 * dim, dim);
+    for (size_t i = 0; i < dim; i++) {
+        B(1, 0) = 1;
+    }
+
+    // Reasonable cost values
+    // const double alpha = 0.18;
+    // const double beta = 0.1;
+    // const double gamma = 0.1;
+    // mat Q = zeros<mat>(2 * dim, 2 * dim);
+    // for (size_t i = 0; i < dim; i++) {
+    //     Q(i, i) = alpha;
+    //     Q(dim + i, dim + i) = beta;
+    // }
+    // mat R = gamma * eye<mat>(dim, dim);
+
+    cout << "B:\n" << B << "\n";
+    cout << "Q:\n" << Q << "\n";
+    cout << "R:\n" << R << "\n";
+
+    mat K = Q;
+    //mat L;
+    for (int i = 0; i < 10000; i++) {
+        K = trans(A)*(K-K*B*inv(trans(B)*K*B+R)*trans(B)*K)*A+Q;
+        //if (i % 100 == 0) {
+        //    cout << "K:\t" << i << "\n" << K << "\n";
+        //    cout << "L:\n" << L << "\n";
+        //}
+        //L = -inv(trans(B)*K*B)*trans(B)*K*A;
+    }
+    mat L = -inv(trans(B)*K*B)*trans(B)*K*A;
+    cout << "L:\n" << L << "\n";
+
+    mat new_F = zeros(2 * dim, 2 * dim);
+    for (size_t i = 0; i < dim; i++) {
+        new_F(i, i) = 1;
+        new_F(i, dim + i) = timeBin;
+    }
+    new_F.submat(dim, 0, 2 * dim - 1, 2 * dim - 1) = L;
+    mat new_Q = prepareQ_ARM_UNDIRECTED(dim); // TODO: check this
+    mat new_b = new_F * reachTarget;
+    answer_.F = repslices(new_F, 1);
+    answer_.Q = repslices(new_Q, 1);
+    answer_.b = repslices(new_b, 1);
+    cout << "F:\n" << new_F << "\n";
+    cout << "Q:\n" << new_Q << "\n";
+    cout << "b:\n" << new_b << "\n";
+
+    //mat x = zeros<mat>(2, 1);
+    //x(0, 0) = 10;
+    //cout << x << "\n";
+    //for (int i = 0; i < 1000; i++) {
+    //    mat u = L * x;
+    //    x = A * x + B * u;
+    //    cout << x << "\n";
+    //}
+
+}
+
+// Eq. 10
+mat timeInvariantRSE::prepareF_ARM_UNDIRECTED(size_t dim)
+{
+    mat ans = eye<mat>(2 * dim, 2 * dim);
+    for (size_t i = 0; i < dim; i++) {
+        ans(i, dim + i) = timeBin;
+    }
+
+    return ans;
+}
+
+// Eq. 11
+mat timeInvariantRSE::prepareQ_ARM_UNDIRECTED(size_t dim)
+{
+    double velInc = 1.0e-4 / timeBin;
+    velInc = 1.0e-3;
+
+    mat ans = zeros<mat>(2 * dim, 2 * dim);
+    for (size_t i = 0; i < dim; i++) {
+        ans(dim + i, dim + i) = velInc;
+    }
+
+    return ans;
+}
+
+// Eq. 24
+mat timeInvariantRSE::prepareREACH_TARGET_COVARIANCE(size_t dim)
 {
     double finalPosCov = 1.0e-6;
     double finalVelCov = 1.0e-8;

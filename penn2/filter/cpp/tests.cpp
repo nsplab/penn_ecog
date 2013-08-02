@@ -35,13 +35,13 @@ void testRSE() {
     uint64 t1 = GetTimeMs64();
     for (size_t i=0; i<100; i++) {
         reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget);
-        reachStateEquation::RSEMatrixStruct rseParams = rseComputer.returnAnswer();
+        RSEMatrixStruct rseParams = rseComputer.returnAnswer();
     }
     uint64 t2 = GetTimeMs64();
     cout<<"time: "<<(t2-t1)<<endl;
 
     reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget);
-    reachStateEquation::RSEMatrixStruct rseParams = rseComputer.returnAnswer();
+    RSEMatrixStruct rseParams = rseComputer.returnAnswer();
 
     for (size_t i=0; i<100; i++) {
         itpp::Uniform_RNG uniGen(0, 1);
@@ -168,12 +168,31 @@ void testJointFilter() {
     const double maxTimeSteps = 3.0/timeBin;
     mat reachTarget = zeros<mat>(2*dim, 1);
     int reachTimeSteps = 1.0/timeBin;
-    reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget, dim);
-    reachStateEquation::RSEMatrixStruct rseParams = rseComputer.returnAnswer();
+    bool timeInvariant = true;
+    RSEMatrixStruct rseParams;
+    if (timeInvariant) {
+        const double alpha = 0.18;
+        const double beta = 0.1;
+        const double gamma = 0.1;
+        mat Q = zeros<mat>(2 * dim, 2 * dim);
+        for (size_t i = 0; i < dim; i++) {
+            Q(i, i) = alpha;
+            Q(dim + i, dim + i) = beta;
+        }
+        mat R = gamma * eye<mat>(dim, dim);
 
-    jointRSE_filter filter(dim,true,true,true,true,true);
+        timeInvariantRSE rseComputer(reachTarget, Q, R, dim);
+        rseParams = rseComputer.returnAnswer();
+    }
+    else {
+        reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget, dim);
+        rseParams = rseComputer.returnAnswer();
+    }
 
-    for (size_t trial=1; trial<=1000; trial++) {
+
+    jointRSE_filter filter(dim,true,true,true,true,true,true);
+
+    for (size_t trial=1; trial<=100; trial++) {
         cout<<"trial: "<<trial<<endl;
         // random point on sphere as initial hand position
         // http://mathworld.wolfram.com/SpherePointPicking.html
@@ -227,7 +246,7 @@ void testJointFilter() {
 
         for (size_t step=0; step<300; step++) {
             cout<<"step: "<<step<<endl;
-            handState = rseParams.F.slice(step) * handState + rseParams.b.slice(step);
+            handState = rseParams.F.slice(timeInvariant ? 0 : step) * handState + rseParams.b.slice(timeInvariant ? 0 : step);
             for (size_t i=0; i<handState.n_rows; i++)
                 origTraject<<handState(i)<<" ";
             cout<<"handState: "<<handState<<endl;
