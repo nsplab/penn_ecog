@@ -126,7 +126,6 @@ mat reachStateEquation::prepareREACH_TARGET_COVARIANCE(size_t dim)
 
 
 
-// TODO: actually consider reachTarget
 timeInvariantRSE::timeInvariantRSE(mat reachTarget, mat Q, mat R, size_t dim)
 {
     mat A = prepareF_ARM_UNDIRECTED(dim);
