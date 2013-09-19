@@ -12,7 +12,7 @@ The following diagram shows the main modules and the connections between them.
 
 This modules interfaces the hardware. After grabbing the signal, it publishes the data using ZMQ at "ipc:///tmp/signal.pipe". The format of the messages is comma separated values (CSV), i.e., the value read from the first channel is followed by a comma, then the value of the second channel and so on.
 
-Currently, two signal simulation modules are implemented. one uses stereo vision and the othe other uses kinect.
+Currently, two signal simulation modules are implemented. one uses stereo vision and the other uses kinect.
 
 2. Feature Extraction
 ---------------------
@@ -25,7 +25,7 @@ The Feature Extraction module receives the output of the Signal Acquisition modu
 
 This modules decides when a new trial starts and whether it is a training or test trial. Each trial has a unique ID. Supervisor publishes the trial ID, goal position, hand position, whether it is a training or test trial, and whether the trial has started at "ipc:///tmp/status.pipe". Supervisor at "ipc:///tmp/graphics.pipe" publishes the positions of the hand, the ball, and the target box, and the score/level.
 
-3. Filter
+4. Filter
 ---------------------
 
 After reading the features (in the CSV format) from "ipc:///tmp/features.pipe" and the trial ID from Supervisor, this module publishes the predicted arm movement in the three dimensions at "ipc:///tmp/hand_position.pipe" (in the CSV format). Supervisor knows whether Filter is lagging behind by checking the trial ID published by Filter. 
@@ -44,6 +44,7 @@ The required external libraries:
 3. Openscenegraph for the C++ graphics module
 4. openkinect and its python wrapper
 5. opencv 2 or 3 and its python wrapper
+6. IT++
 
 To compile C++ modules use cmake, create a build subdirectory and in that directory run:
 cmake ../

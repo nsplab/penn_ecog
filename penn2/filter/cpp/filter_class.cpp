@@ -12,7 +12,7 @@ socket_t FilterClass::supervisor_subscriber_(context_, ZMQ_SUB);
 socket_t FilterClass::features_subscriber_(context_, ZMQ_SUB);
 
 FilterClass::FilterClass() {
-  publisher_.bind("ipc:///tmp/handposition.pipe");
+  publisher_.bind("ipc:///tmp/hand_position.pipe");
   features_subscriber_.connect("ipc:///tmp/features.pipe");
   features_subscriber_.setsockopt(ZMQ_SUBSCRIBE, NULL, 0);
   supervisor_subscriber_.connect("ipc:///tmp/supervisor.pipe");

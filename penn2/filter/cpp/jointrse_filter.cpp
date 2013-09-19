@@ -1,4 +1,5 @@
 #include "jointrse_filter.h"
+#include "matrix.h"
 
 #include <unistd.h>
 
@@ -6,20 +7,27 @@ using namespace arma;
 
 // todo: replace cube with vector of matrices
 
-jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionParams, bool useRSE, bool log):
-    timeStep_(-1), prevTrialId_(0), dim_(dim), velocityParams_(velocityParams), positionParams_(positionParams), log_(log)
+jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionParams, bool affineParam, bool useRSE, bool timeInvariant, bool log):
+    timeStep_(-1), prevTrialId_(0), dim_(dim), velocityParams_(velocityParams), positionParams_(positionParams), affineParam_(affineParam), timeInvariant_(timeInvariant), log_(log)
 {
 
     // make sure at least one of set of parameters is used in filter
     assert(velocityParams_ | positionParams_);
 
+<<<<<<< HEAD
     numSetsOfParams_ = (size_t) velocityParams_ + (size_t) positionParams_;
     cout<<"numSetsOfParams "<<numSetsOfParams_<<endl;
+=======
+    numSetsOfParams_ = (size_t) velocityParams_ + (size_t) positionParams_; // Intentionally does not contain affineParam
+    cout<<"numSetsOfParams_ "<<numSetsOfParams_<<endl;
+>>>>>>> 9ed04f93134e5b0d05255ce4584f5259824b7701
 
     channelParamsFile.open("channelParams.txt");
     innovationFile.open("innovation.txt");
+    covarianceFile.open("covariance.txt");
 
     pos_ = zeros<mat>(dim, 1);
+    prev_u_ = zeros<mat>(dim, 1);
 
     const double timeBin = 0.01;
     // page 31
@@ -29,35 +37,80 @@ jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionP
     // dim*2: position+velocity
     mat reachTarget = zeros<mat>(dim*2, 1);
 
-    reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget);
-    reachStateEquation::RSEMatrixStruct rseParams = rseComputer.returnAnswer();
 
+    RSEMatrixStruct rseParams;
+    if (timeInvariant_) {
+        const double alpha = 0.18;
+        const double beta = 0.1;
+        const double gamma = 0.1;
+        mat Q = zeros<mat>(2 * dim, 2 * dim);
+        for (size_t i = 0; i < dim; i++) {
+            Q(i, i) = alpha;
+            Q(dim + i, dim + i) = beta;
+        }
+        mat R = gamma * eye<mat>(dim, dim);
+
+        timeInvariantRSE rseComputer(reachTarget, Q, R, dim);
+        rseParams = rseComputer.returnAnswer();
+    }
+    else {
+        reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget, dim);
+        rseParams = rseComputer.returnAnswer();
+    }
+
+<<<<<<< HEAD
     // uHistory: history of kinematic params, first position and then velocity
     uHistory_ = zeros<mat>(dim_*numSetsOfParams_ * numLags, 1);
 
     mat FSingleTimeChannels = eye<mat>(dim_*numSetsOfParams_ * numLags * numChannels, dim_*numSetsOfParams_ * numLags * numChannels);
     cube FChannels = repslices(FSingleTimeChannels, maxTimeSteps);
+=======
+    // uHistory: history of kinematic params
+    uHistory_ = zeros<mat>(dim * numSetsOfParams_ * numLags + affineParam_, 1);
+
+    mat FSingleTimeChannels = eye<mat>(dim * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels,
+                                       dim * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels);
+    cube FChannels = repslices(FSingleTimeChannels, timeInvariant_ ? 1 : maxTimeSteps);
+>>>>>>> 9ed04f93134e5b0d05255ce4584f5259824b7701
     // Eq. 18
     F_ = blkdiag(FChannels, rseParams.F);
     cout<<"F_ size: "<<F_.n_rows<<" "<<F_.n_cols<<endl;
 
+<<<<<<< HEAD
     mat QSingleTimeChannels = zeros<mat>(dim_*numSetsOfParams_ * numLags * numChannels, dim_*numSetsOfParams_ * numLags * numChannels);
     cube QChannels = repslices(QSingleTimeChannels, maxTimeSteps);
+=======
+    mat QSingleTimeChannels = zeros<mat>(dim * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels,
+                                         dim * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels);
+    cube QChannels = repslices(QSingleTimeChannels, timeInvariant_ ? 1 : maxTimeSteps);
+>>>>>>> 9ed04f93134e5b0d05255ce4584f5259824b7701
     // Eq.19
     Q_ = blkdiag(QChannels, rseParams.Q);
 
     const double channelCov = 1.0e-2;
+<<<<<<< HEAD
     mat initialChannelCov = channelCov * eye<mat>(dim_*numSetsOfParams_ * numLags * numChannels, dim_*numSetsOfParams_ * numLags * numChannels);
+=======
+    mat initialChannelCov = channelCov * eye<mat>(dim * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels,
+                                                  dim * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels);
+>>>>>>> 9ed04f93134e5b0d05255ce4584f5259824b7701
     covariance_ = prepareINITIAL_ARM_COV(timeBin);
     covariance_ = blkdiag(initialChannelCov, covariance_);
 
     //b_ = zeros<cube>(numChannels * FChannels.n_rows + rseParams.b.n_rows, 1, maxTimeSteps);
     //b_.subcube(numChannels * FChannels.n_rows, 0, 0, b_.n_rows-1, b_.n_cols-1, b_.n_slices - 1) = rseParams.b;
 
-    b_ = zeros<cube>(FChannels.n_rows + rseParams.b.n_rows, 1, maxTimeSteps);
+    b_ = zeros<cube>(FChannels.n_rows + rseParams.b.n_rows, 1, timeInvariant_ ? 1 : maxTimeSteps);
+
+    // TODO                      v---should this be FChannels.n_cols?
     b_.subcube(FChannels.n_rows, 0, 0, b_.n_rows-1, b_.n_cols-1, b_.n_slices - 1) = rseParams.b;
 
+<<<<<<< HEAD
     channelParametersHat_ = zeros<mat>(numChannels, dim_*numSetsOfParams_ * numLags);
+=======
+    // TODO: start with something of the right order of magnitude
+    channelParametersHat_ = zeros<mat>(numChannels, dim * numSetsOfParams_ * numLags + affineParam_);
+>>>>>>> 9ed04f93134e5b0d05255ce4584f5259824b7701
 }
 
 void jointRSE_filter::Predict() {
@@ -72,6 +125,7 @@ void jointRSE_filter::Predict() {
     // NOTE: The third argument 1 to reshape signifies row-wise reshaping. I
     //       think.
     //cout<<"preparing to initialize state"<<endl;
+<<<<<<< HEAD
     mat prev_u = zeros(dim_,1);
     //cout<<"uHistory n_rows " << uHistory.n_rows << endl;
     if (velocityParams_) {
@@ -84,18 +138,28 @@ void jointRSE_filter::Predict() {
         }
     }
 
+=======
+    //cout<<"uHistory n_rows " << uHistory.n_rows << endl;
+    //prev_u << uHistory_(0, 0) << endr << uHistory_(numSetsOfParams_ * numLags, 0) << endr
+    //       << uHistory_(2 * numSetsOfParams_ * numLags, 0) << endr;
+>>>>>>> 9ed04f93134e5b0d05255ce4584f5259824b7701
     //cout<<"prev_u successfully initialized"<<endl;
-    //cout<<"channelParametersHat n_rows " << channelParametersHat.n_rows << "n_cols " << channelParametersHat.n_cols<< endl;
+    //cout<<"channelParametersHat n_rows " << channelParametersHat_.n_rows << "n_cols " << channelParametersHat_.n_cols<< endl;
     mat x = join_cols(join_cols(
+<<<<<<< HEAD
         reshape(channelParametersHat_, dim_*numSetsOfParams_ * numLags * numChannels, 1, 1), pos_),
         prev_u);
     cout<<"x nr: "<<prev_u.n_rows<<endl;
+=======
+        reshape(channelParametersHat_, dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels, 1, 1), pos_),
+        prev_u_);
+>>>>>>> 9ed04f93134e5b0d05255ce4584f5259824b7701
     //cout<<"initialized state"<<endl;
 
     // Select the correct matrices.
-    mat F_current = F_.slice(timeStep_);
-    mat Q_current = Q_.slice(timeStep_);
-    mat b_current = b_.slice(timeStep_);
+    mat F_current = F_.slice(timeInvariant_ ? 0 : timeStep_);
+    mat Q_current = Q_.slice(timeInvariant_ ? 0 : timeStep_);
+    mat b_current = b_.slice(timeInvariant_ ? 0 : timeStep_);
 
     // PERFORM THE PREDICTION STEP.
     pred_x_ = F_current * x + b_current;
@@ -117,6 +181,7 @@ void jointRSE_filter::Update() {
     // a function structure of matrices are fixed
 
     // PERFORM THE UPDATE STEP.
+<<<<<<< HEAD
     // predicted_uHistory, vector of current+history of kinematic members of state vector
     mat predicted_uHistory = zeros<mat>(uHistory_.n_rows, uHistory_.n_cols);
     // first, set last predicted kinematic values
@@ -130,6 +195,30 @@ void jointRSE_filter::Update() {
     // second, set history of predicted kinematic values
     for (size_t i=0; i<dim_*numSetsOfParams_; i++) {
         predicted_uHistory.submat(i*numLags+1, 0, (i+1)*numLags - 1, 0) = uHistory_.submat(i*numLags, 0, (i+1)*numLags - 2, 0);
+=======
+    cout << uHistory_.n_rows << ", " << uHistory_.n_cols << "\n";
+    //uHistory_ = zeros<mat>(dim*numSetsOfParams_ * numLags, 1);
+    // velocityParams_(velocityParams), positionParams_(positionParams)
+    mat predicted_uHistory = zeros<mat>(uHistory_.n_rows, uHistory_.n_cols);
+    for (int i = 0; i < dim_; i++) {
+        if (positionParams_ ) {
+            predicted_uHistory(i * numLags, 0) = pred_x_(dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels + i, 0);
+            if (numLags != 1) {
+                predicted_uHistory.submat(i * numLags + 1, 0, (i + 1) * numLags - 1, 0) =
+                         uHistory_.submat(i * numLags,     0, (i + 1) * numLags - 2, 0);
+            }
+        }
+        if (velocityParams_) { // Not "else if" (can have both position and velocity)
+            predicted_uHistory(positionParams_ * dim_ * numLags + i * numLags, 0) = pred_x_(dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels + dim_ + i, 0);
+            if (numLags != 1) {
+                predicted_uHistory.submat(positionParams_ * dim_ * numLags + i * numLags + 1, 0, positionParams_ * dim_ * numLags + (i + 1) * numLags - 1, 0) =
+                         uHistory_.submat(positionParams_ * dim_ * numLags + i * numLags,     0, positionParams_ * dim_ * numLags + (i + 1) * numLags - 2, 0);
+            }
+        }
+    }
+    if (affineParam_) {
+        predicted_uHistory(numSetsOfParams_ * dim_ * numLags, 0) = 1;
+>>>>>>> 9ed04f93134e5b0d05255ce4584f5259824b7701
     }
 
     // eq. 1.1 in write up
@@ -142,13 +231,23 @@ void jointRSE_filter::Update() {
     mat D_obs = zeros<mat>(pred_x_.n_rows, numChannels);
     for(size_t c=0; c<numChannels; c++)
     {
-        D_obs.submat(c * 3 * numLags, c, (c + 1) * 3 * numLags - 1, c) =
-                predicted_uHistory;
-        mat pred_pars;
-        pred_pars << pred_x_(c * 3 * numLags, 0) << endr
-                  << pred_x_(c * 3 * numLags + numLags, 0) << endr
-                  << pred_x_(c * 3 * numLags + 2 * numLags, 0) << endr;
-        D_obs.submat(D_obs.n_rows - 3, c, D_obs.n_rows - 1, c) = pred_pars;
+        if (positionParams_ ) {
+            D_obs.submat(c * dim_ * numLags, c, (c + 1) * dim_ * numLags - 1, c) =
+                    predicted_uHistory.submat(0, 0, dim_ * numLags - 1, 0);
+            for (int i = 0; i < dim_; i++) {
+                D_obs(D_obs.n_rows - dim_ - dim_ + i, c) = pred_x_(c * dim_ * numLags + i * numLags, 0);
+            }
+        }
+        if (velocityParams_) { // Not "else if" (can have both position and velocity)
+            D_obs.submat(positionParams_ * numChannels * dim_ * numLags + c * dim_ * numLags, c, positionParams_ * numChannels * dim_ * numLags + (c + 1) * dim_ * numLags - 1, c) =
+                    predicted_uHistory.submat(positionParams_ * dim_ * numLags, 0, positionParams_ * dim_ * numLags + dim_ * numLags - 1, 0);
+            for (int i = 0; i < dim_; i++) {
+                D_obs(D_obs.n_rows - dim_ + i, c) = pred_x_(positionParams_ * numChannels * dim_ * numLags + c * dim_ * numLags + i * numLags, 0);
+            }
+        }
+        if (affineParam_) {
+            D_obs(numSetsOfParams_ * numChannels * dim_ * numLags, c) = 1;
+        }
     }
 
     // The double derivative of the observation vector with respect to the
@@ -158,13 +257,20 @@ void jointRSE_filter::Update() {
     cube DD_obs = zeros<cube>(pred_x_.n_rows, pred_x_.n_rows, numChannels);
     for(size_t c=0; c<numChannels; c++)
     {
-        DD_obs(c * 3 * numLags, DD_obs.n_cols - 3, c) = 1;
-        DD_obs(c * 3 * numLags + numLags, DD_obs.n_cols - 2, c) = 1;
-        DD_obs(c * 3 * numLags + 2 * numLags, DD_obs.n_cols - 1, c) = 1;
-
-        DD_obs(DD_obs.n_rows - 3, c * 3 * numLags, c) = 1;
-        DD_obs(DD_obs.n_rows - 2, c * 3 * numLags + numLags, c) = 1;
-        DD_obs(DD_obs.n_rows - 1, c * 3 * numLags + 2 * numLags, c) = 1;
+        for (int i = 0; i < dim_; i++) {
+            if (positionParams_ ) {
+                DD_obs(c * dim_ * numLags + i * numLags, DD_obs.n_cols - dim_ - dim_ + i, c) = 1;
+                DD_obs(DD_obs.n_cols - dim_ - dim_ + i, c * dim_ * numLags + i * numLags, c) = 1;
+            }
+            if (velocityParams_) { // Not "else if" (can have both position and velocity)
+                DD_obs(positionParams_ * numChannels * dim_ * numLags + c * dim_ * numLags + i * numLags, DD_obs.n_cols - dim_ + i, c) = 1;
+                DD_obs(DD_obs.n_cols - dim_ + i, positionParams_ * numChannels * dim_ * numLags + c * dim_ * numLags + i * numLags, c) = 1;
+            }
+            if (affineParam_) {
+                // Nothing to do
+                // Taking two derivatives will always result in a 0 (regardless of which two are selected)
+            }
+        }
     }
     //cout<<"Done computing DD_OBS"<<endl;
 
@@ -199,7 +305,9 @@ void jointRSE_filter::Update() {
     double rcond =
         singular_values(0) / singular_values(singular_values.n_elem - 1);
     if(rcond >= 1.0e-8)
+    {
         new_cov = inv(new_cov_inv);
+    }
     else
     {
         std::cout<<"Matrix is ill-conditioned: "<<rcond<<"; using predicted"
@@ -236,36 +344,54 @@ void jointRSE_filter::Update() {
 
     // UPDATE THE CLASS VARIABLES
     mat new_channelParametersHat = new_x.submat(0, 0,
-                                                3 * numLags * numChannels - 1, 0);
+                                                dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels- 1, 0);
     channelParametersHat_ =
+<<<<<<< HEAD
         trans(reshape(new_channelParametersHat, 3 * numLags, numChannels, 1));
     for(size_t i=0; i<(channelParametersHat_.n_rows); i++)
         for(size_t j=0; j<(channelParametersHat_.n_cols); j++)
             channelParamsFile<<channelParametersHat_(i,j)<<" ";
     channelParamsFile<<";"<<endl;
 
+=======
+        trans(reshape(new_channelParametersHat, dim_ * numSetsOfParams_ * numLags + affineParam_, numChannels, 1));
+    channelParamsFile<<channelParametersHat_<<endl;
+>>>>>>> 9ed04f93134e5b0d05255ce4584f5259824b7701
 
     // extract position from updated state vector
-    pos_ = new_x.submat(3 * numLags * numChannels, 0,
-        3 * numLags * numChannels + 2, 0);
+    pos_ = new_x.submat(dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels, 0,
+                        dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels + dim_ - 1, 0);
+    prev_u_ = new_x.submat(dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels + dim_, 0,
+                           dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels + dim_ + dim_ - 1, 0);
 
     // to test
-    vec handState = new_x.submat(3 * numLags * numChannels, 0,
-            3 * numLags * numChannels + 5, 0);
+    vec handState = new_x.submat(dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels, 0,
+                                 dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels + 2 * dim_ - 1, 0);
 
     handState_ = conv_to< std::vector<float> >::from(handState);
 
     cout<<"pos_: "<<pos_<<endl;
 
-    uHistory_ = predicted_uHistory;
-    uHistory_(0, 0) = new_x(3 * numLags * numChannels + 3, 0);
-    uHistory_(numLags, 0) = new_x(3 * numLags * numChannels + 4, 0);
-    uHistory_(2 * numLags, 0) = new_x(3 * numLags * numChannels + 5, 0);
+    for (int i = 0; i < dim_; i++) {
+        if (positionParams_ ) {
+            uHistory_(i * numLags, 0) = new_x(dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels + i, 0);
+        }
+        if (velocityParams_) { // Not "else if" (can have both position and velocity)
+            uHistory_(positionParams_ * dim_ * numLags + i * numLags, 0) = new_x(dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels + dim_ + i, 0);
+        }
+    }
+    if (affineParam_) { // Not "else if" (can have both position and velocity)
+        // This term is probably always going to be 1 (I don't think anything should change it)
+        // Just to be safe...
+        uHistory_(numSetsOfParams_ * dim_ * numLags, 0) = 1;
+    }
 
     const double timeBin = 0.01;
     //if(covReset.compare("yes") == 0)
-        covariance_ = blkdiag(new_cov.submat(0, 0, 3 * numLags * numChannels - 1,
-            3 * numLags * numChannels - 1), prepareINITIAL_ARM_COV(timeBin));
+        covariance_ = blkdiag(new_cov.submat(0, 0, dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels - 1,
+                                                   dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels - 1), prepareINITIAL_ARM_COV(timeBin));
+        covarianceFile<<covariance_<<endl;
+        //covariance_ = new_cov;
     //else if(covReset.compare("posOnly") == 0)
     //    covariance = blkdiag(blkdiag(
     //        new_cov.submat(0, 0, 3 * numLags * numChannels - 1,
@@ -278,11 +404,12 @@ void jointRSE_filter::Update() {
 
 void jointRSE_filter::InitNewTrial(mat startPos) {
     pos_ = startPos;
-    uHistory_ = zeros<mat>(3 * numLags, 1);
+    prev_u_ = zeros<mat>(dim_, 1);
+    uHistory_ = zeros<mat>(dim_ * numSetsOfParams_ * numLags + affineParam_, 1);
 
     const double timeBin = 0.01;
-    covariance_ = blkdiag(covariance_.submat(0, 0, 3 * numLags * numChannels - 1, \
-                                             3 * numLags * numChannels - 1), prepareINITIAL_ARM_COV(timeBin));
+    covariance_ = blkdiag(covariance_.submat(0, 0, dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels - 1, \
+                                                   dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels - 1), prepareINITIAL_ARM_COV(timeBin));
 
     timeStep_ = -1;
 }
@@ -309,50 +436,18 @@ void jointRSE_filter::Run() {
     //PublishHandMovement();
 }
 
-cube jointRSE_filter::repslices(mat matrix, int n_slices)
-{
-    cube answer = zeros<cube>(matrix.n_rows, matrix.n_cols, n_slices);
-    for(int i = 0; i < n_slices; i++)
-    {
-        answer.slice(i) = matrix;
-    }
-
-   return answer;
-}
-
-cube jointRSE_filter::blkdiag(cube A, cube B) {
-    cube C = zeros<cube>(A.n_rows + B.n_rows, A.n_cols + B.n_cols, A.n_slices);
-
-    C.subcube(0, 0, 0, A.n_rows - 1, A.n_cols - 1, A.n_slices - 1) = A;
-    C.subcube(A.n_rows, A.n_cols, 0, C.n_rows - 1, C.n_cols - 1,
-        C.n_slices - 1) = B;
-
-    return C;
-}
-
-mat jointRSE_filter::blkdiag(mat A, mat B) {
-    mat C = zeros<mat>(A.n_rows + B.n_rows, A.n_cols + B.n_cols);
-
-    C.submat(0, 0, A.n_rows - 1, A.n_cols - 1) = A;
-    C.submat(A.n_rows, A.n_cols, C.n_rows - 1, C.n_cols - 1) = B;
-
-    return C;
-}
-
 // The initial covariance on the arm components of the state.
 // page 20
 mat jointRSE_filter::prepareINITIAL_ARM_COV(const double timeBin) {
-    mat ans = zeros<mat>(6, 6);
-         double posCov = 1.0e-7;
-         double velCov = 1.0e-7 / timeBin;
-         ans(0, 0) = posCov;
-         ans(1, 1) = posCov;
-         ans(2, 2) = posCov;
-         ans(3, 3) = velCov;
-         ans(4, 4) = velCov;
-         ans(5, 5) = velCov;
+    mat ans = zeros<mat>(2 * dim_, 2 * dim_);
+    double posCov = 1.0e-7;
+    double velCov = 1.0e-7 / timeBin;
+    for (size_t i = 0; i < dim_; i++) {
+        ans(i, i) = posCov;
+        ans(dim_ + i, dim_ + i) = velCov;
+    }
 
-        return ans;
+    return ans;
 }
 
 void jointRSE_filter::LogInnovation(arma::vec obs, arma::mat estimatedObs) {
@@ -362,3 +457,4 @@ void jointRSE_filter::LogInnovation(arma::vec obs, arma::mat estimatedObs) {
     }
     innovationFile<<";"<<endl;
 }
+

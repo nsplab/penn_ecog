@@ -35,13 +35,13 @@ void testRSE() {
     uint64 t1 = GetTimeMs64();
     for (size_t i=0; i<100; i++) {
         reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget);
-        reachStateEquation::RSEMatrixStruct rseParams = rseComputer.returnAnswer();
+        RSEMatrixStruct rseParams = rseComputer.returnAnswer();
     }
     uint64 t2 = GetTimeMs64();
     cout<<"time: "<<(t2-t1)<<endl;
 
     reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget);
-    reachStateEquation::RSEMatrixStruct rseParams = rseComputer.returnAnswer();
+    RSEMatrixStruct rseParams = rseComputer.returnAnswer();
 
     for (size_t i=0; i<100; i++) {
         itpp::Uniform_RNG uniGen(0, 1);
@@ -69,34 +69,138 @@ void testRSE() {
     }
 }
 
+const size_t dim = 1;
+
 void testJointFilter() {
 
     ofstream origTraject("origTrajectory.txt");
     ofstream noisTraject("noisTrajectory.txt");
     ofstream filtTraject("filtTrajectory.txt");
 
-    vector<float> target(3);
-    vector<float> features(6);
-    target[0] = 0; target[1] = 0; target[2] = 0;
+    vector<float> target(dim);
+    vector<float> features(jointRSE_filter::numChannels);
+    for (int i = 0; i < dim; i++) {
+        target[i] = 0;
+    }
 
     mat obsMat;
-    obsMat<<0.0<<0.0<<0.0<<0.0<<0.0<<0.0<<endr
-          <<0.0<<0.0<<0.0<<0.0<<0.0<<0.0<<endr
-          <<0.0<<0.0<<0.0<<0.0<<0.0<<0.0<<endr
-          <<0.0<<0.0<<0.0<<-3.0<<0.0<<0.0<<endr
-          <<0.0<<0.0<<0.0<<0.0<<4.0<<0.0<<endr
-          <<0.0<<0.0<<0.0<<0.0<<0.0<<2.5<<endr;
+    // velocity
+    //obsMat<<0.0<<0.0<<0.0<<1.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<2.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<0.0<<3.0<<endr
+    //      <<0.0<<0.0<<0.0<<-3.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<2.0<<4.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<1.0<<1.5<<2.5<<endr
+    //      <<0.0<<0.0<<0.0<<1.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<1.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<0.0<<1.0<<endr
+    //      <<0.0<<0.0<<0.0<<1.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<1.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<0.0<<1.0<<endr
+    //      <<0.0<<0.0<<0.0<<1.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<1.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<0.0<<1.0<<endr;
+    //obsMat<<0.0<<0.0<<0.0<<1.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<1.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<0.0<<1.0<<endr
+    //      <<0.0<<0.0<<0.0<<1.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<1.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<0.0<<1.0<<endr
+    //      <<0.0<<0.0<<0.0<<1.0<<1.0<<1.0<<endr;
+    //obsMat<<0.0<<0.0<<0.0<<1.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<2.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<0.0<<5.0<<endr
+    //      <<0.0<<0.0<<0.0<<-3.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<4.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<0.0<<2.5<<endr;
+    // position
+    //obsMat<<-3.0<<0.0<<0.0<<0.0<<0.0<<0.0<<endr
+    //      <<0.0<<4.0<<0.0<<0.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<2.5<<0.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<0.0<<0.0<<endr;
+    //obsMat<<1.0<<0.0<<0.0<<0.0<<0.0<<0.0<<endr
+    //      <<0.0<<1.0<<0.0<<0.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<1.0<<0.0<<0.0<<0.0<<endr
+    //      <<1.0<<0.0<<0.0<<0.0<<0.0<<0.0<<endr
+    //      <<0.0<<1.0<<0.0<<0.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<1.0<<0.0<<0.0<<0.0<<endr
+    //      <<1.0<<1.0<<1.0<<0.0<<0.0<<0.0<<endr;
+    //obsMat<<1.0<<0.0<<0.0<<0.0<<0.0<<0.0<<endr
+    //      <<0.0<<1.0<<0.0<<0.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<1.0<<0.0<<0.0<<0.0<<endr;
+
+    //obsMat<<0.0<<0.0<<0.0<<1.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<1.0<<0.0<<endr
+    //      <<0.0<<0.0<<0.0<<0.0<<0.0<<1.0<<endr;
+    obsMat<<0.0<<0.0<<1.0<<0.0<<endr
+          <<0.0<<0.0<<0.0<<1.0<<endr;
+    obsMat<<1.0<<0.0<<0.0<<0.0<<endr
+          <<0.0<<1.0<<0.0<<0.0<<endr;
+    //obsMat<<1.0<<0.0<<0.0<<0.0<<0.0<<0.0<<endr
+    //      <<0.0<<1.0<<0.0<<0.0<<0.0<<0.0<<endr
+    //      <<0.0<<0.0<<1.0<<0.0<<0.0<<0.0<<endr;
+
+    //obsMat << 1.8339 << 3.5784 <<-0.2050 << 0.7172 <<-0.7873 << 0.3252 << endr
+    //       <<-2.2588 << 2.7694 <<-0.1241 << 1.6302 << 0.8884 <<-0.7549 << endr
+    //       << 0.8622 <<-1.3499 << 1.4897 << 0.4889 <<-1.1471 << 1.3703 << endr
+    //       << 0.3188 << 3.0349 << 1.4090 << 1.0347 <<-1.0689 <<-1.7115 << endr
+    //       <<-1.3077 << 0.7254 << 1.4172 << 0.7269 <<-0.8095 <<-0.1022 << endr
+    //       <<-0.4336 <<-0.0631 << 0.6715 <<-0.3034 <<-2.9443 <<-0.2414 << endr
+    //       << 0.3426 << 0.7147 <<-1.2075 << 0.2939 << 1.4384 << 0.3192 << endr;
+
+    //obsMat << 0 << 0 << 0 << 0.7172 <<-0.7873 << 0.3252 << endr
+    //       << 0 << 0 << 0 << 1.6302 << 0.8884 <<-0.7549 << endr
+    //       << 0 << 0 << 0 << 0.4889 <<-1.1471 << 1.3703 << endr
+    //       << 0 << 0 << 0 << 1.0347 <<-1.0689 <<-1.7115 << endr
+    //       << 0 << 0 << 0 << 0.7269 <<-0.8095 <<-0.1022 << endr
+    //       << 0 << 0 << 0 <<-0.3034 <<-2.9443 <<-0.2414 << endr
+    //       << 0 << 0 <<-0 << 0.2939 << 1.4384 << 0.3192 << endr;
+
+    //obsMat << 0.7172 <<-0.7873 << 0.3252 << 0 << 0 << 0 << endr
+    //       << 1.6302 << 0.8884 <<-0.7549 << 0 << 0 << 0 << endr
+    //       << 0.4889 <<-1.1471 << 1.3703 << 0 << 0 << 0 << endr
+    //       << 1.0347 <<-1.0689 <<-1.7115 << 0 << 0 << 0 << endr
+    //       << 0.7269 <<-0.8095 <<-0.1022 << 0 << 0 << 0 << endr
+    //       <<-0.3034 <<-2.9443 <<-0.2414 << 0 << 0 << 0 << endr
+    //       << 0.2939 << 1.4384 << 0.3192 << 0 << 0 <<-0 << endr;
+    obsMat<<1.0<<0.0<<endr;
+    obsMat<<0.0<<1.0<<endr;
 
     const double timeBin = 0.01;
     const double maxTimeSteps = 3.0/timeBin;
-    mat reachTarget = zeros<mat>(6, 1);
+    mat reachTarget = zeros<mat>(2*dim, 1);
     int reachTimeSteps = 1.0/timeBin;
-    reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget);
-    reachStateEquation::RSEMatrixStruct rseParams = rseComputer.returnAnswer();
+    bool timeInvariant = true;
+    RSEMatrixStruct rseParams;
+    if (timeInvariant) {
+        const double alpha = 0.18;
+        const double beta = 0.1;
+        const double gamma = 0.1;
+        mat Q = zeros<mat>(2 * dim, 2 * dim);
+        for (size_t i = 0; i < dim; i++) {
+            Q(i, i) = alpha;
+            Q(dim + i, dim + i) = beta;
+        }
+        mat R = gamma * eye<mat>(dim, dim);
 
-    jointRSE_filter filter(3,true,false,true,true);
+        timeInvariantRSE rseComputer(reachTarget, Q, R, dim);
+        rseParams = rseComputer.returnAnswer();
+    }
+    else {
+        reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget, dim);
+        rseParams = rseComputer.returnAnswer();
+    }
 
+
+<<<<<<< HEAD
     for (size_t trial=1; trial<50; trial++) {
+=======
+    jointRSE_filter filter(dim,true,true,true,true,true,true);
+
+    for (size_t trial=1; trial<=100; trial++) {
+>>>>>>> 9ed04f93134e5b0d05255ce4584f5259824b7701
         cout<<"trial: "<<trial<<endl;
         // random point on sphere as initial hand position
         // http://mathworld.wolfram.com/SpherePointPicking.html
@@ -110,18 +214,53 @@ void testJointFilter() {
         float y = r * sin(theta) * sin(phi);
         float z = r * cos(phi);
 
-        vec handState;
-        handState<<x<<y<<z<<0<<0<<0;
+        if (dim == 2) {
+            x = r * cos(theta);
+            y = r * sin(theta);
+        }
+        if (dim == 1) {
+            if (x > 0) {
+                x = r;
+            }
+            else {
+                x = -r;
+            }
+        }
 
-        vector<float> handPos(3); handPos[0]=x; handPos[1]=y; handPos[2]=z;
+        //x = 0;
+        //y = 0;
+        //z = 15;
+        vec handState;
+        if (dim == 3) {
+            handState<<x<<y<<z<<0<<0<<0;
+        }
+        if (dim == 2) {
+            handState<<x<<y<<0<<0;
+        }
+        if (dim == 1) {
+            handState<<x<<0;
+        }
+
+        vector<float> handPos(dim);
+        if (dim >= 1) {
+            handPos[0]=x;
+        }
+        if (dim >= 2) {
+            handPos[1]=y;
+        }
+        if (dim >= 3) {
+            handPos[2]=z;
+        }
 
         for (size_t step=0; step<300; step++) {
             cout<<"step: "<<step<<endl;
-            handState = rseParams.F.slice(step) * handState + rseParams.b.slice(step);
+            handState = rseParams.F.slice(timeInvariant ? 0 : step) * handState + rseParams.b.slice(timeInvariant ? 0 : step);
             for (size_t i=0; i<handState.n_rows; i++)
                 origTraject<<handState(i)<<" ";
+            cout<<"handState: "<<handState<<endl;
             origTraject<<";"<<endl;
-            vec noise = randn<vec>(6);
+            vec noise = 0.0*randn<vec>(jointRSE_filter::numChannels) + 5.21;
+            //vec noise = zeros<vec>(numChannels);
             cout<<"noise: "<<noise<<endl;
             vec noiseHandState = handState;
             for (size_t i=0; i<noiseHandState.n_rows; i++)
@@ -130,6 +269,11 @@ void testJointFilter() {
             mat obs = obsMat * noiseHandState + noise;
             // pass noise
             features = conv_to< std::vector<float> >::from(obs);
+            cout << "features: \n";
+            for (int i = 0; i < features.size(); i++) {
+              cout << features[i] << "\t";
+            }
+            cout << "\n";
             //features = conv_to< std::vector<float> >::from(noise);
             filter.Simulate(features, trial, target, handPos);
             filter.Run();
@@ -140,7 +284,7 @@ void testJointFilter() {
         }
     }
 
-    system("matlab -nodesktop -r \"plot_innovation;quit;\"");
+    system("matlab -nosplash -nodesktop -r \"plot_innovation;quit;\"");
 }
 
 
