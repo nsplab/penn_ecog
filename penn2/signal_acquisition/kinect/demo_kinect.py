@@ -40,7 +40,7 @@ def get_depth():
     diff = prev_point - point
     prev_point = point
     #signal_msg = str(diff[0])+","+str(diff[1])+","+str(diff[2])
-    signal_msg = str(point[0])+","+str(point[1])+","+str(point[2])
+    signal_msg = str(point[0])+" "+str(point[1])+" "+str(point[2])
     socket.send(signal_msg)
     return cv2.flip(dep_rgb, 1)
 

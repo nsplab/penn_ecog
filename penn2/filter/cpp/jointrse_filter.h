@@ -37,6 +37,7 @@ private:
     size_t dim_;
     bool velocityParams_;
     bool positionParams_;
+    size_t numSetsOfParams_;
 
     arma::cube DD_obs_;
 

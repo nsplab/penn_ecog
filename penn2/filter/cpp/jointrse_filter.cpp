@@ -1,5 +1,7 @@
 #include "jointrse_filter.h"
 
+#include <unistd.h>
+
 using namespace arma;
 
 // todo: replace cube with vector of matrices
@@ -11,8 +13,8 @@ jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionP
     // make sure at least one of set of parameters is used in filter
     assert(velocityParams_ | positionParams_);
 
-    size_t numSetsOfParams = (size_t) velocityParams_ + (size_t) positionParams_;
-    cout<<"numSetsOfParams "<<numSetsOfParams<<endl;
+    numSetsOfParams_ = (size_t) velocityParams_ + (size_t) positionParams_;
+    cout<<"numSetsOfParams "<<numSetsOfParams_<<endl;
 
     channelParamsFile.open("channelParams.txt");
     innovationFile.open("innovation.txt");
@@ -30,22 +32,22 @@ jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionP
     reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget);
     reachStateEquation::RSEMatrixStruct rseParams = rseComputer.returnAnswer();
 
-    // uHistory: history of kinematic params
-    uHistory_ = zeros<mat>(dim*numSetsOfParams * numLags, 1);
+    // uHistory: history of kinematic params, first position and then velocity
+    uHistory_ = zeros<mat>(dim_*numSetsOfParams_ * numLags, 1);
 
-    mat FSingleTimeChannels = eye<mat>(dim*numSetsOfParams * numLags * numChannels, dim*numSetsOfParams * numLags * numChannels);
+    mat FSingleTimeChannels = eye<mat>(dim_*numSetsOfParams_ * numLags * numChannels, dim_*numSetsOfParams_ * numLags * numChannels);
     cube FChannels = repslices(FSingleTimeChannels, maxTimeSteps);
     // Eq. 18
     F_ = blkdiag(FChannels, rseParams.F);
     cout<<"F_ size: "<<F_.n_rows<<" "<<F_.n_cols<<endl;
 
-    mat QSingleTimeChannels = zeros<mat>(dim*numSetsOfParams * numLags * numChannels, dim*numSetsOfParams * numLags * numChannels);
+    mat QSingleTimeChannels = zeros<mat>(dim_*numSetsOfParams_ * numLags * numChannels, dim_*numSetsOfParams_ * numLags * numChannels);
     cube QChannels = repslices(QSingleTimeChannels, maxTimeSteps);
     // Eq.19
     Q_ = blkdiag(QChannels, rseParams.Q);
 
     const double channelCov = 1.0e-2;
-    mat initialChannelCov = channelCov * eye<mat>(dim*numSetsOfParams * numLags * numChannels, dim*numSetsOfParams * numLags * numChannels);
+    mat initialChannelCov = channelCov * eye<mat>(dim_*numSetsOfParams_ * numLags * numChannels, dim_*numSetsOfParams_ * numLags * numChannels);
     covariance_ = prepareINITIAL_ARM_COV(timeBin);
     covariance_ = blkdiag(initialChannelCov, covariance_);
 
@@ -55,7 +57,7 @@ jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionP
     b_ = zeros<cube>(FChannels.n_rows + rseParams.b.n_rows, 1, maxTimeSteps);
     b_.subcube(FChannels.n_rows, 0, 0, b_.n_rows-1, b_.n_cols-1, b_.n_slices - 1) = rseParams.b;
 
-    channelParametersHat_ = zeros<mat>(numChannels, dim*numSetsOfParams * numLags);
+    channelParametersHat_ = zeros<mat>(numChannels, dim_*numSetsOfParams_ * numLags);
 }
 
 void jointRSE_filter::Predict() {
@@ -70,15 +72,24 @@ void jointRSE_filter::Predict() {
     // NOTE: The third argument 1 to reshape signifies row-wise reshaping. I
     //       think.
     //cout<<"preparing to initialize state"<<endl;
-    mat prev_u;
+    mat prev_u = zeros(dim_,1);
     //cout<<"uHistory n_rows " << uHistory.n_rows << endl;
-    prev_u << uHistory_(0, 0) << endr << uHistory_(numLags, 0) << endr
-           << uHistory_(2 * numLags, 0) << endr;
+    if (velocityParams_) {
+        size_t offset = 0;
+         if (positionParams_) {
+            offset = dim_ * numLags;
+        }
+        for (size_t i=0; i<dim_; i++) {
+            prev_u(i,0) = uHistory_(offset + i*numLags, 0);
+        }
+    }
+
     //cout<<"prev_u successfully initialized"<<endl;
     //cout<<"channelParametersHat n_rows " << channelParametersHat.n_rows << "n_cols " << channelParametersHat.n_cols<< endl;
     mat x = join_cols(join_cols(
-        reshape(channelParametersHat_, 3 * numLags * numChannels, 1, 1), pos_),
+        reshape(channelParametersHat_, dim_*numSetsOfParams_ * numLags * numChannels, 1, 1), pos_),
         prev_u);
+    cout<<"x nr: "<<prev_u.n_rows<<endl;
     //cout<<"initialized state"<<endl;
 
     // Select the correct matrices.
@@ -100,23 +111,26 @@ void jointRSE_filter::Predict() {
 }
 
 void jointRSE_filter::Update() {
-    /// TODO: currently observation (eq 1.1) depends only on velocity, should change this to consider position as well
+    //usleep(100000);
+
     // add the construction of dd matrices here hard code for each case of 2d/3d/position/velocity
     // a function structure of matrices are fixed
 
     // PERFORM THE UPDATE STEP.
+    // predicted_uHistory, vector of current+history of kinematic members of state vector
     mat predicted_uHistory = zeros<mat>(uHistory_.n_rows, uHistory_.n_cols);
-    predicted_uHistory(0, 0) = pred_x_(3 * numLags * numChannels + 3, 0);
-    predicted_uHistory.submat(1, 0, numLags - 1, 0) =
-            uHistory_.submat(0, 0, numLags - 2, 0);
-    predicted_uHistory(numLags, 0) =
-            pred_x_(3 * numLags * numChannels + 4, 0);
-    predicted_uHistory.submat(numLags + 1, 0, 2 * numLags - 1, 0) =
-            uHistory_.submat(numLags, 0, 2 * numLags - 2, 0);
-    predicted_uHistory(2 * numLags, 0) =
-            pred_x_(3 * numLags * numChannels + 5, 0);
-    predicted_uHistory.submat(2 * numLags + 1, 0, 3 * numLags - 1, 0) =
-            uHistory_.submat(2 * numLags, 0, 3 * numLags - 2, 0);
+    // first, set last predicted kinematic values
+    size_t vOffset = 0;
+     if (! positionParams_) {
+        vOffset = dim_;
+    }
+    for (size_t i=0; i<dim_*numSetsOfParams_; i++) {
+        predicted_uHistory(i*numLags, 0) = pred_x_(dim_*numSetsOfParams_ * numLags * numChannels + vOffset + i, 0);
+    }
+    // second, set history of predicted kinematic values
+    for (size_t i=0; i<dim_*numSetsOfParams_; i++) {
+        predicted_uHistory.submat(i*numLags+1, 0, (i+1)*numLags - 1, 0) = uHistory_.submat(i*numLags, 0, (i+1)*numLags - 2, 0);
+    }
 
     // eq. 1.1 in write up
     // u (mu) eq. 3.11 in write up is estimated_obs
@@ -225,7 +239,11 @@ void jointRSE_filter::Update() {
                                                 3 * numLags * numChannels - 1, 0);
     channelParametersHat_ =
         trans(reshape(new_channelParametersHat, 3 * numLags, numChannels, 1));
-    channelParamsFile<<channelParametersHat_<<endl;
+    for(size_t i=0; i<(channelParametersHat_.n_rows); i++)
+        for(size_t j=0; j<(channelParametersHat_.n_cols); j++)
+            channelParamsFile<<channelParametersHat_(i,j)<<" ";
+    channelParamsFile<<";"<<endl;
+
 
     // extract position from updated state vector
     pos_ = new_x.submat(3 * numLags * numChannels, 0,
