@@ -28,10 +28,6 @@ fstream
 iostream
 -
 
-/home/user/code/penn2/penn/penn2/signal_acquisition/synth/PO8e.h
-unistd.h
--
-
 /home/user/code/penn2/penn/penn2/signal_acquisition/synth/main.cpp
 stdlib.h
 -
@@ -45,8 +41,6 @@ iostream
 -
 zmq.hpp
 -
-PO8e.h
-/home/user/code/penn2/penn/penn2/signal_acquisition/synth/PO8e.h
 GetPot.h
 /home/user/code/penn2/penn/penn2/signal_acquisition/synth/GetPot.h
 
