@@ -30,7 +30,7 @@ void testRSE() {
     const double maxTimeSteps = 3.0/timeBin;
     mat reachTarget = zeros<mat>(6, 1);
     reachTarget<<originX<<endr<<originY<<endr<<originZ<<endr<<0<<endr<<0<<endr<<0<<endr;
-    int reachTimeSteps = 1.0/timeBin;
+    int reachTimeSteps = 2.0/timeBin;
 
     uint64 t1 = GetTimeMs64();
     for (size_t i=0; i<100; i++) {
@@ -58,8 +58,12 @@ void testRSE() {
         handState<<x<<y<<z<<0<<0<<0;
 
         for (float time=0, timeStep=0; time<(3.0-timeBin); time+=timeBin, timeStep+=1) {
-            handState = rseParams.F.slice(timeStep) * handState + rseParams.b.slice(timeStep);
-            //cout<<rseParams.F.slice(timeStep)<<endl;
+            mat randomNoise  = randn<vec>(6);
+            for (size_t i=0; i<6; i++) {
+                randomNoise(i) = randomNoise(i) * sqrt(rseParams.Q.slice(timeStep)(i,i));
+            }
+            handState = rseParams.F.slice(timeStep) * handState + randomNoise + rseParams.b.slice(timeStep);
+            //cout<<rseParams.Q.slice(timeStep)<<endl;
             rseTraject<<handState(0)<<" "<<handState(1)<<" "<<handState(2)<<" "<<handState(3)<<" "<<handState(4)<<" "<<handState(5)<<";"<<endl;
         }
     }
@@ -190,9 +194,13 @@ void testJointFilter() {
     }
 
 
+<<<<<<< HEAD
+    for (size_t trial=1; trial<50; trial++) {
+=======
     jointRSE_filter filter(dim,true,true,true,true,true,true);
 
     for (size_t trial=1; trial<=100; trial++) {
+>>>>>>> 9ed04f93134e5b0d05255ce4584f5259824b7701
         cout<<"trial: "<<trial<<endl;
         // random point on sphere as initial hand position
         // http://mathworld.wolfram.com/SpherePointPicking.html

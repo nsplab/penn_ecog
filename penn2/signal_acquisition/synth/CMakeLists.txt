@@ -1,0 +1,7 @@
+project(synth)
+cmake_minimum_required(VERSION 2.8)
+SET(CMAKE_CXX_FLAGS "-DNDEBUG -O3 -g -std=c++0x")
+SET(SRC_LIST main.cpp)
+add_executable(${PROJECT_NAME} ${SRC_LIST})
+#target_link_libraries(${PROJECT_NAME} zmq -L PO8eStreaming)
+target_link_libraries(${PROJECT_NAME} zmq)
