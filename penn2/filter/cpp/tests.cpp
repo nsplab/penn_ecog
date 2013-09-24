@@ -194,13 +194,9 @@ void testJointFilter() {
     }
 
 
-<<<<<<< HEAD
-    for (size_t trial=1; trial<50; trial++) {
-=======
     jointRSE_filter filter(dim,true,true,true,true,true,true);
 
     for (size_t trial=1; trial<=100; trial++) {
->>>>>>> 9ed04f93134e5b0d05255ce4584f5259824b7701
         cout<<"trial: "<<trial<<endl;
         // random point on sphere as initial hand position
         // http://mathworld.wolfram.com/SpherePointPicking.html

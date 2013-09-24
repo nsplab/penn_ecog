@@ -157,7 +157,6 @@ void jointRSE_filter::Update() {
     // a function structure of matrices are fixed
 
     // PERFORM THE UPDATE STEP.
-<<<<<<< HEAD
     // predicted_uHistory, vector of current+history of kinematic members of state vector
     mat predicted_uHistory = zeros<mat>(uHistory_.n_rows, uHistory_.n_cols);
     // ???
