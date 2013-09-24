@@ -6,8 +6,9 @@ using namespace arma;
 // todo: replace cube with vector of matrices
 
 jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionParams, bool affineParam, bool useRSE, bool timeInvariant, bool log):
-    timeStep_(-1), prevTrialId_(0), dim_(dim), velocityParams_(velocityParams), positionParams_(positionParams), affineParam_(affineParam), timeInvariant_(timeInvariant), log_(log)
+    timeStep_(-1), prevTrialId_(0), velocityParams_(velocityParams), positionParams_(positionParams), affineParam_(affineParam), timeInvariant_(timeInvariant), log_(log)
 {
+    dim_ = dim;
 
     // make sure at least one of set of parameters is used in filter
     assert(velocityParams_ | positionParams_);
@@ -21,6 +22,10 @@ jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionP
 
     pos_ = zeros<mat>(dim, 1);
     prev_u_ = zeros<mat>(dim, 1);
+    for (size_t i = 0; i <= sensoryDelay; i++) {
+        saved_pos_.push_back(pos_);
+        saved_u_.push_back(prev_u_);
+    }
 
     const double timeBin = 0.01;
     // page 31
@@ -288,6 +293,12 @@ void jointRSE_filter::Update() {
                         dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels + dim_ - 1, 0);
     prev_u_ = new_x.submat(dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels + dim_, 0,
                            dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels + dim_ + dim_ - 1, 0);
+    saved_pos_.push_back(pos_);
+    saved_u_.push_back(prev_u_);
+    pos_ = saved_pos_[0];
+    prev_u_ = saved_u_[0];
+    saved_pos_.erase(saved_pos_.begin());
+    saved_u_.erase(saved_u_.begin());
 
     // to test
     vec handState = new_x.submat(dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels, 0,
@@ -330,6 +341,12 @@ void jointRSE_filter::Update() {
 void jointRSE_filter::InitNewTrial(mat startPos) {
     pos_ = startPos;
     prev_u_ = zeros<mat>(dim_, 1);
+    saved_pos_.clear();
+    saved_u_.clear();
+    for (size_t i = 0; i <= sensoryDelay; i++) {
+        saved_pos_.push_back(pos_);
+        saved_u_.push_back(prev_u_);
+    }
     uHistory_ = zeros<mat>(dim_ * numSetsOfParams_ * numLags + affineParam_, 1);
 
     const double timeBin = 0.01;
@@ -340,11 +357,14 @@ void jointRSE_filter::InitNewTrial(mat startPos) {
 }
 
 void jointRSE_filter::Run() {
-    //GrabFeatures();
+    GetState();
+
+    GrabFeatures();
     obs_.resize(features_.size());
     for (size_t i=0; i<features_.size(); i++) {
         obs_[i] = features_[i];
     }
+
     // re-initialize filter at start of new trial
     if (prevTrialId_ != trial_id) {
         cout<<"new trial started"<<endl;
@@ -356,9 +376,11 @@ void jointRSE_filter::Run() {
         InitNewTrial(pos_);
         prevTrialId_ = trial_id;
     }
+
     Predict();
     Update();
-    //PublishHandMovement();
+
+    PublishHandMovement();
 }
 
 // The initial covariance on the arm components of the state.
