@@ -12,7 +12,7 @@
 using namespace std;
 using namespace zmq;
 
-string cfgFile("/home/user/penn2/config/penn.cfg");
+string cfgFile("../../config/penn.cfg");
 
 int kbhit()
 {
