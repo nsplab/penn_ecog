@@ -8,11 +8,12 @@ class jointRSE_filter : public FilterClass {
 public:
     static const size_t numLags = 1;
     static const size_t numChannels = 1;
+    static const size_t sensoryDelay = 0;
 
     jointRSE_filter(size_t dim, bool velocityParams=true, bool positionParams=true, bool affineParam=true, bool useRSE=true, bool timeInvariant=false, bool log=false);
     void Update();
     void Predict();
-    // man loop function
+    // main loop function
     void Run();
 private:
     arma::mat prepareINITIAL_ARM_COV(const double timeBin);
@@ -30,21 +31,18 @@ private:
     arma::mat channelParametersHat_;
     size_t prevTrialId_;
     arma::mat pos_;
+    std::vector<arma::mat> saved_pos_;
     arma::mat prev_u_;
+    std::vector<arma::mat> saved_u_;
     arma::mat pred_x_;
     arma::mat pred_cov_;
     arma::vec obs_;
 
-    size_t dim_;
     bool velocityParams_;
     bool positionParams_;
-<<<<<<< HEAD
-    size_t numSetsOfParams_;
-=======
     bool affineParam_;
     size_t numSetsOfParams_;
-    size_t timeInvariant_;
->>>>>>> 9ed04f93134e5b0d05255ce4584f5259824b7701
+    bool timeInvariant_;
 
     arma::cube DD_obs_;
 
