@@ -49,6 +49,7 @@ int main(int argc, char** argv) {
     time_t rawtime;
     time(&rawtime);
     string dataFilename = string("data_")+ctime(&rawtime);
+    dataFilename.pop_back(); // remove the new line added by ctime
     FILE* pFile;
     pFile = fopen(dataFilename.c_str(), "wb");
     setvbuf (pFile, NULL, _IOFBF, numberOfChannels*sizeof(float));
