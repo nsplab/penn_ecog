@@ -4,15 +4,16 @@ from sklearn.cross_decomposition import PLSCanonical, PLSRegression
 from numpy import array, fft, absolute, vstack, mean, floor
 import struct
 import os
+from scipy.stats import pearsonr
 
-filename = "../signal_acquisition/synth/data_Tue Sep 24 20:04:49 2013"
-sampling_rate = 1024
-fft_samples = 64 # ???
+filename = "../signal_acquisition/synth/data_noise"
+sampling_rate = 6103
+fft_samples = 381 # ???
 fft_offset = 10 # ???
 channels = 16
 n_components = 4 # ???
 scale = True # ???
-save_output = True
+save_output = False
 
 
 f = open(filename, 'r')
@@ -78,5 +79,19 @@ if save_output:
     f.write(str(predicted[i][0]))
     f.write('\n')
 
+correlation = [0.0 for i in xrange(channels * frequencies + 1)]
 for i in range(pls.coefs.size):
-  print('Electode #' + str(i / frequencies) + ' (' + str((i % frequencies) * sampling_rate / fft_samples) + ' Hz): ' + str(pls.coefs[i]))
+  correlation[i] = pearsonr(signal, predictor[i, :])[0]
+
+for i in range(pls.coefs.size):
+  print('Electrode #' + str(i / frequencies) + ' (' + str((i % frequencies) * sampling_rate / fft_samples) + ' Hz):\t' + str(pls.coefs[i][0]) + "\t" + str(correlation[i]))
+
+temp = correlation[:]
+temp = absolute(temp)
+temp.sort()
+number = 10
+print('Most Correlated:')
+for i in range(pls.coefs.size):
+  if absolute(correlation[i]) > temp[-number]:
+    print('Electrode #' + str(i / frequencies) + ' (' + str((i % frequencies) * sampling_rate / fft_samples) + ' Hz):\t' + str(pls.coefs[i][0]) + "\t" + str(correlation[i]))
+
