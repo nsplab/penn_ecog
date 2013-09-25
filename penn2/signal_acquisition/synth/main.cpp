@@ -3,6 +3,7 @@
 #include <string>
 #include <sys/resource.h>
 #include <iostream>
+#include <random>
 
 #include <zmq.hpp>
 
@@ -87,8 +88,11 @@ int main(int argc, char** argv) {
     // force signal frequency
     float forceFrq = 0.25;
 
+    std::default_random_engine generator;
+    std::normal_distribution<double> distribution(0.0,2.0);
+
     size_t secondsOfData = 10;
-    for (size_t t=0; t<(10*samplingRate); t++) {
+    for (size_t t=0; t<(secondsOfData*samplingRate); t++) {
         // main loop
         //while(!kbhit()) {
 
@@ -118,11 +122,11 @@ int main(int argc, char** argv) {
 
                 // correlated channels
                 for (size_t ch=4; ch<8; ch++) {
-                    tempBuff[ch] = (*funcp)(2.0*M_PI * float(t)/float(samplingRate) * float(ch)*4.0 ) * tempBuff[0];
+                    tempBuff[ch] = (*funcp)(2.0*M_PI * float(t)/float(samplingRate) * float(ch)*4.0 ) * tempBuff[0] + distribution(generator);
                 }
                 // uncorrelated channels
                 for (size_t ch=8; ch<20; ch++) {
-                    tempBuff[ch] = (*funcp)(2.0*M_PI * float(t)/float(samplingRate) * float(ch)*4.0 ) * 1.0;
+                    tempBuff[ch] = (*funcp)(2.0*M_PI * float(t)/float(samplingRate) * float(ch)*4.0 ) * 1.0 + distribution(generator);
                 }
 
                 // write into file
