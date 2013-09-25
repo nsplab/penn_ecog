@@ -13,7 +13,7 @@ filename_eeg = 'eeg_craniectomy'
 #filename_emg = 'emg_synthesized'
 #filename_eeg = 'eeg_synthesized'
 sampling_rate = 1024
-fft_samples = 8 # ???
+fft_samples = 64 # ???
 fft_offset = 10 # ???
 #samples = 410620 # skull
 samples = 419836 # craniectomy
@@ -22,7 +22,7 @@ samples = 209918 # craniectomy before discontinuity
 channels = 1
 n_components = 4 # ???
 scale = True # ???
-save_output = False
+save_output = True
 
 freq_samples = (samples - fft_samples + fft_offset) / fft_offset
 frequencies = fft_samples / 2 + 1
@@ -124,4 +124,4 @@ if save_output:
     f.write('\n')
 
 for i in range(pls.coefs.size):
-  print('Electode #' + str(i / frequencies) + ' (' + str((i % frequencies) * sampling_rate / fft_samples) + ' Hz): ' + str(pls.coefs[i]))
+  print('Electrode #' + str(i / frequencies) + ' (' + str((i % frequencies) * sampling_rate / fft_samples) + ' Hz): ' + str(pls.coefs[i]))
