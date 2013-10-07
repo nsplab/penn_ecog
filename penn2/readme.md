@@ -1,3 +1,11 @@
+Directories
+=======
+
+feature_extraction_offline - 
+
+feature_extraction_online - 
+  + spectrogram - implements various spectrogram methods as listed at http://www.mathworks.com/help/signal/ref/spectrum.html
+  + 
 
 Modules
 =======
