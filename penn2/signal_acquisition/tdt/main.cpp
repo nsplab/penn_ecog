@@ -95,66 +95,80 @@ int main(int argc, char** argv) {
     // this buffer only contains one float per channel
     float tempBuff[numberOfChannels];
 
-    context_t context(1);
-    socket_t publisher(context, ZMQ_PUB);
-    uint64_t hwm = 1;
+
+    //Initializing ZMQ protocol that allows us to communicate between modules of the code
+    context_t context(1);			//number of threads used by ZMQ
+    socket_t publisher(context, ZMQ_PUB);	//socket used to broadcast data
+    uint64_t hwm = 1;				//hwm - high water mark - determines buffer size for
+    						//data passed through ZMQ. hwm = 1 makes the ZMQ buffer 
+    						//size = 1. This means that if no module has accessed a
+    						//value written through ZMQ, new values will be dropped
+    						//until any module reads the value
     //publisher.setsockopt(ZMQ_HWM, &hwm, sizeof(hwm));
-    publisher.bind("ipc:///tmp/sig.pipe");
+    publisher.bind("ipc:///tmp/sig.pipe");	//gives address of data that other modules can reference
+						//ipc (interprocess communication) is a Linux standard
+						//for communication between programs, used by ZMQ
+						//Note that ZMQ also uses TCP or UDP, not preferred here
+						//because ipc is robust to changes in ports and local IP addresses
+						//unlike TCP
+
+    size_t timeStamp = 0;			//timeStamp is our counter on the PC that is used as the system clock
+    						//for aligning ECoG and other TDT data with task events on the PC
+    						//such as the value of an on-screen stimulus
 
 
-    size_t timeStamp = 0;
 
-    // main loop
+    // main loop - runs an infinite loop until any key on the keyboard is hit.
     while(!kbhit()) {
 
-        // wait until data is ready
-        //size_t rwait = card->waitForDataReady(300000);
-        //cout<<"rwait: "<<rwait<<endl;
+        numberOfSamples = card->samplesReady();  // how many samples are currently available for reading from the PO8e
 
-        // how many samples are buffered
-        numberOfSamples = card->samplesReady();
-        //numberOfSamples = rwait;
+        if (numberOfSamples < 1)		//if no samples are ready, 
+            continue;				//skip remaining code in the while loop and start a new cycle
 
-        if (numberOfSamples < 1)
-            continue;
-
-        //cout<<"#buffered samples: "<<numberOfSamples<<endl;
-
-        for(size_t i = 0; i < numberOfSamples; i++, timeStamp++) {
-            if (card->readBlock(tempBuff, 1) != 1) {
-                cout<<"reading sample "<<i<<" failed!"<<endl;
+        for(size_t i = 0; i < numberOfSamples; i++, timeStamp++) {//increment timeStamp based on number of samples received - assumes samples reeceived regularly
+            if (card->readBlock(tempBuff, 1) != 1) {	//readblock(tempBuff,1) loads one sample from every channel into tempBuff, returning 1 if successful, and advances to the next sample
+                cout<<"reading sample "<<i<<" failed!"<<endl;  //if there is a problem accessing the buffer, print failure message to terminal
                 return 1;
             }
 
-            zmq::message_t zmq_message(sizeof(float)*numberOfChannels+sizeof(size_t));
-            memcpy(zmq_message.data(), &timeStamp, sizeof(size_t)*1);
-            //memcpy(&timeStamp, zmq_message.data(), sizeof(size_t)*1);
+	//use the ZMQ protocol to broadcast the following values:
+	//	tempBuff - the single current sample from every channel
+	//	timeStamp - the counter on the PC that serves as the system clock to align ECoG with task events
+	
+            zmq::message_t zmq_message(sizeof(float)*numberOfChannels+sizeof(size_t)); //form a ZMQ message object; note this will cause problems if it is moved out from the loop
+            //form the zmq message that contains timeStamp and tempBuff
+            //(memcpy is a standard C function that copies the timeStamp into the memory address given by zmq_message.data())
+            memcpy(zmq_message.data(), &timeStamp, sizeof(size_t)*1);  
+           //memcpy(&timeStamp, zmq_message.data(), sizeof(size_t)*1);
+            memcpy(static_cast<size_t*>(zmq_message.data())+1, tempBuff, sizeof(float)*numberOfChannels);  
+            
             if ((timeStamp % 50) == 0) {
-	            cout<<"timeStamp: "<<timeStamp<<endl;
-//            cout<<zmq_message.size()<<endl;
-  	          cout<<numberOfSamples<<endl;
-		}
-            memcpy(static_cast<size_t*>(zmq_message.data())+1, tempBuff, sizeof(float)*numberOfChannels);
+	            cout<<"timeStamp: "<<timeStamp<<endl;	//every 50 timeStamps, print the timeStamp
+//            cout<<zmq_message.size()<<endl;			//
+  	          cout<<numberOfSamples<<endl;			//and # of samples that were ready in the PO8e buffer
+		}            
+            
 //char tstr[] = "10001 this that";
 //            memcpy(zmq_message.data(), tstr, strlen(tstr));
         //snprintf ((char *) zmq_message.data(), 20 ,
         //    "%05d %d", 10001, timeStamp);
             //s_sendmore(publisher, "A");
-            publisher.send(zmq_message);
+            publisher.send(zmq_message);	//ZMQ command to trigger the broadcast of tempBuff and timeStamp
 
             // advance PO8e buffer pointer
             card->flushBufferedData(1);
 
-            // write into file
+            // write timeStamp and tempBuff into the data file on the PC harddrive
             fwrite(&timeStamp, sizeof(size_t), 1, pFile);
             fwrite(&tempBuff, sizeof(float), numberOfChannels, pFile);
         }
 
-    } // main loop
+    } // end of main loop
 
-    fclose(pFile);
-    PO8e::releaseCard(card);
-    publisher.close();
+    fclose(pFile);		//close the data file that records all TDT channels with timeStamp onto the PC (Puget)
+    PO8e::releaseCard(card);	//for PO8e
+    publisher.close();		//for ZMQ
 
     return 0;
 }
