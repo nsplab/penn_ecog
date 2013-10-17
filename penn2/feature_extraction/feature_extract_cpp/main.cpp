@@ -54,6 +54,7 @@ int main(int argc, char** argv)
     socket_t subscriber(context, ZMQ_SUB);
     publisher.bind("ipc:///tmp/features.pipe");
     subscriber.connect("ipc:///tmp/signal.pipe");
+    subscriber.setsockopt(ZMQ_SUBSCRIBE, "", 0);
 
     float buffer[numChannels];
     vector<float> points(numChannels);
@@ -66,15 +67,20 @@ int main(int argc, char** argv)
         size_t timestamp;
         memcpy(&timestamp, signal.data(), sizeof(size_t));
 
+        cout<<"timestamp: "<<timestamp<<endl;
+
         // skip timestamp, copy the rest
         memcpy(buffer, (size_t*)signal.data()+1, signal.size()-sizeof(size_t));
         copy(&(buffer[0]), &(buffer[numChannels-1]), points.begin());
+        for (size_t i=0; i<numChannels; i++)
+            cout<<"p "<<i<<" : "<< points[i]<<endl;
 
         fft.AddPoints(points);
         if (fft.Process()) {
             fft.GetPowerOneVec(powers);
 
             VectorXf features = coefMx * powers;
+            //cout<<"features: "<<features<<endl;
         }
     }
 

@@ -12,6 +12,7 @@ using namespace Eigen;
 
 float x=0, y=0, z=0;
 float prevx=0, prevy=0, prevz=0;
+float diffx=0.0, diffy=0.0, diffz=0.0;
 
 context_t context(2);
 
@@ -28,7 +29,7 @@ void GenerateSignal() {
     float zSignalAmp = 2.0f;
     float zSignalFrq = 30.0f; // Hz
 
-    size_t samplingRate = 25000; // Hz
+    size_t samplingRate = 1000; // Hz
 
     // the synthetic signals are mixed to generate the output singnals/channels
     int numberOfChannels = 4; // number of output channels
@@ -41,11 +42,9 @@ void GenerateSignal() {
     Matrix<float, Dynamic, Dynamic> signal(numberOfChannels,1); // output signal
     Vector3f sample; // synthetic signal based on x,y,z from kinect
 
-    float diffx=0.0, diffy=0.0, diffz=0.0;
-
     for (size_t timeStamp=0;;timeStamp++) {
 
-        diffx = prevx - x; diffy = prevx - y; diffz = prevx - z;
+        diffx = prevx - x; diffy = prevy - y; diffz = prevz - z;
 
         size_t i = timeStamp % samplingRate;
         sample(0) = cos(2.0*M_PI * float(i)/float(samplingRate) * xSignalFrq) * xSignalAmp * diffx;
@@ -53,8 +52,11 @@ void GenerateSignal() {
         sample(2) = cos(2.0*M_PI * float(i)/float(samplingRate) * zSignalFrq) * zSignalAmp * diffz;
 
         signal = mixingMatrix * sample;
-
-        prevx = x; prevy = y; prevz = z;
+        //cout<<"signal: "<<signal<<endl;
+        if (diffy>0){
+        cout<<"diffx: "<<diffx<<" "<<x<<" "<<prevx<<endl;
+        cout<<"diffy: "<<diffy<<" "<<y<<" "<<prevy<<endl;
+        }
 
         message_t zmqMessage(sizeof(float)*numberOfChannels+sizeof(size_t));
         memcpy(zmqMessage.data(), &timeStamp, sizeof(size_t)*1);
@@ -62,7 +64,8 @@ void GenerateSignal() {
 
         publisher.send(zmqMessage);
 
-        std::this_thread::sleep_for(std::chrono::microseconds(10));
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
+        prevx = x; prevy = y; prevz = z;
     }
 }
 
@@ -73,6 +76,8 @@ int main()
     subscriber.connect("ipc:///tmp/ksignal.pipe");
     subscriber.setsockopt(ZMQ_SUBSCRIBE, "", 0);
 
+    thread broadcast(GenerateSignal);
+
     for (;;)   {
         message_t ksig_msg;
         subscriber.recv(&ksig_msg);
@@ -81,7 +86,9 @@ int main()
         istringstream iss(msg);
         iss>>x>>y>>z;
 
-        cout<<"x:"<<x<<"\ty:"<<y<<"\tz:"<<z<<endl;
+
+
+        //cout<<"x:"<<x<<"\ty:"<<y<<"\tz:"<<z<<endl;
     }
 
     return 0;
