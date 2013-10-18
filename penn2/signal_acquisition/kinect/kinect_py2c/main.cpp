@@ -45,9 +45,16 @@ void GenerateSignal() {
     for (size_t timeStamp=0;;timeStamp++) {
 
         size_t i = timeStamp % samplingRate;
-        sample(0) = cos(2.0*M_PI * float(i)/float(samplingRate) * xSignalFrq) * xSignalAmp * diffx;
-        sample(1) = cos(2.0*M_PI * float(i)/float(samplingRate) * ySignalFrq) * ySignalAmp * diffy;
-        sample(2) = cos(2.0*M_PI * float(i)/float(samplingRate) * zSignalFrq) * zSignalAmp * diffz;
+
+        // assume intended velocity is power modulated
+        float maxSpeed = 20.0;
+        float baselinePower = maxSpeed / 2.0;
+        diffx = (fabs(diffx)>maxspeed)? (maxSpeed*diffx/fabs(diffx)):diffx;
+        diffy = (fabs(diffy)>maxspeed)? (maxSpeed*diffy/fabs(diffy)):diffy;
+        diffz = (fabs(diffz)>maxspeed)? (maxSpeed*diffz/fabs(diffz)):diffz;
+        sample(0) = cos(2.0*M_PI * float(i)/float(samplingRate) * xSignalFrq) * xSignalAmp * sqrt(diffx+baseline_power);
+        sample(1) = cos(2.0*M_PI * float(i)/float(samplingRate) * ySignalFrq) * ySignalAmp * sqrt(diffy+baseline_power);
+        sample(2) = cos(2.0*M_PI * float(i)/float(samplingRate) * zSignalFrq) * zSignalAmp * sqrt(diffz+baseline_power);
 
         signal = mixingMatrix * sample;
         cout<<"signal: "<<signal<<endl;
@@ -80,7 +87,9 @@ int main()
         iss>>x>>y>>z;
         //cout<<"x:"<<x<<"\ty:"<<y<<"\tz:"<<z<<endl;
 
-        diffx = prevx - x; diffy = prevy - y; diffz = prevz - z;
+        diffx = prevx - x;
+        diffy = prevy - y;
+        diffz = prevz - z;
 
         prevx = x; prevy = y; prevz = z;
     }
