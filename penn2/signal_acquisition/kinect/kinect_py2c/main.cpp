@@ -44,19 +44,13 @@ void GenerateSignal() {
 
     for (size_t timeStamp=0;;timeStamp++) {
 
-        diffx = prevx - x; diffy = prevy - y; diffz = prevz - z;
-
         size_t i = timeStamp % samplingRate;
         sample(0) = cos(2.0*M_PI * float(i)/float(samplingRate) * xSignalFrq) * xSignalAmp * diffx;
         sample(1) = cos(2.0*M_PI * float(i)/float(samplingRate) * ySignalFrq) * ySignalAmp * diffy;
         sample(2) = cos(2.0*M_PI * float(i)/float(samplingRate) * zSignalFrq) * zSignalAmp * diffz;
 
         signal = mixingMatrix * sample;
-        //cout<<"signal: "<<signal<<endl;
-        if (diffy>0){
-        cout<<"diffx: "<<diffx<<" "<<x<<" "<<prevx<<endl;
-        cout<<"diffy: "<<diffy<<" "<<y<<" "<<prevy<<endl;
-        }
+        cout<<"signal: "<<signal<<endl;
 
         message_t zmqMessage(sizeof(float)*numberOfChannels+sizeof(size_t));
         memcpy(zmqMessage.data(), &timeStamp, sizeof(size_t)*1);
@@ -65,7 +59,6 @@ void GenerateSignal() {
         publisher.send(zmqMessage);
 
         std::this_thread::sleep_for(std::chrono::microseconds(100));
-        prevx = x; prevy = y; prevz = z;
     }
 }
 
@@ -85,10 +78,11 @@ int main()
 
         istringstream iss(msg);
         iss>>x>>y>>z;
-
-
-
         //cout<<"x:"<<x<<"\ty:"<<y<<"\tz:"<<z<<endl;
+
+        diffx = prevx - x; diffy = prevy - y; diffz = prevz - z;
+
+        prevx = x; prevy = y; prevz = z;
     }
 
     return 0;

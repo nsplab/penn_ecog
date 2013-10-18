@@ -203,6 +203,7 @@ bool Fft<T>::Process() {
         in[i] *= winFunc[i];
       fftwf_execute(plan_forward);
       memcpy(outVec[sig], out, sizeof(fftwf_complex)*nc);
+      //std::cout<<outVec[sig][0][0]<<std::endl;
     }
   } else {
     for (size_t sig=0; sig<buffer.size(); sig++) {
@@ -231,12 +232,14 @@ void Fft<T>::GetPower(std::vector<std::vector<T> >& pow) {
 
 template<class T>
 void Fft<T>::GetPowerOneVec(Eigen::VectorXf& pow) {
+    std::cout<<"winFuncSum "<<winFuncSum<<std::endl;
   const size_t nc = buffer[0].capacity()/2+1;
   pow.resize(buffer.size() * nc);
   for (size_t sig=0; sig<buffer.size(); sig++) {
     for (size_t i = 0; i < nc; i++) {
-      pow[sig*nc+i] = sqrt(outVec[sig][i][0]*outVec[sig][i][0] + outVec[sig][i][1]*outVec[sig][i][1]);
-      pow[sig*nc+i] *= winFuncSum;
+      pow(sig*nc+i) = sqrt(outVec[sig][i][0]*outVec[sig][i][0] + outVec[sig][i][1]*outVec[sig][i][1]);
+      //std::cout<<"pow(sig*nc+i) "<<outVec[sig][i][0]<<std::endl;
+      pow(sig*nc+i) *= winFuncSum;
     }
   }
 }

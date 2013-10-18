@@ -13,7 +13,7 @@ using namespace zmq;
 using namespace Eigen;
 
 int parsConfig(string& signalConfig, string& matrixFile, size_t& fftWinSize,
-               size_t& fftWinType, size_t& outputRate);
+               size_t& fftWinType, size_t& outputRate, string& spatialFilterFile);
 
 int GetWinSizeSamples(string signalConfig, size_t& fftWinSizeSamples,
                       size_t fftWinSize, size_t& numChannels, size_t& samplingRate);
@@ -25,17 +25,23 @@ int main(int argc, char** argv)
 
     string signalConfig;
     string matrixFile;
+    string spatialFilterFile;
     size_t fftWinSize;
     size_t fftWinType;
     size_t outputRate;
 
     if (0 != parsConfig(signalConfig, matrixFile, fftWinSize,
-                        fftWinType, outputRate)) {
+                        fftWinType, outputRate, spatialFilterFile)) {
         return 1;
     }
 
     MatrixXf coefMx;
     loadMatrix(coefMx, matrixFile);
+
+    MatrixXf spatialFilterMx;
+    loadMatrix(spatialFilterMx, spatialFilterFile);
+
+
     VectorXf powers;
 
     // compute fft window size in number of samples
@@ -47,7 +53,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    Fft<float> fft(fftWinSizeSamples, Fft<float>::windowFunc(int(fftWinType)), samplingRate, numChannels);
+    Fft<float> fft(fftWinSizeSamples, Fft<float>::windowFunc::BLACKMAN_HARRIS, samplingRate, numChannels);
 
     context_t context(2);
     socket_t publisher(context, ZMQ_PUB);
@@ -64,23 +70,32 @@ int main(int argc, char** argv)
         message_t signal;
         subscriber.recv(&signal);
 
+        // extract timestamp
         size_t timestamp;
         memcpy(&timestamp, signal.data(), sizeof(size_t));
-
         cout<<"timestamp: "<<timestamp<<endl;
 
-        // skip timestamp, copy the rest
+        // extract neural signal
         memcpy(buffer, (size_t*)signal.data()+1, signal.size()-sizeof(size_t));
-        copy(&(buffer[0]), &(buffer[numChannels-1]), points.begin());
-        for (size_t i=0; i<numChannels; i++)
-            cout<<"p "<<i<<" : "<< points[i]<<endl;
+
+        // spatial filter
+        VectorXf signalVector;
+        signalVector.resize(numChannels);
+        memcpy(signalVector.data(), buffer, signal.size()-sizeof(size_t));
+        VectorXf signalSpatialFiltered = spatialFilterMx * signalVector;
+        memcpy(signalVector.data(), buffer, signal.size()-sizeof(size_t));
+
+        // compute FFT
+        copy(&(buffer[0]), &(buffer[numChannels]), points.begin());
+        //for (size_t i=0; i<numChannels; i++)
+        //    cout<<"p "<<i<<" : "<< points[i]<<endl;
 
         fft.AddPoints(points);
         if (fft.Process()) {
             fft.GetPowerOneVec(powers);
 
             VectorXf features = coefMx * powers;
-            //cout<<"features: "<<features<<endl;
+            cout<<"features: "<<features<<endl;
         }
     }
 
@@ -135,7 +150,8 @@ int parsConfig(string& signalConfig, string& matrixFile, size_t& fftWinSize,
 
 
 int GetWinSizeSamples(string signalConfig, size_t& fftWinSizeSamples,
-                      size_t fftWinSize, size_t& numChannels, size_t& samplingRate) {
+                      size_t fftWinSize, size_t& numChannels, size_t& samplingRate,
+                      string& spatialFilterFile) {
 
     // check if signalConfig exists
     ifstream testFile(signalConfig.c_str());
