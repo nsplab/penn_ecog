@@ -18,10 +18,17 @@
 #include <osgGA/TrackballManipulator>
 #include <osgAnimation/Export>
 #include <osgAnimation/UpdateMatrixTransform>
+#include <osgText/Text>
+
+#include <eigen3/Eigen/Core>
+#include <eigen3/Eigen/Geometry>
+#include <eigen3/Eigen/Eigen>
 
 #define GRASP_STEPS 10
 
+
 osg::Geode* createAxis();
+
 
 struct BoneFinder : public osg::NodeVisitor
 {

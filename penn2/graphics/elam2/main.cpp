@@ -36,10 +36,6 @@
 
 #include <zmq.hpp>
 
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/Geometry>
-#include <eigen3/Eigen/Eigen>
-
 #include <thread>
 
 #include <sys/ioctl.h>
@@ -62,19 +58,20 @@ using namespace chrono;
 
 float roll,pitch,yaw, roll2,pitch2,yaw2, roll3,pitch3,yaw3;
 
-float ball_x = 0;
-float ball_y = 0;
-float ball_z = 0;
-
-bool openHand = false;
-bool pauseGame = false;
 bool subLevelFlag = false;
 
-osg::ref_ptr<osgText::Font> g_font =
-        osgText::readFontFile("../pirulen.ttf");
+extern bool openHand;
 
-osg::ref_ptr<osgText::Font> c_font =
-        osgText::readFontFile("../Arial.ttf");
+extern float ball_x;
+extern float ball_y;
+extern float ball_z;
+
+extern bool pauseGame;
+
+extern osg::ref_ptr<osgText::Font> g_font;
+
+extern osg::ref_ptr<osgText::Font> c_font;
+
 
 int main(int argc, char** argv)
 {
@@ -133,7 +130,7 @@ int main(int argc, char** argv)
 
     // load arm model
     osg::ref_ptr<osg::Node> model = osgDB::readNodeFile("../bare_hand_Scene.osgt");
-    cout<<!model<<endl;
+    //cout<<int(!model)<<endl;
 
     // couldn't load the model
     if ( !model ) return 1;
@@ -481,32 +478,33 @@ int main(int argc, char** argv)
     double fixed1 = 0.0;
     double fixed2 = 0.0;
     double fixed3 = 0.0;
+
     /**********************************************************************
- *This part sets the sockets to connect with the modules
- *********************************************************************/
-    context_t context(6);
+     *This part sets the sockets to connect with the modules
+     *********************************************************************/
+    context_t context(1);
     socket_t subscriber(context, ZMQ_SUB);
-    subscriber.connect("ipc:///tmp/signal.pipe");
+    subscriber.connect("ipc:///tmp/graphics.pipe");
     subscriber.setsockopt(ZMQ_SUBSCRIBE, "", 0);
 
-    socket_t subscriber_eeg(context, ZMQ_SUB);
-    subscriber_eeg.connect("tcp://127.0.0.1:5559");
-    cout <<"passed the first one"<<endl;
-    socket_t publisher_eeg(context, ZMQ_PUB);
-    publisher_eeg.bind("tcp://127.0.0.1:55000");
-    cout <<"passed the first one"<<endl;
-    socket_t publisher_histogram(context, ZMQ_PUB);
-    publisher_histogram.bind("tcp://127.0.0.1:55003");
-    socket_t publisher_hand(context, ZMQ_PUB);
-    publisher_hand.bind("tcp://127.0.0.1:55008");
+    //socket_t subscriber_eeg(context, ZMQ_SUB);
+    //subscriber_eeg.connect("tcp://127.0.0.1:5559");
+    //cout <<"passed the first one"<<endl;
+    //socket_t publisher_eeg(context, ZMQ_PUB);
+    //publisher_eeg.bind("tcp://127.0.0.1:55000");
+    //cout <<"passed the first one"<<endl;
+    //socket_t publisher_histogram(context, ZMQ_PUB);
+    //publisher_histogram.bind("tcp://127.0.0.1:55003");
+    //socket_t publisher_hand(context, ZMQ_PUB);
+    //publisher_hand.bind("tcp://127.0.0.1:55008");
 
-    cout <<"passed the first one"<<endl;
-    socket_t publisher(context, ZMQ_PUB);
-    publisher.bind("ipc:///tmp/game.pipe");
+    //cout <<"passed the first one"<<endl;
+    //socket_t publisher(context, ZMQ_PUB);
+    //publisher.bind("ipc:///tmp/game.pipe");
 
-    socket_t eyeSubscriber(context, ZMQ_SUB);
-    eyeSubscriber.connect("ipc:///tmp/eye.pipe");
-    eyeSubscriber.setsockopt(ZMQ_SUBSCRIBE, "", 0);
+    //socket_t eyeSubscriber(context, ZMQ_SUB);
+    //eyeSubscriber.connect("ipc:///tmp/eye.pipe");
+    //eyeSubscriber.setsockopt(ZMQ_SUBSCRIBE, "", 0);
 
     /**************************************************************************/
 
@@ -627,11 +625,12 @@ int main(int argc, char** argv)
         milliseconds ms_pickup = duration_cast<milliseconds>(end- pickup_clock);
 
         //cout<<"Click is"<<eegclick[0]<<endl;
-        zmq::message_t eeg_signal;
-        bool gotSomthing = subscriber_eeg.recv(&eeg_signal,ZMQ_NOBLOCK);
+        //zmq::message_t eeg_signal;
+        //bool gotSomthing = subscriber_eeg.recv(&eeg_signal,ZMQ_NOBLOCK);
+        //cout<<"gotSomthing "<<int(gotSomthing)<<endl;
         //cout<<"Received is "<<eeg_signal.data()<<endl;
         //if (gotSomthing)
-        memcpy(eegclick, eeg_signal.data(), 3*sizeof(int));
+        //memcpy(eegclick, eeg_signal.data(), 3*sizeof(int));
 
         if ((lastFrameEEGClick == 1) && (eegclick[0] == 1)) {
             eegclick[0] = 0;
@@ -647,7 +646,7 @@ int main(int argc, char** argv)
 
         paused = (size_t) pauseGame;
         //cout<<"Click is "<<eegclick[0]<<endl;
-        cout<<"Power is "<<eegclick[2]<<endl;
+        //cout<<"Power is "<<eegclick[2]<<endl;
         //cout<<"Mean Power is"<<float(eegclick[2])/10000<<endl;
         centerBox = PowerToPixel(float(eegclick[2])/10000);
         //cout <<"Box is "<<centerBox<<endl;
@@ -664,9 +663,9 @@ int main(int argc, char** argv)
         waypoint_message[6] = ms_pickup.count();
 
         //cout<<"The Sent Waypoint is "<<waypoint_message[0]<<endl;
-        zmq::message_t waypoint_zmq(7*sizeof(int));
-        memcpy(waypoint_zmq.data(), &(waypoint_message[0]), 7*sizeof(int));
-        publisher_eeg.send(waypoint_zmq);
+        //zmq::message_t waypoint_zmq(7*sizeof(int));
+        //memcpy(waypoint_zmq.data(), &(waypoint_message[0]), 7*sizeof(int));
+        //publisher_eeg.send(waypoint_zmq);
         /******************************************************************
          *Management of the traffic light
          *********************************************************************/
@@ -700,13 +699,13 @@ int main(int argc, char** argv)
         // size_t is an unint
 
 
-        zmq::message_t zmq_message(4*sizeof(char) + sizeof(int));
-        memcpy(zmq_message.data(), &paused, sizeof(size_t));
-        memcpy((size_t *)zmq_message.data()+1, &tmpTrial, sizeof(size_t));
-        memcpy((size_t *)zmq_message.data()+2, &subLevel, sizeof(size_t));
-        memcpy((size_t *)zmq_message.data()+3, &level, sizeof(size_t));
-        memcpy((size_t *)zmq_message.data()+4, &score, sizeof(int));
-        publisher.send(zmq_message);
+        //zmq::message_t zmq_message(4*sizeof(char) + sizeof(int));
+        //memcpy(zmq_message.data(), &paused, sizeof(size_t));
+        //memcpy((size_t *)zmq_message.data()+1, &tmpTrial, sizeof(size_t));
+        //memcpy((size_t *)zmq_message.data()+2, &subLevel, sizeof(size_t));
+        //memcpy((size_t *)zmq_message.data()+3, &level, sizeof(size_t));
+        //memcpy((size_t *)zmq_message.data()+4, &score, sizeof(int));
+        //publisher.send(zmq_message);
 
         //This ocntrols the pause button
         if (pauseGame) {
@@ -784,7 +783,7 @@ int main(int argc, char** argv)
         //cout<<visor.getCameraManipulator()->getMatrix()<<endl;
         //cout<<"-------------------"<<endl;
 
-        int eyeX = -1000;
+        /*int eyeX = -1000;
         int eyeY = -1000;
         bool rEye = eyeSubscriber.recv(&eye_msg, ZMQ_NOBLOCK);
         string rpl;
@@ -803,7 +802,7 @@ int main(int argc, char** argv)
                 istringstream(eyePos[1]) >> eyeY;
                 //cout<<"ex: "<<eyeX<<"  ey: "<<eyeY<<endl;
             }
-        }
+        }*/
 
 
         // update next frame
@@ -821,11 +820,12 @@ int main(int argc, char** argv)
         subscriber.recv(&hand_msg);
 
         string hand_str(((char *)hand_msg.data()));
-        stringstream ss;
-        ss.str(hand_str);
+        cout<<"hand_str "<<hand_str<<endl;
+        //stringstream ss;
+        //ss.str(hand_str);
 
         float tx,ty,tz;
-        ss>>tx>>tz>>ty;
+        //ss>>tx>>tz>>ty;
         //cout<<"---------------"<<endl;
         //cout<<tx<<endl;
         //cout<<ty<<endl;
@@ -833,27 +833,27 @@ int main(int argc, char** argv)
         tx = (tx - 320.0) / 26.0 + 2.0;
         tz = -(tz - 240.0) / 26.0 + 2.0;
         ty = -(ty - 32.0) * 3.0;
-        cout<<tx<<endl;
-        cout<<ty<<endl;
-        cout<<tz<<endl;
+        //cout<<tx<<endl;
+        //cout<<ty<<endl;
+        //cout<<tz<<endl;
 
         // here we pubslish the hand values consistent with what the user is looking at
-        float hand_message[3]; //hand message has x, y and z position
-        hand_message[0] = tx;
-        hand_message[1] = ty;
-        hand_message[2] = tz;
-        zmq::message_t hand_signal(3*sizeof(float));
-        memcpy(hand_signal.data(), &(hand_message[0]), 3*sizeof(float));
-        publisher_hand.send(hand_signal);
+        //float hand_message[3]; //hand message has x, y and z position
+        //hand_message[0] = tx;
+        //hand_message[1] = ty;
+        //hand_message[2] = tz;
+        //zmq::message_t hand_signal(3*sizeof(float));
+        //memcpy(hand_signal.data(), &(hand_message[0]), 3*sizeof(float));
+        //publisher_hand.send(hand_signal);
 
         if (!firstIt) {
-            handpos.x() = handpos.x() + alpha * (tx - handpos.x());
-            handpos.z() = handpos.z() + alpha * (tz - handpos.z());
-            handpos.y() = handpos.y() + alpha * (ty - handpos.y());
+//            handpos.x() = handpos.x() + alpha * (tx - handpos.x());
+//            handpos.z() = handpos.z() + alpha * (tz - handpos.z());
+//            handpos.y() = handpos.y() + alpha * (ty - handpos.y());
         } else {
-            handpos.x() = tx;
-            handpos.z() = tz;
-            handpos.y() = ty;
+//            handpos.x() = tx;
+//            handpos.z() = tz;
+//            handpos.y() = ty;
         }
         firstIt = false;
 
@@ -913,7 +913,7 @@ int main(int argc, char** argv)
                                         35.0f)
                                     );
         ostringstream trial_ostr;
-        trial_ostr<<"Trials Left: "<<trialpersubl.getValue() - tmpTrial+1;
+        trial_ostr<<"Trials Left: "<<trialPerSublevel - tmpTrial+1;
         TrialLeftGeode->removeDrawables(0);
         TrialLeftGeode->addDrawable( createText(
                                          osg::Vec3(50.0f, 990.0f, 0.0f),
@@ -1252,7 +1252,7 @@ int main(int argc, char** argv)
                     currentWaypoint += 1;
                     start_waypoints = high_resolution_clock::now();
 
-                    if (currentWaypoint >= wpNum.getValue()) {
+                    if (currentWaypoint >= numWaypoints) {
                         //start the counter
                         box_trans->setScale(osg::Vec3d(1.3,1.3,1.3));
                         currentWaypoint = -1;
@@ -1325,7 +1325,7 @@ int main(int argc, char** argv)
             }
 
             bool openByEye = false;
-            if (eyeMode) {
+           /* if (eyeMode) {
                 cout<<" framesStareTarget: "<<framesStareTarget<<endl;
                 if (eyeX != -1000) {
 
@@ -1341,7 +1341,7 @@ int main(int argc, char** argv)
                     cout<<"ey: "<<1080.0-eyeY<<endl;
                     cout<<"targetPosIn2D.y(): "<<targetPosIn2D.y()<<endl;
                     cout<<"targetPosIn2D.z(): "<<targetPosIn2D.z()<<endl;*/
-                    float eyeDisTarget = sqrt((eyeX - targetPosIn2D.x()) * (eyeX - targetPosIn2D.x()) +
+                    /*float eyeDisTarget = sqrt((eyeX - targetPosIn2D.x()) * (eyeX - targetPosIn2D.x()) +
                                               ((1080.0-eyeY) - targetPosIn2D.y()) * ((1080.0-eyeY) - targetPosIn2D.y()) );
 
                     cout<<"eyeDisTarget "<<eyeDisTarget<<endl;
@@ -1365,11 +1365,11 @@ int main(int argc, char** argv)
                 } else {
                     bioFeedBox->setElementAlpha(0.5);
                 }
-            }
+            }*/
 
-            if ((demoMode && openHand) || (!demoMode && eegclick[0]) || (openByEye)) {
-                if (openByEye)
-                    openByEye = false;
+            if ((true && openHand) || (!true && eegclick[0]) || (openByEye)) {
+                //if (openByEye)
+                //    openByEye = false;
 
                 //If there was a click, send a zmq message with the time
                 //get current time
@@ -1377,17 +1377,15 @@ int main(int argc, char** argv)
                 //if (demoMode && openHand) {
                 if ( (inBoxReach > 0)&&(guiEventHandler->handState == true)) {
                     inBoxReach = 0;
-                    /**************************************************/
                     auto release_time = high_resolution_clock::now();
                     milliseconds time_zmq_message = duration_cast<milliseconds>(release_time - counter_start);
                     message_arr[0] = time_zmq_message.count();
-                    stringstream message;
-                    message<<setprecision(3)<<fixed<<message_arr[0]/1000<<",";
-                    message<<endl;
-                    zmq::message_t histogram_message(message.str().length());
-                    memcpy((char *) histogram_message.data(), message.str().c_str(), message.str().length());
-                    publisher_histogram.send(histogram_message);
-                    /**************************************************/
+                    //stringstream message;
+                    //message<<setprecision(3)<<fixed<<message_arr[0]/1000<<",";
+                    //message<<endl;
+                    //zmq::message_t histogram_message(message.str().length());
+                    //memcpy((char *) histogram_message.data(), message.str().c_str(), message.str().length());
+                    //publisher_histogram.send(histogram_message);
                     guiEventHandler->step = 0;
                     guiEventHandler->handState = false;
                     stickBallHand = false;
@@ -1448,7 +1446,7 @@ int main(int argc, char** argv)
                         tmp = box_pos - sph_pos;
                     }
 
-                    for (size_t i=0; i< wpNum.getValue(); i++) {
+                    for (size_t i=0; i< numWaypoints; i++) {
                         double x = (double)rand()/(RAND_MAX)* 14.0 - 7.0;
                         double y = 0.0;//(double)rand()/(RAND_MAX)*(-2.0)-4.0;
                         double z = (double)rand()/(RAND_MAX)* 10.0 - 5;
@@ -1529,7 +1527,7 @@ int main(int argc, char** argv)
 
 
                     trial_counter_start = high_resolution_clock::now();
-                    if (tmpTrial > trialpersubl.getValue()) {
+                    if (tmpTrial > trialPerSublevel) {
                         tmpTrial = 1;
                         subLevel += 1;
                         start = high_resolution_clock::now();
@@ -1537,7 +1535,7 @@ int main(int argc, char** argv)
 
 
                     }
-                    if (subLevel > sublperlevel.getValue()) {
+                    if (subLevel > sublevelPerLevel) {
                         level += 1;
                         subLevel = 1;
                         subLevelFlag = true;
@@ -1552,9 +1550,9 @@ int main(int argc, char** argv)
         }
 
         else if(currentWaypoint == -1) {
-            if(eyeMode) {
-                framesStareTarget = 0;
-            }
+            //if(eyeMode) {
+            //    framesStareTarget = 0;
+            //}
             if (inBoxReach > 0) {
                 // event: target disengaged
                 targetEngaged = false;
@@ -1716,8 +1714,8 @@ int main(int argc, char** argv)
             totalTimeWithBall += tmpTimeFlt;
         }
 
-        cout<<"totalTimeWithBall: "<<totalTimeWithBall<<endl;
-        cout<<"totalTimeWithoutBall: "<<totalTimeWithoutBall<<endl;
+        //cout<<"totalTimeWithBall: "<<totalTimeWithBall<<endl;
+        //cout<<"totalTimeWithoutBall: "<<totalTimeWithoutBall<<endl;
 
 
     }
@@ -1726,12 +1724,12 @@ int main(int argc, char** argv)
     for (size_t i=0; i<9; i++)
         fclose(eventFiles[i]);
 
-    int ret = 0;
-    ret = system("./copydata.sh");
-    cout<<"data copied"<<endl;
+    //int ret = 0;
+    //ret = system("./copydata.sh");
+    //cout<<"data copied"<<endl;
 
-    ret = system("matlab -nodesktop -nosplash -r \"plotdata;quit\"");
-    ret = system("reset");
+    //ret = system("matlab -nodesktop -nosplash -r \"plotdata;quit\"");
+    //ret = system("reset");
 
     return visor.run();
 

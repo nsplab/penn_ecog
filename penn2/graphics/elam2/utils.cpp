@@ -1,6 +1,21 @@
 
 #include "utils.h"
 
+bool openHand = false;
+
+float ball_x = 0;
+float ball_y = 0;
+float ball_z = 0;
+
+bool pauseGame = false;
+
+osg::ref_ptr<osgText::Font> g_font =
+        osgText::readFontFile("../pirulen.ttf");
+
+osg::ref_ptr<osgText::Font> c_font =
+        osgText::readFontFile("../Arial.ttf");
+
+
 osg::Geode* createAxis()
 {
     osg::Geode*     geode    = new osg::Geode();
