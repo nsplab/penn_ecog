@@ -1,22 +1,29 @@
 import zmq
 import numpy as np
+import signal
 
 import setpos
+import config
+
+from state import GameState
+from state import FilterState
 
 # ZMQ connections, 3 threads
 context = zmq.Context(3)
 
 # socket to publish state to filter modules
-socket = context.socket(zmq.PUB)
-socket.bind("ipc:///tmp/supervisor.pipe")
+ssocket = context.socket(zmq.PUB)
+ssocket.bind("ipc:///tmp/supervisor.pipe")
 
 # socket to publish state to graphics modules
 gsocket = context.socket(zmq.PUB)
+gsocket.setsockopt(zmq.HWM, 1)
 gsocket.bind("ipc:///tmp/graphics.pipe")
 
 # socket to receive estimated hand movement from filter
 hsocket = context.socket(zmq.SUB)
-hsocket.connect("ipc:///tmp/hand_position.pipe")
+#hsocket.connect("ipc:///tmp/hand_position.pipe")
+hsocket.connect("ipc:///tmp/ksignal.pipe")
 hsocket.setsockopt(zmq.SUBSCRIBE, '')  # subscribe with no filter
 
 # parameters
@@ -24,33 +31,49 @@ run = True  # keep main loop iterating
 init_obj_pos = True  # initialize positions of ball and box
 start_trial = False  # if trial has started
 goal_is_ball = True  # ball or box is goal
-trial_id = 0
 
-# 0: training, 1: test
-triaining_test_seq = np.array([0, 0, 0, 1, 1])
+gameState = GameState()
+filterState = FilterState()
 
-ball_pos = np.array([0.0, 0.0, 0.0])
-box_pos = np.array([0.0, 0.0, 0.0])
-hand_pos = np.array([-6.0, 0.0, 0.0])
 
+def signal_handler(signal, frame):
+    global run
+    run = False
+
+signal.signal(signal.SIGINT, signal_handler)
+
+# main loop
 while run:
 
 # put ball and box in random positions
     if init_obj_pos:
-        ball_pos, box_pos = setpos.SetInitialPositions(hand_pos)
+        gameState.ball_pos, gameState.box_pos = \
+                                 setpos.SetInitialPositions(gameState.hand_pos)
         init_obj_pos = False
 
     # broadcast state
     if goal_is_ball:
-        goal_pos = ball_pos
+        filterState.target_pos = gameState.ball_pos
     else:
-        goal_pos = box_pos
-    goal_pos_str = np.char.mod('%f', goal_pos)
-    state_string = str(trial_id)
-    socket.send(","+str(",".join(goal_pos_str))+","+str(triaining_test_seq[trial_id % len(triaining_test_seq)])+","+str(start_trial))
-    trial_id += 1
+        filterState.target_pos = gameState.box_pos
 
-    try:
+    if gameState.updateState():
+        # a new trial started
+        gameState.ball_pos, gameState.box_pos = \
+                                 setpos.SetInitialPositions(gameState.hand_pos)
+        filterState.trial += 1
+    gsocket.send(gameState.serialize())
+    ssocket.send(filterState.serialize())
+
+    vec_str = hsocket.recv()
+    vec = vec_str.split(" ")
+
+    gameState.hand_pos[0] = (float(vec[0]) - 320) / 26.0
+    gameState.hand_pos[1] = -(float(vec[1]) - 240) / 26.0
+    #gameState.hand_pos[2] = -(float(vec[1]) - 12) / 3.0
+
+
+'''    try:
         res = hsocket.recv(zmq.NOBLOCK)
         #print "res: "+res[:-2]
         # if received data
@@ -73,4 +96,4 @@ while run:
     graphics_msg += str(",".join(hand_pos_str))
     print(graphics_msg)
     gsocket.send(graphics_msg)
-
+'''
