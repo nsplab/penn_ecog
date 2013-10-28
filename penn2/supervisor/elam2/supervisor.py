@@ -10,7 +10,7 @@ import setpos
 # contains the configuration parameters
 import config
 
-# 
+# the state machines to present th state of th graphics and filter modules
 from state import GameState
 from state import FilterState
 
@@ -28,8 +28,8 @@ gsocket.bind("ipc:///tmp/graphics.pipe")
 
 # socket to receive estimated hand movement from filter
 hsocket = context.socket(zmq.SUB)
-#hsocket.connect("ipc:///tmp/hand_position.pipe")
-hsocket.connect("ipc:///tmp/ksignal.pipe")
+hsocket.connect("ipc:///tmp/hand_position.pipe")
+#hsocket.connect("ipc:///tmp/ksignal.pipe")
 hsocket.setsockopt(zmq.SUBSCRIBE, '')  # subscribe with no filter
 
 # parameters
@@ -38,14 +38,16 @@ init_obj_pos = True  # initialize positions of ball and box
 start_trial = False  # if trial has started
 goal_is_ball = True  # ball or box is goal
 
+# create state objects
 gameState = GameState()
 filterState = FilterState()
 
-
+# capture the kill signal and terminate the process
 def signal_handler(signal, frame):
     global run
     run = False
 
+# register the signal handler
 signal.signal(signal.SIGINT, signal_handler)
 
 # main loop
@@ -71,6 +73,7 @@ while run:
     gsocket.send(gameState.serialize())
     ssocket.send(filterState.serialize())
 
+    # receive the hand velocity
     vec_str = hsocket.recv()
     vec = vec_str.split(" ")
 
