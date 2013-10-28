@@ -2,6 +2,7 @@ import numpy as np
 import threading
 
 # 0: training, 1: test
+# used to tell the filter module the type of the current trial
 triainingTestSeq = np.array([0, 0, 0, 1, 1])
 
 
@@ -23,6 +24,7 @@ class GameState(object):
         self.numTrials = 3
         self.numSublevels = 2
 
+    # convert the game state to ascii strin to be sent to the graphics module
     def serialize(self):
         svalue = (str(self.hand_pos[0]) + " " +
                   str(self.hand_pos[1]) + " " +
@@ -40,6 +42,7 @@ class GameState(object):
                    str(self.trial))
         return svalue
 
+    # close the hand and pick up the ball
     def pickBall(self):
         print "function"
         self.closed_hand = 1
@@ -68,6 +71,7 @@ class GameState(object):
                 self.score += 10
                 ret = True
 
+        # advance the trial number, sublevel number, and the level number
         if ret:
             self.trial += 1
         if self.trial > self.numTrials:
