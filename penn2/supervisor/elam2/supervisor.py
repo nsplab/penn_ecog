@@ -1,10 +1,16 @@
+# to use the zmq library
 import zmq
-import numpy as np
+
+# to capture the kill signal and terminate the process gracefully
 import signal
 
+# provides th function to reinitialize the hand and target positions
 import setpos
+
+# contains the configuration parameters
 import config
 
+# 
 from state import GameState
 from state import FilterState
 
