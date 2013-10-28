@@ -42,6 +42,7 @@ goal_is_ball = True  # ball or box is goal
 gameState = GameState()
 filterState = FilterState()
 
+
 # capture the kill signal and terminate the process
 def signal_handler(signal, frame):
     global run
