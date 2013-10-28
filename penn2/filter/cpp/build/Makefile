@@ -186,6 +186,30 @@ main.cpp.s:
 	$(MAKE) -f CMakeFiles/filter.dir/build.make CMakeFiles/filter.dir/main.cpp.s
 .PHONY : main.cpp.s
 
+matrix.o: matrix.cpp.o
+.PHONY : matrix.o
+
+# target to build an object file
+matrix.cpp.o:
+	$(MAKE) -f CMakeFiles/filter.dir/build.make CMakeFiles/filter.dir/matrix.cpp.o
+.PHONY : matrix.cpp.o
+
+matrix.i: matrix.cpp.i
+.PHONY : matrix.i
+
+# target to preprocess a source file
+matrix.cpp.i:
+	$(MAKE) -f CMakeFiles/filter.dir/build.make CMakeFiles/filter.dir/matrix.cpp.i
+.PHONY : matrix.cpp.i
+
+matrix.s: matrix.cpp.s
+.PHONY : matrix.s
+
+# target to generate assembly for a file
+matrix.cpp.s:
+	$(MAKE) -f CMakeFiles/filter.dir/build.make CMakeFiles/filter.dir/matrix.cpp.s
+.PHONY : matrix.cpp.s
+
 naive_filter.o: naive_filter.cpp.o
 .PHONY : naive_filter.o
 
@@ -276,6 +300,9 @@ help:
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... matrix.o"
+	@echo "... matrix.i"
+	@echo "... matrix.s"
 	@echo "... naive_filter.o"
 	@echo "... naive_filter.i"
 	@echo "... naive_filter.s"

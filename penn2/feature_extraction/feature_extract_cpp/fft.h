@@ -225,6 +225,7 @@ void Fft<T>::GetPower(std::vector<std::vector<T> >& pow) {
     for (size_t i = 0; i < nc; i++) {
       pow[sig][i] = sqrt(outVec[sig][i][0]*outVec[sig][i][0] + outVec[sig][i][1]*outVec[sig][i][1]);
       pow[sig][i] *= winFuncSum;
+      pow[sig][i] = pow[sig][i]*pow[sig][i]/2.0;
     }
   }
   //std::cout<<"w "<<winFuncSum<<std::endl;
@@ -240,6 +241,7 @@ void Fft<T>::GetPowerOneVec(Eigen::VectorXf& pow) {
       pow(sig*nc+i) = sqrt(outVec[sig][i][0]*outVec[sig][i][0] + outVec[sig][i][1]*outVec[sig][i][1]);
       //std::cout<<"pow(sig*nc+i) "<<outVec[sig][i][0]<<std::endl;
       pow(sig*nc+i) *= winFuncSum;
+      pow(sig*nc+i) = pow(sig*nc+i)*pow(sig*nc+i)/2.0;
     }
   }
 }

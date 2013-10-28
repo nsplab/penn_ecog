@@ -12,7 +12,7 @@ void NaiveFilter::Predict() {
   GrabFeatures();
   // process features
   for (size_t i=0; i<features_.size(); i++) {
-      features_[i] /= 2.0;
+      features_[i] *= 1.2;
   }
 }
 

@@ -64,6 +64,8 @@
       </Unit>
       <Unit filename="/home/user/code/penn2/penn/penn2/filter/cpp/main.cpp">
       </Unit>
+      <Unit filename="/home/user/code/penn2/penn/penn2/filter/cpp/matrix.cpp">
+      </Unit>
       <Unit filename="/home/user/code/penn2/penn/penn2/filter/cpp/naive_filter.cpp">
       </Unit>
       <Unit filename="/home/user/code/penn2/penn/penn2/filter/cpp/reachstateequation.cpp">
@@ -73,6 +75,8 @@
       <Unit filename="/home/user/code/penn2/penn/penn2/filter/cpp/filter_class.h">
       </Unit>
       <Unit filename="/home/user/code/penn2/penn/penn2/filter/cpp/jointrse_filter.h">
+      </Unit>
+      <Unit filename="/home/user/code/penn2/penn/penn2/filter/cpp/matrix.h">
       </Unit>
       <Unit filename="/home/user/code/penn2/penn/penn2/filter/cpp/naive_filter.h">
       </Unit>

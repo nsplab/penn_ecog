@@ -40,6 +40,7 @@ protected:
   size_t trial_id;
   // target position sent by supervisor
   std::vector<float> target_;
+  size_t featureTimestamp_;
 private:
   static zmq::context_t context_;
   static zmq::socket_t publisher_;

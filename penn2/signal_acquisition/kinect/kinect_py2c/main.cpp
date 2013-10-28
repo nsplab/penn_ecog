@@ -4,6 +4,7 @@
 #include <chrono>
 
 #include <zmq.hpp>
+
 #include <eigen3/Eigen/Dense>
 
 using namespace std;
@@ -48,13 +49,22 @@ void GenerateSignal() {
 
         // assume intended velocity is power modulated
         float maxSpeed = 20.0;
-        float baselinePower = maxSpeed / 2.0;
-        diffx = (fabs(diffx)>maxspeed)? (maxSpeed*diffx/fabs(diffx)):diffx;
-        diffy = (fabs(diffy)>maxspeed)? (maxSpeed*diffy/fabs(diffy)):diffy;
-        diffz = (fabs(diffz)>maxspeed)? (maxSpeed*diffz/fabs(diffz)):diffz;
-        sample(0) = cos(2.0*M_PI * float(i)/float(samplingRate) * xSignalFrq) * xSignalAmp * sqrt(diffx+baseline_power);
-        sample(1) = cos(2.0*M_PI * float(i)/float(samplingRate) * ySignalFrq) * ySignalAmp * sqrt(diffy+baseline_power);
-        sample(2) = cos(2.0*M_PI * float(i)/float(samplingRate) * zSignalFrq) * zSignalAmp * sqrt(diffz+baseline_power);
+        float baselinePower = maxSpeed;
+        if (diffx >= maxSpeed)
+            diffx = maxSpeed;
+        else if (diffx <= -maxSpeed)
+            diffx = -maxSpeed;
+        if (diffy >= maxSpeed)
+            diffy = maxSpeed;
+        else if (diffy <= -maxSpeed)
+            diffy = -maxSpeed;
+        if (diffz >= maxSpeed)
+            diffz = maxSpeed;
+        else if (diffz <= -maxSpeed)
+            diffz = -maxSpeed;
+        sample(0) = cos(2.0*M_PI * float(i)/float(samplingRate) * xSignalFrq) * xSignalAmp * sqrt(diffx+baselinePower);
+        sample(1) = cos(2.0*M_PI * float(i)/float(samplingRate) * ySignalFrq) * ySignalAmp * sqrt(diffy+baselinePower);
+        sample(2) = cos(2.0*M_PI * float(i)/float(samplingRate) * zSignalFrq) * zSignalAmp * sqrt(diffz+baselinePower);
 
         signal = mixingMatrix * sample;
         cout<<"signal: "<<signal<<endl;
@@ -65,7 +75,7 @@ void GenerateSignal() {
 
         publisher.send(zmqMessage);
 
-        std::this_thread::sleep_for(std::chrono::microseconds(100));
+        this_thread::sleep_for(chrono::microseconds(100));
     }
 }
 
@@ -91,9 +101,10 @@ int main()
         diffy = prevy - y;
         diffz = prevz - z;
 
+        //cout<<"dx:"<<diffx<<"\tdy:"<<diffy<<"\tdz:"<<diffz<<endl;
+
         prevx = x; prevy = y; prevz = z;
     }
 
     return 0;
 }
-

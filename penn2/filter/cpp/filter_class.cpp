@@ -17,7 +17,7 @@ FilterClass::FilterClass() {
   features_subscriber_.setsockopt(ZMQ_SUBSCRIBE, NULL, 0);
   supervisor_subscriber_.connect("ipc:///tmp/supervisor.pipe");
   supervisor_subscriber_.setsockopt(ZMQ_SUBSCRIBE, NULL, 0);
-  // the target is in 3 dimensions, TODO: fix me
+  // the target is in 3 dimensions
   target_.resize(3);
   handMovement_.resize(3);
 }
@@ -26,25 +26,20 @@ void FilterClass::GrabFeatures() {
   // receive data from feature extractor
   zmq::message_t features_msg;
   features_subscriber_.recv(&features_msg);
-  // convert reveived data into c++ string/sstream
-  string feat_str(((char *)features_msg.data()));
-  replace(feat_str.begin(), feat_str.end(), ',', ' ');
-  stringstream ss;
-  ss.str(feat_str);
 
   // extract timestamp, # features, and features
-  int timestamp;
-  ss>>timestamp;
-  int vec_size;
-  ss>>vec_size;
+  featureTimestamp_;
+  memcpy(&featureTimestamp_, features_msg.data(), sizeof(size_t));
 
   cout<<"timestamp: "<<timestamp<<endl;
+
+  size_t vec_size = (features_msg.size() - sizeof(size_t)) / sizeof(float);
+
   cout<<"vec size: "<<vec_size<<endl;
 
   features_.resize(vec_size);
-  for (size_t i=0; i<vec_size; i++) {
-      ss>>features_[i];
-  }
+  memcpy(features_.data(), static_cast<size_t*>(featuesMsg.data())+1, vec_size * sizeof(float));
+
   cout<<"features: ";
   for (size_t i=0; i<vec_size; i++) {
       cout<<features_[i]<<" ";

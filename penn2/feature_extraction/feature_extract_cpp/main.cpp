@@ -44,9 +44,11 @@ int main(int argc, char** argv)
 
     VectorXf powers;
 
+    // this allows selecting channels by the spatial filter matrix, before
+    // computing the FFT
+    size_t numChannels = spatialFilterMx.rows();
     // compute fft window size in number of samples
     size_t fftWinSizeSamples;
-    size_t numChannels;
     size_t samplingRate;
     if (0 != GetWinSizeSamples(signalConfig, fftWinSizeSamples,
                                fftWinSize, numChannels, samplingRate)) {
@@ -65,6 +67,9 @@ int main(int argc, char** argv)
     float buffer[numChannels];
     vector<float> points(numChannels);
 
+    size_t numberOfSamplesSkip = samplingRate / outputRate;
+    size_t prevProcSample = 0;
+
     bool quit = false;
     while (!quit) {
         message_t signal;
@@ -73,7 +78,6 @@ int main(int argc, char** argv)
         // extract timestamp
         size_t timestamp;
         memcpy(&timestamp, signal.data(), sizeof(size_t));
-        cout<<"timestamp: "<<timestamp<<endl;
 
         // extract neural signal
         memcpy(buffer, (size_t*)signal.data()+1, signal.size()-sizeof(size_t));
@@ -83,19 +87,31 @@ int main(int argc, char** argv)
         signalVector.resize(numChannels);
         memcpy(signalVector.data(), buffer, signal.size()-sizeof(size_t));
         VectorXf signalSpatialFiltered = spatialFilterMx * signalVector;
-        memcpy(signalVector.data(), buffer, signal.size()-sizeof(size_t));
+        memcpy(buffer, signalSpatialFiltered.data(), signalSpatialFiltered.rows()*sizeof(float));
+
+        points.resize(signalSpatialFiltered.rows());
 
         // compute FFT
-        copy(&(buffer[0]), &(buffer[numChannels]), points.begin());
+        copy(&(buffer[0]), &(buffer[points.size()]), points.begin());
         //for (size_t i=0; i<numChannels; i++)
         //    cout<<"p "<<i<<" : "<< points[i]<<endl;
 
         fft.AddPoints(points);
+        if (prevProcSample + numberOfSamplesSkip > timestamp)
+            continue;
         if (fft.Process()) {
+            prevProcSample = timestamp;
             fft.GetPowerOneVec(powers);
-
             VectorXf features = coefMx * powers;
+
+            cout<<"timestamp: "<<timestamp<<endl;
+            cout<<"message size: "<<(signal.size()-sizeof(size_t))/sizeof(float)<<endl;
             cout<<"features: "<<features<<endl;
+
+            message_t featuesMsg(sizeof(size_t)+features.rows()*sizeof(float));
+            memcpy(featuesMsg.data(), &timestamp, sizeof(size_t));
+            memcpy(static_cast<size_t*>(featuesMsg.data())+1, features.data(), features.rows()*sizeof(float));
+            publisher.send(featuesMsg);
         }
     }
 
@@ -103,7 +119,7 @@ int main(int argc, char** argv)
 }
 
 int parsConfig(string& signalConfig, string& matrixFile, size_t& fftWinSize,
-               size_t& fftWinType, size_t& outputRate) {
+               size_t& fftWinType, size_t& outputRate, string& spatialFilterFile) {
 
     string cfgFile("../config.cfg");
 
@@ -141,6 +157,16 @@ int parsConfig(string& signalConfig, string& matrixFile, size_t& fftWinSize,
         testFile.close();
     }
 
+    spatialFilterFile = ifile("spatialFilterFile", "");
+    // check if spatialFilterFile exists
+    testFile.open(spatialFilterFile.c_str());
+    if (! testFile.good()) {
+        cout<<"Could not open spatialFilterFile: "<<spatialFilterFile<<endl;
+        return 1;
+    } else {
+        testFile.close();
+    }
+
     fftWinSize = ifile("fftWinSize", 300);
     fftWinType = ifile("fftWinSize", 0);
     outputRate = ifile("outputRate", 3);
@@ -150,8 +176,7 @@ int parsConfig(string& signalConfig, string& matrixFile, size_t& fftWinSize,
 
 
 int GetWinSizeSamples(string signalConfig, size_t& fftWinSizeSamples,
-                      size_t fftWinSize, size_t& numChannels, size_t& samplingRate,
-                      string& spatialFilterFile) {
+                      size_t fftWinSize, size_t& numChannels, size_t& samplingRate) {
 
     // check if signalConfig exists
     ifstream testFile(signalConfig.c_str());
