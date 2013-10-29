@@ -52,8 +52,7 @@ jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionP
 
         timeInvariantRSE rseComputer(reachTarget, Q, R, dim);
         rseParams = rseComputer.returnAnswer();
-    }
-    else {
+    } else {
         reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget, dim);
         rseParams = rseComputer.returnAnswer();
     }
@@ -374,7 +373,7 @@ void jointRSE_filter::Update() {
     //    covariance_ = new_cov;
 }
 
-void jointRSE_filter::InitNewTrial(mat startPos) {
+void jointRSE_filter::InitNewTrial(mat startPos, mat reachTarget) {
     pos_ = startPos;
     prev_u_ = zeros<mat>(dim_, 1);
     saved_pos_.clear();
@@ -386,37 +385,76 @@ void jointRSE_filter::InitNewTrial(mat startPos) {
     uHistory_ = zeros<mat>(dim_ * numSetsOfParams_ * numLags + affineParam_, 1);
 
     const double timeBin = 0.01;
-    covariance_ = blkdiag(covariance_.submat(0, 0, dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels - 1, \
+    covariance_ = blkdiag(covariance_.submat(0, 0, dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels - 1,
                                                    dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels - 1), prepareINITIAL_ARM_COV(timeBin));
 
     timeStep_ = -1;
+
+    // page 31
+    const double maxTimeSteps = 3.0/timeBin;
+    // page 27
+    int reachTimeSteps = 1.0/timeBin;
+    reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget, dim_);
+    RSEMatrixStruct rseParams;
+    rseParams = rseComputer.returnAnswer();
+    mat FSingleTimeChannels = eye<mat>(dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels,
+                                       dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels);
+    cube FChannels = repslices(FSingleTimeChannels, timeInvariant_ ? 1 : maxTimeSteps);
+    // Eq. 18
+    F_ = blkdiag(FChannels, rseParams.F);
+    cout<<"F_ size: "<<F_.n_rows<<" "<<F_.n_cols<<endl;
+
+    mat QSingleTimeChannels = zeros<mat>(dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels,
+                                         dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels);
+    cube QChannels = repslices(QSingleTimeChannels, timeInvariant_ ? 1 : maxTimeSteps);
+
+    // Eq.19
+    Q_ = blkdiag(QChannels, rseParams.Q);
+
+    //b_ = zeros<cube>(numChannels * FChannels.n_rows + rseParams.b.n_rows, 1, maxTimeSteps);
+    //b_.subcube(numChannels * FChannels.n_rows, 0, 0, b_.n_rows-1, b_.n_cols-1, b_.n_slices - 1) = rseParams.b;
+
+    b_ = zeros<cube>(FChannels.n_rows + rseParams.b.n_rows, 1, timeInvariant_ ? 1 : maxTimeSteps);
+
+    // TODO                      v---should this be FChannels.n_cols?
+    b_.subcube(FChannels.n_rows, 0, 0, b_.n_rows-1, b_.n_cols-1, b_.n_slices - 1) = rseParams.b;
 }
 
 void jointRSE_filter::Run() {
-    GetState();
+    for (;;) {
+        GrabFeatures();
 
-    GrabFeatures();
-    obs_.resize(features_.size());
-    for (size_t i=0; i<features_.size(); i++) {
-        obs_[i] = features_[i];
-    }
+        SendHandPosGetState(handPos_);
 
-    // re-initialize filter at start of new trial
-    if (prevTrialId_ != trial_id) {
-        cout<<"new trial started"<<endl;
-        pos_.resize(handPos_.size());
-        for (size_t i=0; i<handPos_.size(); i++) {
-            pos_[i] = handPos_[i];
+        obs_.resize(features_.size());
+        for (size_t i=0; i<features_.size(); i++) {
+            obs_[i] = features_[i];
         }
 
-        InitNewTrial(pos_);
-        prevTrialId_ = trial_id;
+        // re-initialize filter at start of new trial
+        if (prevTrialId_ != trial_id) {
+            cout<<"new trial started"<<endl;
+            pos_.resize(handPos_.size());
+            for (size_t i=0; i<handPos_.size(); i++) {
+                pos_[i] = handPos_[i];
+            }
+
+            arma::mat reachTarget = zeros<mat>(dim_*2, 1);
+            for (size_t i=0; i<target_.size(); i++) {
+                reachTarget[i] = target_[i];
+            }
+
+            InitNewTrial(pos_, reachTarget);
+            prevTrialId_ = trial_id;
+        }
+
+        Predict();
+        Update();
+
+        handPos_[0] += pos_[0];
+        handPos_[1] += pos_[1];
+        handPos_[2] += pos_[2];
     }
-
-    Predict();
-    Update();
-
-    PublishHandMovement();
 }
 
 // The initial covariance on the arm components of the state.

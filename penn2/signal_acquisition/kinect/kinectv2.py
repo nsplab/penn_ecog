@@ -29,7 +29,7 @@ first_iter = True
 def get_video():
     rgb = freenect.sync_get_video()[0]
     bgr = cv2.cvtColor(rgb, cv2.COLOR_BGR2RGB)
-    return bgr
+    return cv2.flip(bgr, 1)
 
 # Parameters for lucas kanade optical flow
 lk_params = dict(winSize=(45, 45),
@@ -42,11 +42,19 @@ oldpoint = 0
 prev = 0
 old_gray = 0
 
+alpha = 0.5
+tx = 0
+ty = 0
+tz = 0
+
 # retrive the next depth video frame
 def get_depth_raw():
+    global socket
     global prev, oldpoint, old_gray
+    global alpha, tx, ty, tz
     # get the depth frame
     img = freenect.sync_get_depth()[0]
+    img = cv2.flip(img, 1)
 
     # backplane, bring very far pixels to backplane at 2000
     smallDiffs = (img > 2000)
@@ -64,13 +72,29 @@ def get_depth_raw():
     # background pixels are white
     timg[background] = 65535
 
-    #
     perc = np.percentile(timg, 0.2)
     near_indices = timg <= perc
-    x = np.median(near_indices[1])
-    y = np.median(near_indices[0])
-    range_x = np.max(near_indices[0]) - np.min(near_indices[0])
-    range_y = np.max(near_indices[1]) - np.min(near_indices[1])
+    far_indices = timg > perc
+    dep = np.empty_like(timg)
+    dep[near_indices] = 255
+    dep[far_indices] = 0
+    nindices = np.nonzero(dep)
+    x = np.median(nindices[1])
+    y = np.median(nindices[0])
+    z = np.median(timg[nindices])
+    print 'z: ', z
+
+    if tx == 0 and ty == 0 and tz == 0:
+        tx = x
+        ty = y
+        tz = z
+    else:
+        tx = tx + alpha * (x - tx)
+        ty = ty + alpha * (y - ty)
+        tz = tz + alpha * (z - tz)
+
+    range_x = np.max(nindices[0]) - np.min(nindices[0])
+    range_y = np.max(nindices[1]) - np.min(nindices[1])
 
     if prev == 1:
         ni = timg.copy()
@@ -94,10 +118,13 @@ def get_depth_raw():
             old_gray = timg.copy()
 
     if range_x ** 2 + range_y ** 2 < 7200:
-        cv2.circle(timg, (int(x), int(y)), 10, cv2.cv.RGB(0, 0, 0),
+        cv2.circle(timg, (int(tx), int(ty)), 10, cv2.cv.RGB(0, 0, 0),
                  8, cv2.CV_AA)
-        cv2.circle(timg, (int(x), int(y)), 10, cv2.cv.RGB(65535, 65535, 65535),
+        cv2.circle(timg, (int(tx), int(ty)), 10, cv2.cv.RGB(65535, 65535, 65535),
                  5, cv2.CV_AA)
+
+    signal_msg = str(tx) + " " + str(ty) + " " + str(tz)
+    socket.send(signal_msg)
 
     return timg
 
@@ -105,6 +132,7 @@ def get_depth_raw():
 tmpDepth = freenect.sync_get_depth(format=freenect.DEPTH_11BIT)[0]
 tmpDepth = freenect.sync_get_depth(format=freenect.DEPTH_11BIT)[0]
 tmpDepth = freenect.sync_get_depth(format=freenect.DEPTH_11BIT)[0]
+tmpDepth = cv2.flip(tmpDepth, 1)
 # convert to two-byte image
 backDepth = tmpDepth.copy().astype(np.int16)
 smallDiffs = (backDepth > 2000)
@@ -124,7 +152,7 @@ signal.signal(signal.SIGINT, signal_handler)
 # main loop
 while run:
     cv2.imshow('Video', get_video())
-    cv2.imshow('Raw Depth', get_depth_raw())
+    cv2.imshow('Depth', get_depth_raw())
     if cv2.waitKey(10) == 27:
         run = False
 

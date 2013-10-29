@@ -23,6 +23,7 @@ class GameState(object):
         self.holdTime = 2.0  # seconds
         self.numTrials = 3
         self.numSublevels = 2
+        self.pickedBall = False
 
     # convert the game state to ascii strin to be sent to the graphics module
     def serialize(self):
@@ -48,6 +49,7 @@ class GameState(object):
         self.closed_hand = 1
         self.timeThread.cancel()
         self.ballTimerStarted = False
+        self.pickedBall = True
 
     def updateState(self):
         ret = False

@@ -13,10 +13,8 @@ public:
   void GrabFeatures();
   // receive state from supervisor:
   // hand position, mode (training/testing), target position
-  void GetState();
-  // use ZMQ to publish hand movement at next cycle
-  // sent values are added to current hand position by supervisor
-  void PublishHandMovement(const std::vector<float>& hand_movement);
+  void SendHandPosGetState(const std::vector<float>& hand_movement);
+
   // derived classes should implement these two methods
   virtual void Update() = 0;
   virtual void Predict() = 0;
@@ -27,24 +25,24 @@ public:
 protected:
   // feature vector
   std::vector<float> features_;
-  // hand movement
-  std::vector<float> handMovement_;
   // hand position
   std::vector<float> handPos_;
-  // hand position
+  // hand state
   std::vector<float> handState_;
   // training or testing mode
   TrialMode mode_;
+  // subject attending
+  float attending_;
   // trial ID sent by supervisor
   // should be sent back to it
   size_t trial_id;
   // target position sent by supervisor
   std::vector<float> target_;
   size_t featureTimestamp_;
+  size_t dim_;
 private:
   static zmq::context_t context_;
-  static zmq::socket_t publisher_;
-  static zmq::socket_t supervisor_subscriber_;
+  static zmq::socket_t supervisor_;
   static zmq::socket_t features_subscriber_;
 };
 

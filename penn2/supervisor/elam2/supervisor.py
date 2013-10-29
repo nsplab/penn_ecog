@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # to use the zmq library
 import zmq
 
@@ -10,7 +11,7 @@ import setpos
 # contains the configuration parameters
 import config
 
-# the state machines to present th state of th graphics and filter modules
+# the state machines to present the state of the graphics and filter modules
 from state import GameState
 from state import FilterState
 
@@ -18,19 +19,13 @@ from state import FilterState
 context = zmq.Context(3)
 
 # socket to publish state to filter modules
-ssocket = context.socket(zmq.PUB)
+ssocket = context.socket(zmq.REP)
 ssocket.bind("ipc:///tmp/supervisor.pipe")
 
 # socket to publish state to graphics modules
 gsocket = context.socket(zmq.PUB)
 gsocket.setsockopt(zmq.HWM, 1)
 gsocket.bind("ipc:///tmp/graphics.pipe")
-
-# socket to receive estimated hand movement from filter
-hsocket = context.socket(zmq.SUB)
-hsocket.connect("ipc:///tmp/hand_position.pipe")
-#hsocket.connect("ipc:///tmp/ksignal.pipe")
-hsocket.setsockopt(zmq.SUBSCRIBE, '')  # subscribe with no filter
 
 # parameters
 run = True  # keep main loop iterating
@@ -60,6 +55,14 @@ while run:
                                  setpos.SetInitialPositions(gameState.hand_pos)
         init_obj_pos = False
 
+    #print 'filterState.serialize() ', filterState.serialize()
+    vec_str = ssocket.recv()
+    print 'vec_str ', vec_str
+    vec = vec_str.split(" ")
+    gameState.hand_pos[0] = -float(vec[0])
+    gameState.hand_pos[1] = -float(vec[1])
+    #gameState.hand_pos[2] += float(vec[1])
+
     # broadcast state
     if goal_is_ball:
         filterState.target_pos = gameState.ball_pos
@@ -71,39 +74,16 @@ while run:
         gameState.ball_pos, gameState.box_pos = \
                                  setpos.SetInitialPositions(gameState.hand_pos)
         filterState.trial += 1
+
+    # if a new trial started for filter
+    if gameState.pickedBall:
+        filterState.trial += 1
+        gameState.pickedBall = False
+
     gsocket.send(gameState.serialize())
+
     ssocket.send(filterState.serialize())
 
-    # receive the hand velocity
-    vec_str = hsocket.recv()
-    vec = vec_str.split(" ")
-
-    gameState.hand_pos[0] = (float(vec[0]) - 320) / 26.0
-    gameState.hand_pos[1] = -(float(vec[1]) - 240) / 26.0
+    #gameState.hand_pos[0] = (float(vec[0]) - 320) / 26.0
+    #gameState.hand_pos[1] = -(float(vec[1]) - 240) / 26.0
     #gameState.hand_pos[2] = -(float(vec[1]) - 12) / 3.0
-
-
-'''    try:
-        res = hsocket.recv(zmq.NOBLOCK)
-        #print "res: "+res[:-2]
-        # if received data
-        if res != zmq.EAGAIN:
-            #print res
-            # convert string array to numpy array
-            hand_mov = np.array([float(x) for x in res[:-2].split(',')])
-            hand_pos[0] = hand_mov[0]
-            hand_pos[1] = hand_mov[1]
-            hand_pos[2] = hand_mov[2]
-            #print hand_mov
-    except:
-        pass
-
-    ball_pos_str = np.char.mod('%f', ball_pos)
-    box_pos_str = np.char.mod('%f', box_pos)
-    hand_pos_str = np.char.mod('%f', hand_pos)
-    graphics_msg = str(",".join(ball_pos_str)) + ","
-    graphics_msg += str(",".join(box_pos_str)) + ","
-    graphics_msg += str(",".join(hand_pos_str))
-    print(graphics_msg)
-    gsocket.send(graphics_msg)
-'''

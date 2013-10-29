@@ -108,6 +108,12 @@ int main(int argc, char** argv)
             cout<<"message size: "<<(signal.size()-sizeof(size_t))/sizeof(float)<<endl;
             cout<<"features: "<<features<<endl;
 
+
+            if (isnan(features(0))) {
+                cout<<"NaN"<<endl;
+                break;
+            }
+
             message_t featuesMsg(sizeof(size_t)+features.rows()*sizeof(float));
             memcpy(featuesMsg.data(), &timestamp, sizeof(size_t));
             memcpy(static_cast<size_t*>(featuesMsg.data())+1, features.data(), features.rows()*sizeof(float));

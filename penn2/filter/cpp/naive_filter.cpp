@@ -12,20 +12,22 @@ void NaiveFilter::Predict() {
   GrabFeatures();
   // process features
   for (size_t i=0; i<features_.size(); i++) {
-      features_[i] *= 1.2;
+      features_[i] *= 0.5;
   }
 }
 
 void NaiveFilter::Update() {
-    handMovement_[0] = features_[0];
-    handMovement_[1] = features_[1];
-    handMovement_[2] = features_[2];
+    float baseline = 50.0;
+    float scale = 30.0;
+    handPos_[0] += (features_[0] - baseline) / scale;
+    handPos_[1] += (features_[1] - baseline) / scale;
+    handPos_[2] += (features_[2] - baseline) / scale;
 }
 
 void NaiveFilter::Run() {
   for (;;) {
+      SendHandPosGetState(handPos_);
       Predict();
       Update();
-      PublishHandMovement(handMovement_);
     }
 }

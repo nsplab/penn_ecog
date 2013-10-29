@@ -48,7 +48,7 @@ void GenerateSignal() {
         size_t i = timeStamp % samplingRate;
 
         // assume intended velocity is power modulated
-        float maxSpeed = 20.0;
+        float maxSpeed = 50.0;
         float baselinePower = maxSpeed;
         if (diffx >= maxSpeed)
             diffx = maxSpeed;
@@ -68,6 +68,12 @@ void GenerateSignal() {
 
         signal = mixingMatrix * sample;
         cout<<"signal: "<<signal<<endl;
+
+        if (isnan(signal(0))) {
+            signal(0) = 0.0;
+            signal(1) = 0.0;
+            signal(2) = 0.0;
+        }
 
         message_t zmqMessage(sizeof(float)*numberOfChannels+sizeof(size_t));
         memcpy(zmqMessage.data(), &timeStamp, sizeof(size_t)*1);
@@ -97,9 +103,9 @@ int main()
         iss>>x>>y>>z;
         //cout<<"x:"<<x<<"\ty:"<<y<<"\tz:"<<z<<endl;
 
-        diffx = prevx - x;
-        diffy = prevy - y;
-        diffz = prevz - z;
+        diffx = x - prevx;
+        diffy = y - prevy;
+        diffz = z - prevz;
 
         //cout<<"dx:"<<diffx<<"\tdy:"<<diffy<<"\tdz:"<<diffz<<endl;
 

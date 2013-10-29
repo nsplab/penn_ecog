@@ -12,8 +12,10 @@ CMakeFiles/filter.dir/jointrse_filter.cpp.o: ../reachstateequation.h
 
 CMakeFiles/filter.dir/main.cpp.o: ../GetPot.h
 CMakeFiles/filter.dir/main.cpp.o: ../filter_class.h
+CMakeFiles/filter.dir/main.cpp.o: ../jointrse_filter.h
 CMakeFiles/filter.dir/main.cpp.o: ../main.cpp
 CMakeFiles/filter.dir/main.cpp.o: ../naive_filter.h
+CMakeFiles/filter.dir/main.cpp.o: ../reachstateequation.h
 
 CMakeFiles/filter.dir/matrix.cpp.o: ../matrix.cpp
 CMakeFiles/filter.dir/matrix.cpp.o: ../matrix.h

@@ -17,7 +17,7 @@ public:
     void Run();
 private:
     arma::mat prepareINITIAL_ARM_COV(const double timeBin);
-    void InitNewTrial(arma::mat startPos);
+    void InitNewTrial(arma::mat startPos, arma::mat reachTarget);
 
     void LogInnovation(arma::vec obs, arma::mat estimatedObs);
 

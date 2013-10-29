@@ -6,20 +6,17 @@ using namespace std;
 using namespace zmq;
 
 // ZMQ thread pool of 3
-context_t FilterClass::context_(3);
-socket_t FilterClass::publisher_(context_, ZMQ_PUB);
-socket_t FilterClass::supervisor_subscriber_(context_, ZMQ_SUB);
+context_t FilterClass::context_(2);
+socket_t FilterClass::supervisor_(context_, ZMQ_REQ);
 socket_t FilterClass::features_subscriber_(context_, ZMQ_SUB);
 
 FilterClass::FilterClass() {
-  publisher_.bind("ipc:///tmp/hand_position.pipe");
   features_subscriber_.connect("ipc:///tmp/features.pipe");
   features_subscriber_.setsockopt(ZMQ_SUBSCRIBE, NULL, 0);
-  supervisor_subscriber_.connect("ipc:///tmp/supervisor.pipe");
-  supervisor_subscriber_.setsockopt(ZMQ_SUBSCRIBE, NULL, 0);
-  // the target is in 3 dimensions
+  supervisor_.connect("ipc:///tmp/supervisor.pipe");
+  // assume target is in 3d
   target_.resize(3);
-  handMovement_.resize(3);
+  handPos_.resize(3, 0.0);
 }
 
 void FilterClass::GrabFeatures() {
@@ -28,17 +25,16 @@ void FilterClass::GrabFeatures() {
   features_subscriber_.recv(&features_msg);
 
   // extract timestamp, # features, and features
-  featureTimestamp_;
   memcpy(&featureTimestamp_, features_msg.data(), sizeof(size_t));
 
-  cout<<"timestamp: "<<timestamp<<endl;
+  cout<<"timestamp: "<<featureTimestamp_<<endl;
 
   size_t vec_size = (features_msg.size() - sizeof(size_t)) / sizeof(float);
 
   cout<<"vec size: "<<vec_size<<endl;
 
   features_.resize(vec_size);
-  memcpy(features_.data(), static_cast<size_t*>(featuesMsg.data())+1, vec_size * sizeof(float));
+  memcpy(features_.data(), static_cast<size_t*>(features_msg.data())+1, vec_size * sizeof(float));
 
   cout<<"features: ";
   for (size_t i=0; i<vec_size; i++) {
@@ -47,35 +43,39 @@ void FilterClass::GrabFeatures() {
   cout<<endl;
 }
 
-void FilterClass::GetState() {
-  // receive data from supervisor
-  zmq::message_t supervisor_msg;
-  supervisor_subscriber_.recv(&supervisor_msg);
-  // convert reveived data into c++ string/sstream
-  string feat_str(((char *)supervisor_msg.data()));
-  replace(feat_str.begin(), feat_str.end(), ',', ' ');
-  stringstream ss;
+void FilterClass::SendHandPosGetState(const vector<float>& hand_movement) {
+    stringstream message;
+    for (vector<float>::const_iterator it=hand_movement.begin();
+         it<hand_movement.end(); it++) {
+      message<<*it<<" ";
+    }
+    message<<endl;
+    zmq::message_t zmq_message(message.str().length());
+    memcpy((char *) zmq_message.data(), message.str().c_str(), message.str().length());
+    supervisor_.send(zmq_message);
+    cout<<"message sent"<<endl;
 
-  // extract trial ID, target position, and mode (training/testing)
-  ss >> trial_id;
+    // receive data from supervisor
+    zmq::message_t supervisor_msg;
+    supervisor_.recv(&supervisor_msg);
+    // convert reveived data into c++ string/sstream
+    string feat_str(((char *)supervisor_msg.data()));
+    replace(feat_str.begin(), feat_str.end(), ',', ' ');
+    stringstream ss;
 
-  ss >> target_[0];ss >> target_[1];ss >> target_[2];
+    // extract target position, hand position, trial ID, mode (training/testing)
+    // and attending value from supervisor's message
+    ss >> target_[0];ss >> target_[1];ss >> target_[2];
 
-  int mode;
-  ss >> mode;
-  mode_ = (TrialMode)mode;
-}
+    ss >> handPos_[0];ss >> handPos_[1];ss >> handPos_[2];
 
-void FilterClass::PublishHandMovement(const vector<float>& hand_movement) {
-  stringstream message;
-  for (vector<float>::const_iterator it=hand_movement.begin();
-       it<hand_movement.end(); it++) {
-    message<<*it<<",";
-  }
-  message<<endl;
-  zmq::message_t zmq_message(message.str().length());
-  memcpy((char *) zmq_message.data(), message.str().c_str(), message.str().length());
-  publisher_.send(zmq_message);
+    ss >> trial_id;
+
+    int mode;
+    ss >> mode;
+    mode_ = (TrialMode)mode;
+
+    ss >> attending_;
 }
 
 void FilterClass::Simulate(vector<float> features, size_t trial, vector<float> target, std::vector<float> initHandPosition) {
