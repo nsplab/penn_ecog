@@ -6,37 +6,17 @@
 
 #IncludeRegexTransform: 
 
-/home/user/code/penn2/penn/penn2/filter/cpp/filter_class.h
-vector
--
-zmq.hpp
--
-
-/home/user/code/penn2/penn/penn2/filter/cpp/jointrse_filter.h
-reachstateequation.h
-/home/user/code/penn2/penn/penn2/filter/cpp/reachstateequation.h
-filter_class.h
-/home/user/code/penn2/penn/penn2/filter/cpp/filter_class.h
-
-/home/user/code/penn2/penn/penn2/filter/cpp/reachstateequation.h
+/home/user/code/penn2/penn/penn2/filter/cpp/matrix.h
 armadillo
 -
 
-/home/user/code/penn2/penn/penn2/filter/cpp/tests.cpp
-armadillo
--
-iostream
--
-itpp/base/random.h
--
+/home/user/code/penn2/penn/penn2/filter/cpp/reachstateequation.cpp
 reachstateequation.h
 /home/user/code/penn2/penn/penn2/filter/cpp/reachstateequation.h
-jointrse_filter.h
-/home/user/code/penn2/penn/penn2/filter/cpp/jointrse_filter.h
-Windows.h
--
-sys/time.h
--
-ctime
+matrix.h
+/home/user/code/penn2/penn/penn2/filter/cpp/matrix.h
+
+/home/user/code/penn2/penn/penn2/filter/cpp/reachstateequation.h
+armadillo
 -
 

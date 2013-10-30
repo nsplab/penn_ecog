@@ -12,7 +12,7 @@ reachStateEquation::reachStateEquation(size_t maxTimeSteps, size_t reachTimeStep
 
     // Precompute the inverse and inverse transpose of F.
     vec singular_values_test = svd(F);
-    cout << singular_values_test.t() << endl;
+    //cout << singular_values_test.t() << endl;
     mat F_inv = inv(F);
     mat F_inv_t = trans(F_inv);
 
