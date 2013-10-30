@@ -22,9 +22,9 @@ uint64 GetTimeMs64();
 void testRSE() {
     ofstream rseTraject("rseTrajectory.txt");
 
-    float originX =  4.0;
-    float originY = -4.0;
-    float originZ =  5.0;
+    float originX =  10.0;
+    float originY = -10.0;
+    float originZ =  10.0;
 
     const double timeBin = 0.01;
     const double maxTimeSteps = 3.0/timeBin;

@@ -140,6 +140,10 @@ void jointRSE_filter::Predict() {
     pred_x_ = F_current * x + b_current;
     pred_cov_ = F_current * covariance_ * F_current.t() + Q_current;
 
+    pos_ = pred_x_.submat(dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels, 0,
+                                   dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels + dim_ - 1, 0);;
+    cout<<"pos_"<<pos_<<endl;
+
     /*cout<<"Q_current size: "<<Q_current.n_rows<<" "<<Q_current.n_cols<<endl;
     cout<<"b_current size: "<<b_current.n_rows<<" "<<b_current.n_cols<<endl;
     cout<<"x_ size: "<<x.n_rows<<" "<<x.n_cols<<endl;
@@ -449,7 +453,7 @@ void jointRSE_filter::Run() {
         }
 
         Predict();
-        Update();
+        //Update();
 
         handPos_[0] += pos_[0];
         handPos_[1] += pos_[1];
