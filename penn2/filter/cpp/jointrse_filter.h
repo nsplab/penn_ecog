@@ -20,7 +20,7 @@ private:
     arma::mat prepareINITIAL_ARM_COV(const double timeBin);
     void InitNewTrial(arma::mat startPos, arma::mat reachTarget);
 
-    void LogInnovation(arma::vec obs, arma::mat estimatedObs);
+    void LogInnovation(arma::mat estimatedObs);
 
     // state evolution matrix
     arma::cube F_;

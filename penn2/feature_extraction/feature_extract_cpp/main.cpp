@@ -231,7 +231,7 @@ void loadMatrix(MatrixXf& coefMx, string matrixFile) {
     coefMx.resize(rows,cols);
 
     float element = 0.0;
-    size_t col=0,row=0;
+    size_t col=0, row=0;
     while(true) {
         mxFile>>element;
         if (!mxFile.good())

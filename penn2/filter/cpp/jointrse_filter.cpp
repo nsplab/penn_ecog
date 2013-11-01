@@ -309,7 +309,7 @@ void jointRSE_filter::Update() {
     }
 
     if (log_) {
-        LogInnovation(obs_,estimated_obs);
+        LogInnovation(estimated_obs);
     }
     //cout<<"Done computing x_adjust"<<endl;
     // Eq. 3.11 (write up)
@@ -336,6 +336,8 @@ void jointRSE_filter::Update() {
                         dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels + dim_ - 1, 0);
     prev_u_ = new_x.submat(dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels + dim_, 0,
                            dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels + dim_ + dim_ - 1, 0);
+
+
     saved_pos_.push_back(pos_);
     saved_u_.push_back(prev_u_);
 
@@ -530,7 +532,7 @@ mat jointRSE_filter::prepareINITIAL_ARM_COV(const double timeBin) {
     return ans;
 }
 
-void jointRSE_filter::LogInnovation(arma::vec obs, arma::mat estimatedObs) {
+void jointRSE_filter::LogInnovation(arma::mat estimatedObs) {
     for(size_t c = 0; c < numChannels; c++)
     {
         innovationFile<<(obs_(c) - estimatedObs(c, 0))<<" ";
