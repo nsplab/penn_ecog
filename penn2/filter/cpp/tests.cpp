@@ -50,9 +50,9 @@ void testRSE() {
         float theta = 2.0 * itpp::pi * u;
         float phi = acos(2.0*v-1.0);
         float r = 15;
-        float x = r * cos(theta) * sin(phi) + originX;
-        float y = r * sin(theta) * sin(phi) + originY;
-        float z = r * cos(phi) + originZ;
+        float x = 0;//r * cos(theta) * sin(phi) + originX;
+        float y = 0;//r * sin(theta) * sin(phi) + originY;
+        float z = 0;//r * cos(phi) + originZ;
 
         vec handState;
         handState<<x<<y<<z<<0<<0<<0;
@@ -62,7 +62,9 @@ void testRSE() {
             for (size_t i=0; i<6; i++) {
                 randomNoise(i) = randomNoise(i) * sqrt(rseParams.Q.slice(timeStep)(i,i));
             }
-            handState = rseParams.F.slice(timeStep) * handState + randomNoise + rseParams.b.slice(timeStep);
+            handState = rseParams.F.slice(timeStep) * handState + /*randomNoise +*/ rseParams.b.slice(timeStep);
+            cout<<"rseParams.F.slice(timeStep) "<<endl<<rseParams.F.slice(timeStep)<<endl;
+            cout<<"rseParams.b.slice(timeStep) "<<endl<<rseParams.b.slice(timeStep)<<endl;
             //cout<<rseParams.Q.slice(timeStep)<<endl;
             rseTraject<<handState(0)<<" "<<handState(1)<<" "<<handState(2)<<" "<<handState(3)<<" "<<handState(4)<<" "<<handState(5)<<";"<<endl;
         }

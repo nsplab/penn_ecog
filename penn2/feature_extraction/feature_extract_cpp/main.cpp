@@ -111,6 +111,22 @@ int main(int argc, char** argv)
 
             if (isnan(features(0))) {
                 cout<<"NaN"<<endl;
+
+                cout<<"features "<<features<<endl;
+
+                cout<<"points "<<endl;
+                for (size_t tt=0; tt<points.size(); tt++) {
+                    cout<<points[tt]<<" * ";
+                }
+
+                vector<boost::circular_buffer<float> > *buffer = fft.GetBuffer();
+                for (size_t tt=0; tt<buffer->size(); tt++) {
+                    cout<<"vec "<<tt<<endl;
+                    for (boost::circular_buffer<float>::iterator it = (*buffer)[tt].begin(); it!= (*buffer)[tt].end(); ++it)
+                        cout<<*it<<endl;
+                }
+
+
                 break;
             }
 

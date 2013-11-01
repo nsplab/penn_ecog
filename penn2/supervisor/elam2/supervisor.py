@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+
+# add requests from the filter module to start a new trial
+# to save time if the filter is not learning
+
 # to use the zmq library
 import zmq
 
@@ -10,6 +14,8 @@ import setpos
 
 # contains the configuration parameters
 import config
+
+import threading
 
 # the state machines to present the state of the graphics and filter modules
 from state import GameState
@@ -46,6 +52,24 @@ def signal_handler(signal, frame):
 # register the signal handler
 signal.signal(signal.SIGINT, signal_handler)
 
+trialTimeoutThread = None
+
+trialTimeout = 10  # seconds
+
+
+def StartNewTrial():
+    global goal_is_ball, trialTimeoutThread, run
+    global gameState, filterState
+    print 'should start a new trial ***********************************'
+    trialTimeoutThread.cancel()
+    #goal_is_ball = not goal_is_ball
+    gameState.ball_pos, gameState.box_pos = \
+                                 setpos.SetInitialPositions(gameState.hand_pos)
+    filterState.trial += 1
+    trialTimeoutThread = threading.Timer(trialTimeout, StartNewTrial)
+    if run:
+        trialTimeoutThread.start()
+
 # main loop
 while run:
 
@@ -54,14 +78,39 @@ while run:
         gameState.ball_pos, gameState.box_pos = \
                                  setpos.SetInitialPositions(gameState.hand_pos)
         init_obj_pos = False
+        trialTimeoutThread = threading.Timer(trialTimeout, StartNewTrial)
+        trialTimeoutThread.start()
 
     #print 'filterState.serialize() ', filterState.serialize()
     vec_str = ssocket.recv()
     print 'vec_str ', vec_str
     vec = vec_str.split(" ")
-    gameState.hand_pos[0] = -float(vec[0])
-    gameState.hand_pos[1] = -float(vec[1])
+    gameState.hand_pos[0] = float(vec[0])
+    gameState.hand_pos[1] = float(vec[1])
     #gameState.hand_pos[2] += float(vec[1])
+    filterState.hand_pos[0] = float(vec[0])
+    filterState.hand_pos[1] = float(vec[1])
+    #filterState.hand_pos[2] += float(vec[1])
+
+    if gameState.updateState():
+        # a new trial started
+        gameState.ball_pos, gameState.box_pos = \
+                                 setpos.SetInitialPositions(gameState.hand_pos)
+        filterState.trial += 1
+        goal_is_ball = True
+        trialTimeoutThread.cancel()
+        trialTimeoutThread = threading.Timer(trialTimeout, StartNewTrial)
+        trialTimeoutThread.start()
+
+    # if a new trial started for filter
+    if gameState.pickedBall:
+        filterState.trial += 1
+        gameState.pickedBall = False
+        goal_is_ball = False
+        print 'issue new trial'
+        trialTimeoutThread.cancel()
+        trialTimeoutThread = threading.Timer(trialTimeout, StartNewTrial)
+        trialTimeoutThread.start()
 
     # broadcast state
     if goal_is_ball:
@@ -69,21 +118,16 @@ while run:
     else:
         filterState.target_pos = gameState.box_pos
 
-    if gameState.updateState():
-        # a new trial started
-        gameState.ball_pos, gameState.box_pos = \
-                                 setpos.SetInitialPositions(gameState.hand_pos)
-        filterState.trial += 1
-
-    # if a new trial started for filter
-    if gameState.pickedBall:
-        filterState.trial += 1
-        gameState.pickedBall = False
-
     gsocket.send(gameState.serialize())
 
     ssocket.send(filterState.serialize())
 
+    print 'filterState.serialize() ', filterState.serialize()
+
+    print 'filterState.trial ', filterState.trial
+
     #gameState.hand_pos[0] = (float(vec[0]) - 320) / 26.0
     #gameState.hand_pos[1] = -(float(vec[1]) - 240) / 26.0
     #gameState.hand_pos[2] = -(float(vec[1]) - 12) / 3.0
+
+trialTimeoutThread.cancel()

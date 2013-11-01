@@ -59,9 +59,12 @@ void FilterClass::SendHandPosGetState(const vector<float>& hand_movement) {
     zmq::message_t supervisor_msg;
     supervisor_.recv(&supervisor_msg);
     // convert reveived data into c++ string/sstream
-    string feat_str(((char *)supervisor_msg.data()));
-    replace(feat_str.begin(), feat_str.end(), ',', ' ');
-    stringstream ss;
+    string feat_str;
+    feat_str.resize(supervisor_msg.size(),'\0');
+    feat_str.assign((char *)supervisor_msg.data(),supervisor_msg.size());
+    cout<<"feat_str "<<feat_str<<endl;
+    //replace(feat_str.begin(), feat_str.end(), ',', ' ');
+    stringstream ss(feat_str);
 
     // extract target position, hand position, trial ID, mode (training/testing)
     // and attending value from supervisor's message
@@ -70,6 +73,8 @@ void FilterClass::SendHandPosGetState(const vector<float>& hand_movement) {
     ss >> handPos_[0];ss >> handPos_[1];ss >> handPos_[2];
 
     ss >> trial_id;
+
+    cout<<"trial_id "<<trial_id<<endl;
 
     int mode;
     ss >> mode;

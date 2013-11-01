@@ -10,11 +10,12 @@ public:
     static const size_t numChannels = 1;
     static const size_t sensoryDelay = 0;
 
-    jointRSE_filter(size_t dim, bool velocityParams=true, bool positionParams=true, bool affineParam=true, bool useRSE=true, bool timeInvariant=false, bool log=false);
+    jointRSE_filter(size_t dim, bool velocityParams=true, bool positionParams=true, bool affineParam=true, bool useRSE=true, bool timeInvariant=false, bool log=false, float maxTrialTime=3.0);
     void Update();
     void Predict();
     // main loop function
     void Run();
+    void RunPredictOnly();
 private:
     arma::mat prepareINITIAL_ARM_COV(const double timeBin);
     void InitNewTrial(arma::mat startPos, arma::mat reachTarget);
@@ -37,6 +38,8 @@ private:
     arma::mat pred_x_;
     arma::mat pred_cov_;
     arma::vec obs_;
+
+    double maxTimeSteps_;
 
     bool velocityParams_;
     bool positionParams_;

@@ -7,7 +7,7 @@ using namespace arma;
 
 // todo: replace cube with vector of matrices
 
-jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionParams, bool affineParam, bool useRSE, bool timeInvariant, bool log):
+jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionParams, bool affineParam, bool useRSE, bool timeInvariant, bool log , float maxTrialTime):
     timeStep_(-1), prevTrialId_(0), velocityParams_(velocityParams), positionParams_(positionParams), affineParam_(affineParam), timeInvariant_(timeInvariant), log_(log)
 {
     dim_ = dim;
@@ -31,12 +31,12 @@ jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionP
 
     const double timeBin = 0.01;
     // page 31
-    const double maxTimeSteps = 3.0/timeBin;
+    const double maxTimeSteps = maxTrialTime/timeBin;
+    maxTimeSteps_ = maxTimeSteps;
     // page 27
     int reachTimeSteps = 1.0/timeBin;
     // dim*2: position+velocity
     mat reachTarget = zeros<mat>(dim*2, 1);
-
 
     RSEMatrixStruct rseParams;
     if (timeInvariant_) {
@@ -97,6 +97,10 @@ jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionP
 void jointRSE_filter::Predict() {
     timeStep_ ++;
 
+    if (timeStep_ >= maxTimeSteps_) {
+        timeStep_ = maxTimeSteps_-1;
+    }
+
     // INITIALIZE THE STATE VECTOR. The first elements are the channel
     // parameters, presented in order of channel number, then x-y-z
     // directionality (x then y then z), and finally lag number (least
@@ -126,10 +130,10 @@ void jointRSE_filter::Predict() {
 
     //cout<<"prev_u successfully initialized"<<endl;
     //cout<<"channelParametersHat n_rows " << channelParametersHat_.n_rows << "n_cols " << channelParametersHat_.n_cols<< endl;
+
     mat x = join_cols(join_cols(
-        reshape(channelParametersHat_, dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels, 1, 1), pos_),
+        reshape(channelParametersHat_, (dim_ * numSetsOfParams_ * numLags + affineParam_) * numChannels, 1, 1), pos_),
         prev_u_);
-    //cout<<"initialized state"<<endl;
 
     // Select the correct matrices.
     mat F_current = F_.slice(timeInvariant_ ? 0 : timeStep_);
@@ -139,10 +143,6 @@ void jointRSE_filter::Predict() {
     // PERFORM THE PREDICTION STEP.
     pred_x_ = F_current * x + b_current;
     pred_cov_ = F_current * covariance_ * F_current.t() + Q_current;
-
-    pos_ = pred_x_.submat(dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels, 0,
-                                   dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels + dim_ - 1, 0);;
-    cout<<"pos_"<<pos_<<endl;
 
     /*cout<<"Q_current size: "<<Q_current.n_rows<<" "<<Q_current.n_cols<<endl;
     cout<<"b_current size: "<<b_current.n_rows<<" "<<b_current.n_cols<<endl;
@@ -313,7 +313,11 @@ void jointRSE_filter::Update() {
     }
     //cout<<"Done computing x_adjust"<<endl;
     // Eq. 3.11 (write up)
+    // multiplied by zero
     mat new_x = pred_x_ + new_cov * x_adjust;
+    mat tmp = new_x - pred_x_;
+    cout<<"tmp: "<<endl;
+    cout<<tmp<<endl;
     //cout<<"Done computing new_x"<<endl;
 
     // UPDATE THE CLASS VARIABLES
@@ -334,8 +338,14 @@ void jointRSE_filter::Update() {
                            dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels + dim_ + dim_ - 1, 0);
     saved_pos_.push_back(pos_);
     saved_u_.push_back(prev_u_);
-    pos_ = saved_pos_[0];
-    prev_u_ = saved_u_[0];
+
+
+    // why these are added here?
+    // who added these?
+    //pos_ = saved_pos_[0];
+    //prev_u_ = saved_u_[0];
+
+
     saved_pos_.erase(saved_pos_.begin());
     saved_u_.erase(saved_u_.begin());
 
@@ -435,6 +445,8 @@ void jointRSE_filter::Run() {
             obs_[i] = features_[i];
         }
 
+        cout<<"trial_id "<<trial_id<<endl;
+        cout<<"prevTrialId_ "<<prevTrialId_<<endl;
         // re-initialize filter at start of new trial
         if (prevTrialId_ != trial_id) {
             cout<<"new trial started"<<endl;
@@ -453,11 +465,54 @@ void jointRSE_filter::Run() {
         }
 
         Predict();
-        //Update();
+        Update();
 
-        handPos_[0] += pos_[0];
-        handPos_[1] += pos_[1];
-        handPos_[2] += pos_[2];
+        handPos_[0] = pos_[0];
+        handPos_[1] = pos_[1];
+        handPos_[2] = pos_[2];
+    }
+}
+
+void jointRSE_filter::RunPredictOnly() {
+    for (;;) {
+        GrabFeatures();
+
+        SendHandPosGetState(handPos_);
+
+        obs_.resize(features_.size());
+        for (size_t i=0; i<features_.size(); i++) {
+            obs_[i] = features_[i];
+        }
+
+        cout<<"trial_id "<<trial_id<<endl;
+        cout<<"prevTrialId_ "<<prevTrialId_<<endl;
+        // re-initialize filter at start of new trial
+        if (prevTrialId_ != trial_id) {
+            cout<<"new trial started"<<endl;
+            pos_.resize(handPos_.size());
+            for (size_t i=0; i<handPos_.size(); i++) {
+                pos_[i] = handPos_[i];
+            }
+
+            arma::mat reachTarget = zeros<mat>(dim_*2, 1);
+            for (size_t i=0; i<target_.size(); i++) {
+                reachTarget[i] = target_[i];
+            }
+
+            InitNewTrial(pos_, reachTarget);
+            prevTrialId_ = trial_id;
+        }
+
+        Predict();
+
+        pos_ = pred_x_.submat(dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels, 0,
+                                       dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels + dim_ - 1, 0);
+        prev_u_ = pred_x_.submat(dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels + dim_, 0,
+                                       dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels + dim_ + dim_ - 1, 0);
+
+        handPos_[0] = pos_[0];
+        handPos_[1] = pos_[1];
+        handPos_[2] = pos_[2];
     }
 }
 

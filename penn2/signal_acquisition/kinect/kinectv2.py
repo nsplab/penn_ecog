@@ -82,7 +82,6 @@ def get_depth_raw():
     x = np.median(nindices[1])
     y = np.median(nindices[0])
     z = np.median(timg[nindices])
-    print 'z: ', z
 
     if tx == 0 and ty == 0 and tz == 0:
         tx = x
@@ -117,15 +116,18 @@ def get_depth_raw():
             prev = 1
             old_gray = timg.copy()
 
-    if range_x ** 2 + range_y ** 2 < 7200:
-        cv2.circle(timg, (int(tx), int(ty)), 10, cv2.cv.RGB(0, 0, 0),
+    # if range_x ** 2 + range_y ** 2 < 7200:
+    cv2.circle(timg, (int(tx), int(ty)), 10, cv2.cv.RGB(0, 0, 0),
                  8, cv2.CV_AA)
-        cv2.circle(timg, (int(tx), int(ty)), 10, cv2.cv.RGB(65535, 65535, 65535),
+    cv2.circle(timg, (int(tx), int(ty)), 10, cv2.cv.RGB(65535, 65535, 65535),
                  5, cv2.CV_AA)
 
     signal_msg = str(tx) + " " + str(ty) + " " + str(tz)
     socket.send(signal_msg)
 
+    print 'x: ', tx
+    print 'y: ', ty
+    print 'z: ', tz
     return timg
 
 # get depth background image, 3 times in case of bad/slow initialization

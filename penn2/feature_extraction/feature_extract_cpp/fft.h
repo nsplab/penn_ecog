@@ -48,6 +48,8 @@ public:
   void GetPhase(std::vector<std::vector<T> >& pha, std::vector<T>* phaseShift=NULL);
   //static Fft<float>::windowFunc WinTypeStr(std::string type);
 
+  std::vector <boost::circular_buffer<T> >* GetBuffer() { return &buffer; }
+
 private:
   std::vector<boost::circular_buffer<T> > buffer;
   fftwf_complex* out;

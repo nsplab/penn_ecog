@@ -3,7 +3,7 @@ import threading
 
 # 0: training, 1: test
 # used to tell the filter module the type of the current trial
-triainingTestSeq = np.array([0, 0, 0, 1, 1])
+triainingTestSeq = np.array([0, 0, 0, 0, 0, 1])
 
 
 class GameState(object):
@@ -56,7 +56,7 @@ class GameState(object):
         # pick up ball
         if self.closed_hand == 1:
             self.ball_pos = self.hand_pos
-        if np.linalg.norm(self.hand_pos - self.ball_pos) < 0.8:
+        elif np.linalg.norm(self.hand_pos - self.ball_pos) < 0.8:
             if self.ballTimerStarted is False:
                 self.timeThread = threading.Timer(self.holdTime, self.pickBall)
                 self.ballTimerStarted = True
@@ -69,6 +69,7 @@ class GameState(object):
         # drop ball
         if self.closed_hand == 1:
             if np.linalg.norm(self.hand_pos - self.box_pos) < 0.5:
+                print "drop the ball"
                 self.closed_hand = 0
                 self.score += 10
                 ret = True
@@ -88,7 +89,7 @@ class GameState(object):
 
 class FilterState(object):
 
-    def __init__(self, target_pos=np.zeros(3), hand_pos=np.zeros(3), trial=0,
+    def __init__(self, target_pos=np.zeros(3), hand_pos=np.zeros(3), trial=1,
                  attending=0.0):
         self.target_pos = target_pos
         self.hand_pos = hand_pos

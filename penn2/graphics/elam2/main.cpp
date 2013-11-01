@@ -161,7 +161,8 @@ int main(int argc, char** argv)
     guiEventHandler->step = 0;
     guiEventHandler->handState = false;
 
-    visor.realize();
+    //visor.realize();
+    visor.setUpViewInWindow(0,0,800,600,0);
     osgViewer::Viewer::Windows windows;
     visor.getWindows(windows);
     windows[0]->setWindowName("3D Env");
