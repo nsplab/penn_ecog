@@ -1,0 +1,12 @@
+*.pyc
+*.so
+*.o
+*.lo
+*.slo
+*.a
+*.la
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+install_manifest.txt
