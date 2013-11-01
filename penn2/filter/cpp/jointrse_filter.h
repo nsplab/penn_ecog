@@ -21,6 +21,7 @@ private:
     void InitNewTrial(arma::mat startPos, arma::mat reachTarget);
 
     void LogInnovation(arma::mat estimatedObs);
+    void LogStateVector(arma::mat state);
 
     // state evolution matrix
     arma::cube F_;
