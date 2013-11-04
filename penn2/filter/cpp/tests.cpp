@@ -196,7 +196,7 @@ void testJointFilter() {
     }
 
 
-    jointRSE_filter filter(dim,true,true,true,true,true,true);
+    jointRSE_filter filter(dim,true,true,true,true,true,true,3.0,7.0,1.0e-3,1.0e-6,1.0e-8,10,1.0,1.0e-7,1.0e-7, false);
 
     for (size_t trial=1; trial<=100; trial++) {
         cout<<"trial: "<<trial<<endl;

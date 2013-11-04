@@ -43,37 +43,36 @@ void GenerateSignal() {
     Matrix<float, Dynamic, Dynamic> signal(numberOfChannels,1); // output signal
     Vector3f sample; // synthetic signal based on x,y,z from kinect
 
-    for (size_t timeStamp=0;;timeStamp++) {
+    bool exit = false;
+    for (size_t timeStamp=0; !exit; timeStamp++) {
 
         size_t i = timeStamp % samplingRate;
+        float dx = diffx;
+        float dy = diffy;
+        float dz = diffz;
 
         // assume intended velocity is power modulated
         float maxSpeed = 50.0;
         float baselinePower = maxSpeed;
-        if (diffx >= maxSpeed)
-            diffx = maxSpeed;
-        else if (diffx <= -maxSpeed)
-            diffx = -maxSpeed;
-        if (diffy >= maxSpeed)
-            diffy = maxSpeed;
-        else if (diffy <= -maxSpeed)
-            diffy = -maxSpeed;
-        if (diffz >= maxSpeed)
-            diffz = maxSpeed;
-        else if (diffz <= -maxSpeed)
-            diffz = -maxSpeed;
-        sample(0) = cos(2.0*M_PI * float(i)/float(samplingRate) * xSignalFrq) * xSignalAmp * sqrt(diffx+baselinePower);
-        sample(1) = cos(2.0*M_PI * float(i)/float(samplingRate) * ySignalFrq) * ySignalAmp * sqrt(diffy+baselinePower);
-        sample(2) = cos(2.0*M_PI * float(i)/float(samplingRate) * zSignalFrq) * zSignalAmp * sqrt(diffz+baselinePower);
+        if (dx >= maxSpeed)
+            dx = maxSpeed;
+        else if (dx <= -maxSpeed)
+            dx = -maxSpeed;
+        if (dy >= maxSpeed)
+            dy = maxSpeed;
+        else if (dy <= -maxSpeed)
+            dy = -maxSpeed;
+        if (dz >= maxSpeed)
+            dz = maxSpeed;
+        else if (dz <= -maxSpeed)
+            dz = -maxSpeed;
+
+        sample(0) = cos(2.0*M_PI * float(i)/float(samplingRate) * xSignalFrq) * xSignalAmp * sqrt(dx+baselinePower);
+        sample(1) = cos(2.0*M_PI * float(i)/float(samplingRate) * ySignalFrq) * ySignalAmp * sqrt(dy+baselinePower);
+        sample(2) = cos(2.0*M_PI * float(i)/float(samplingRate) * zSignalFrq) * zSignalAmp * sqrt(dz+baselinePower);
 
         signal = mixingMatrix * sample;
         cout<<"signal: "<<signal<<endl;
-
-        if (isnan(signal(0))) {
-            signal(0) = 0.0;
-            signal(1) = 0.0;
-            signal(2) = 0.0;
-        }
 
         message_t zmqMessage(sizeof(float)*numberOfChannels+sizeof(size_t));
         memcpy(zmqMessage.data(), &timeStamp, sizeof(size_t)*1);
@@ -81,7 +80,7 @@ void GenerateSignal() {
 
         publisher.send(zmqMessage);
 
-        this_thread::sleep_for(chrono::microseconds(100));
+        this_thread::sleep_for(chrono::microseconds(1000));
     }
 }
 

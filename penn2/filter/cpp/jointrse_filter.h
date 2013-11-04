@@ -10,18 +10,22 @@ public:
     static const size_t numChannels = 1;
     static const size_t sensoryDelay = 0;
 
-    jointRSE_filter(size_t dim, bool velocityParams=true, bool positionParams=true, bool affineParam=true, bool useRSE=true, bool timeInvariant=false, bool log=false, float maxTrialTime=3.0);
+    jointRSE_filter(size_t dim, bool velocityParams, bool positionParams, bool affineParam, bool useRSE,
+                    bool timeInvariant, bool log, float trialTime, float maxTrialTime, double diagQ, double finalPosCov,
+                    double finalVelCov, unsigned featureRate, double channelCov, double initialArmPosVar, double initialArmVelVar,
+                    bool integrateVel);
     void Update();
     void Predict();
     // main loop function
     void Run();
     void RunPredictOnly();
 private:
-    arma::mat prepareINITIAL_ARM_COV(const double timeBin);
+    arma::mat prepareINITIAL_ARM_COV();
     void InitNewTrial(arma::mat startPos, arma::mat reachTarget);
 
     void LogInnovation(arma::mat estimatedObs);
     void LogStateVector(arma::mat state);
+    void LogUpdateStateVector(arma::mat state);
 
     // state evolution matrix
     arma::cube F_;
@@ -41,6 +45,13 @@ private:
     arma::vec obs_;
 
     double maxTimeSteps_;
+    int reachTimeSteps_;
+    double timeBin_;
+
+    bool integrateVel_;
+
+    double initialArmPosVar_;
+    double initialArmVelVar_;
 
     bool velocityParams_;
     bool positionParams_;
@@ -53,6 +64,8 @@ private:
     std::ofstream channelParamsFile;
     std::ofstream innovationFile;
     std::ofstream covarianceFile;
+    std::ofstream stateFile;
+    std::ofstream updateStateFile;
 
     bool log_;
 };

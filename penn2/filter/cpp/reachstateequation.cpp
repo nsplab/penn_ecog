@@ -4,7 +4,7 @@
 // Equation number s relative to "Dynamic Analysis of Naive Adaptive Brain-Machine Interfaces"
 using namespace arma;
 
-reachStateEquation::reachStateEquation(size_t maxTimeSteps, size_t reachTimeSteps, mat reachTarget, size_t dim)
+reachStateEquation::reachStateEquation(size_t maxTimeSteps, size_t reachTimeSteps, mat reachTarget, size_t dim, double diagQ, double finalPosCov, double finalVelCov)
 {
     size_t nExtraTimeSteps = maxTimeSteps - reachTimeSteps;
 
@@ -16,14 +16,14 @@ reachStateEquation::reachStateEquation(size_t maxTimeSteps, size_t reachTimeStep
     mat F_inv = inv(F);
     mat F_inv_t = trans(F_inv);
 
-    mat Pi_T = prepareREACH_TARGET_COVARIANCE(dim);
+    mat Pi_T = prepareREACH_TARGET_COVARIANCE(dim, finalPosCov, finalVelCov);
 
     // Precompute all the Pi(t, reachTimeSteps) and phi(t, reachTimeSteps) values.
     cube Pi_t_T = zeros<cube>(Pi_T.n_rows, Pi_T.n_cols, reachTimeSteps + 1);
     cube phi_t_T = zeros<cube>(F.n_rows, F.n_cols, reachTimeSteps + 1);
     phi_t_T.slice(reachTimeSteps) = phi_t_T.slice(reachTimeSteps).eye();
 
-    mat Q = prepareQ_ARM_UNDIRECTED(dim);
+    mat Q = prepareQ_ARM_UNDIRECTED(dim, diagQ);
 
     // Eq. 15
     Pi_t_T.slice(reachTimeSteps) = Pi_T + Q;
@@ -93,10 +93,10 @@ mat reachStateEquation::prepareF_ARM_UNDIRECTED(size_t dim)
 }
 
 // Eq. 11
-mat reachStateEquation::prepareQ_ARM_UNDIRECTED(size_t dim)
+mat reachStateEquation::prepareQ_ARM_UNDIRECTED(size_t dim, double velInc)
 {
-    double velInc = 1.0e-4 / timeBin;
-    velInc = 1.0e-3;
+    //double velInc = 1.0e-4 / timeBin;
+    //velInc = 1.0e-3; // this is the used value
 
     mat ans = zeros<mat>(2 * dim, 2 * dim);
     for (size_t i = 0; i < dim; i++) {
@@ -107,10 +107,10 @@ mat reachStateEquation::prepareQ_ARM_UNDIRECTED(size_t dim)
 }
 
 // Eq. 24
-mat reachStateEquation::prepareREACH_TARGET_COVARIANCE(size_t dim)
+mat reachStateEquation::prepareREACH_TARGET_COVARIANCE(size_t dim, double finalPosCov, double finalVelCov)
 {
-    double finalPosCov = 1.0e-6;
-    double finalVelCov = 1.0e-8;
+    //double finalPosCov = 1.0e-6;
+    //double finalVelCov = 1.0e-8;
 
     mat ans = zeros<mat>(2 * dim, 2 * dim);
     for (size_t i = 0; i < dim; i++) {

@@ -7,9 +7,14 @@ using namespace arma;
 
 // todo: replace cube with vector of matrices
 
-jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionParams, bool affineParam, bool useRSE, bool timeInvariant, bool log , float maxTrialTime):
+jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionParams, bool affineParam, bool useRSE, bool timeInvariant, bool log, float trialTime,
+                                 float maxTrialTime, double diagQ, double finalPosCov, double finalVelCov, unsigned featureRate, double channelCov, double initialArmPosVar,
+                                 double initialArmVelVar, bool integrateVel):
     timeStep_(-1), prevTrialId_(0), velocityParams_(velocityParams), positionParams_(positionParams), affineParam_(affineParam), timeInvariant_(timeInvariant), log_(log)
 {
+
+    integrateVel_ = integrateVel;
+
     dim_ = dim;
 
     // make sure at least one of set of parameters is used in filter
@@ -21,6 +26,11 @@ jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionP
     channelParamsFile.open("channelParams.txt");
     innovationFile.open("innovation.txt");
     covarianceFile.open("covariance.txt");
+    stateFile.open("state.txt");
+    updateStateFile.open("updatedstate.txt");
+
+    initialArmPosVar_ = initialArmPosVar;
+    initialArmVelVar_ = initialArmVelVar;
 
     pos_ = zeros<mat>(dim, 1);
     prev_u_ = zeros<mat>(dim, 1);
@@ -29,12 +39,14 @@ jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionP
         saved_u_.push_back(prev_u_);
     }
 
-    const double timeBin = 0.01;
+    const double timeBin = 1.0/double(featureRate);
+    timeBin_ = timeBin;
     // page 31
     const double maxTimeSteps = maxTrialTime/timeBin;
     maxTimeSteps_ = maxTimeSteps;
     // page 27
-    int reachTimeSteps = 1.0/timeBin;
+    int reachTimeSteps = trialTime/timeBin;
+    reachTimeSteps_ = reachTimeSteps;
     // dim*2: position+velocity
     mat reachTarget = zeros<mat>(dim*2, 1);
 
@@ -53,7 +65,7 @@ jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionP
         timeInvariantRSE rseComputer(reachTarget, Q, R, dim);
         rseParams = rseComputer.returnAnswer();
     } else {
-        reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget, dim);
+        reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget, dim, diagQ, finalPosCov, finalVelCov);
         rseParams = rseComputer.returnAnswer();
     }
 
@@ -75,11 +87,11 @@ jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionP
     // Eq.19
     Q_ = blkdiag(QChannels, rseParams.Q);
 
-    const double channelCov = 1.0e-2;
+    //const double channelCov = 1.0;
     mat initialChannelCov = channelCov * eye<mat>(dim * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels,
                                                   dim * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels);
 
-    covariance_ = prepareINITIAL_ARM_COV(timeBin);
+    covariance_ = prepareINITIAL_ARM_COV();
     covariance_ = blkdiag(initialChannelCov, covariance_);
 
     //b_ = zeros<cube>(numChannels * FChannels.n_rows + rseParams.b.n_rows, 1, maxTimeSteps);
@@ -308,9 +320,6 @@ void jointRSE_filter::Update() {
         cout<<"novel_"<<c<<": "<<(obs_(c) -  estimated_obs(c, 0))<<endl;
     }
 
-    if (log_) {
-        LogInnovation(estimated_obs);
-    }
     //cout<<"Done computing x_adjust"<<endl;
     // Eq. 3.11 (write up)
     // multiplied by zero
@@ -319,6 +328,12 @@ void jointRSE_filter::Update() {
     cout<<"tmp: "<<endl;
     cout<<tmp<<endl;
     //cout<<"Done computing new_x"<<endl;
+
+    if (log_) {
+        LogInnovation(estimated_obs);
+        LogStateVector(pred_x_);
+        LogUpdateStateVector(new_x);
+    }
 
     // UPDATE THE CLASS VARIABLES
     mat new_channelParametersHat = new_x.submat(0, 0,
@@ -373,10 +388,9 @@ void jointRSE_filter::Update() {
         uHistory_(numSetsOfParams_ * dim_ * numLags, 0) = 1;
     }
 
-    const double timeBin = 0.01;
     //if(covReset.compare("yes") == 0)
         covariance_ = blkdiag(new_cov.submat(0, 0, dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels - 1,
-                                                   dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels - 1), prepareINITIAL_ARM_COV(timeBin));
+                                                   dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels - 1), prepareINITIAL_ARM_COV());
         covarianceFile<<covariance_<<endl;
         //covariance_ = new_cov;
     //else if(covReset.compare("posOnly") == 0)
@@ -400,16 +414,15 @@ void jointRSE_filter::InitNewTrial(mat startPos, mat reachTarget) {
     }
     uHistory_ = zeros<mat>(dim_ * numSetsOfParams_ * numLags + affineParam_, 1);
 
-    const double timeBin = 0.01;
     covariance_ = blkdiag(covariance_.submat(0, 0, dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels - 1,
-                                                   dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels - 1), prepareINITIAL_ARM_COV(timeBin));
+                                                   dim_ * numSetsOfParams_ * numLags * numChannels + affineParam_ * numChannels - 1), prepareINITIAL_ARM_COV());
 
     timeStep_ = -1;
 
     // page 31
-    const double maxTimeSteps = 3.0/timeBin;
+    const double maxTimeSteps = maxTimeSteps_;
     // page 27
-    int reachTimeSteps = 1.0/timeBin;
+    int reachTimeSteps = reachTimeSteps_;
     reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget, dim_);
     RSEMatrixStruct rseParams;
     rseParams = rseComputer.returnAnswer();
@@ -520,10 +533,10 @@ void jointRSE_filter::RunPredictOnly() {
 
 // The initial covariance on the arm components of the state.
 // page 20
-mat jointRSE_filter::prepareINITIAL_ARM_COV(const double timeBin) {
+mat jointRSE_filter::prepareINITIAL_ARM_COV() {
     mat ans = zeros<mat>(2 * dim_, 2 * dim_);
-    double posCov = 1.0e-7;
-    double velCov = 1.0e-7 / timeBin;
+    double posCov = initialArmPosVar_;
+    double velCov = initialArmPosVar_; // 1.0e-7 / timeBin;
     for (size_t i = 0; i < dim_; i++) {
         ans(i, i) = posCov;
         ans(dim_ + i, dim_ + i) = velCov;
@@ -537,8 +550,21 @@ void jointRSE_filter::LogInnovation(arma::mat estimatedObs) {
     {
         innovationFile<<(obs_(c) - estimatedObs(c, 0))<<" ";
     }
-    innovationFile<<";"<<endl;
+    innovationFile<<endl;
 }
 
+void jointRSE_filter::LogStateVector(arma::mat state) {
+    for(size_t c = 0; c < state.n_rows; c++)
+    {
+        stateFile<<state(c,0)<<" ";
+    }
+    stateFile<<endl;
+}
 
-
+void jointRSE_filter::LogUpdateStateVector(arma::mat state) {
+    for(size_t c = 0; c < state.n_rows; c++)
+    {
+        stateFile<<state(c,0)<<" ";
+    }
+    stateFile<<endl;
+}

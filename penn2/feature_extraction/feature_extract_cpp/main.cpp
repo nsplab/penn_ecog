@@ -71,6 +71,7 @@ int main(int argc, char** argv)
     size_t prevProcSample = 0;
 
     bool quit = false;
+
     while (!quit) {
         message_t signal;
         subscriber.recv(&signal);
@@ -97,8 +98,9 @@ int main(int argc, char** argv)
         //    cout<<"p "<<i<<" : "<< points[i]<<endl;
 
         fft.AddPoints(points);
-        if (prevProcSample + numberOfSamplesSkip > timestamp)
+        if ((prevProcSample + numberOfSamplesSkip) > timestamp){
             continue;
+        }
         if (fft.Process()) {
             prevProcSample = timestamp;
             fft.GetPowerOneVec(powers);
@@ -145,7 +147,7 @@ int parsConfig(string& signalConfig, string& matrixFile, size_t& fftWinSize,
 
     string cfgFile("../config.cfg");
 
-    // check if config exists
+    // check if the config file exists
     ifstream testFile(cfgFile.c_str());
     if (! testFile.good()) {
         cout<<"Could not open the config file: "<<cfgFile<<endl;
