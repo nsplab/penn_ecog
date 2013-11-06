@@ -6,14 +6,13 @@
 
 class jointRSE_filter : public FilterClass {
 public:
-    static const size_t numLags = 1;
     static const size_t numChannels = 1;
-    static const size_t sensoryDelay = 0;
+    static const size_t sensoryDelay = 5;
 
     jointRSE_filter(size_t dim, bool velocityParams, bool positionParams, bool affineParam, bool useRSE,
                     bool timeInvariant, bool log, float trialTime, float maxTrialTime, double diagQ, double finalPosCov,
                     double finalVelCov, unsigned featureRate, double channelCov, double initialArmPosVar, double initialArmVelVar,
-                    bool integrateVel);
+                    bool integrateVel, unsigned numLags);
     void Update();
     void Predict();
     // main loop function
@@ -58,6 +57,8 @@ private:
     bool affineParam_;
     size_t numSetsOfParams_;
     bool timeInvariant_;
+
+    unsigned numLags_;
 
     arma::cube DD_obs_;
 

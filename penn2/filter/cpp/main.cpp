@@ -46,6 +46,7 @@ int main(int argc, char** argv) {
     double channelCov = ifile("channelCov", 1.0);
     double initialArmPosVar = ifile("initialArmPosVar", 1.0);
     double initialArmVelVar = ifile("initialArmVelVar", 1.0);
+    unsigned numLags = ifile("numLags", 1);
 
     string featureConfig = ifile("featureConfig", "feature.cfg");
     GetPot ifileFeature(featureConfig.c_str(), "#", "\n");
@@ -78,12 +79,14 @@ int main(int argc, char** argv) {
                            channelCov,     // channel parameter variance
                            initialArmPosVar,
                            initialArmVelVar,
-                           true            // integrate velocity to get position
+                           true,           // integrate velocity to get position
+                           numLags
                            );
-    filter.Run();
+    //filter.Run();
     //filter.RunPredictOnly();
 
     //testRSE();
+    testJointFilter(3, filter);
 
     return 0;
 }
