@@ -34,7 +34,7 @@ jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionP
 
     pos_ = zeros<mat>(dim, 1);
     prev_u_ = zeros<mat>(dim, 1);
-    for (size_t i = 0; i <= sensoryDelay; i++) {
+    for (size_t i = 0; i < sensoryDelay; i++) {
         saved_pos_.push_back(pos_);
         saved_u_.push_back(prev_u_);
     }
@@ -359,8 +359,8 @@ void jointRSE_filter::Update() {
 
     // why these are added here?
     // who added these?
-    //pos_ = saved_pos_[0];
-    //prev_u_ = saved_u_[0];
+    pos_ = saved_pos_[0];
+    prev_u_ = saved_u_[0];
 
 
     saved_pos_.erase(saved_pos_.begin());
@@ -408,7 +408,7 @@ void jointRSE_filter::InitNewTrial(mat startPos, mat reachTarget) {
     prev_u_ = zeros<mat>(dim_, 1);
     saved_pos_.clear();
     saved_u_.clear();
-    for (size_t i = 0; i <= sensoryDelay; i++) {
+    for (size_t i = 0; i < sensoryDelay; i++) {
         saved_pos_.push_back(pos_);
         saved_u_.push_back(prev_u_);
     }
