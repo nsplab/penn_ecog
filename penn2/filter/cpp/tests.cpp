@@ -71,9 +71,15 @@ void testRSE() {
     }
 }
 
-const size_t dim = 1;
+//const size_t dim = 1;
 
-void testJointFilter() {
+
+/*
+ * Use RSE as the control policy to test the adaptive filter in a closed loop
+ * Initial hand positions are randomly select on a sphere and the target is
+ * the center of the sphere
+ */
+void testJointFilter(unsigned dim=3) {
 
     ofstream origTraject("origTrajectory.txt");
     ofstream noisTraject("noisTrajectory.txt");

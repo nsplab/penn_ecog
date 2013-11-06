@@ -77,7 +77,8 @@ int main(int argc, char** argv) {
                            featureRate,    // feature rate
                            channelCov,     // channel parameter variance
                            initialArmPosVar,
-                           initialArmVelVar
+                           initialArmVelVar,
+                           true            // integrate velocity to get position
                            );
     filter.Run();
     //filter.RunPredictOnly();

@@ -2,6 +2,6 @@
 #define TESTS_H
 
 void testRSE();
-void testJointFilter();
+void testJointFilter(unsigned dim);
 
 #endif // TESTS_H
