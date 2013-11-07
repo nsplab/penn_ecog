@@ -1,1 +1,0 @@
-/home/user/code/penn2/penn/penn2/signal_acquisition/synth/build/CMakeFiles/synth.dir

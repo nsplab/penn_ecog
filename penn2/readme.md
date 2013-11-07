@@ -1,6 +1,9 @@
 Directories
 =======
 
+libs -
++ the libraries / classes used by more than one module are in this directory.
+
 feature_extraction_offline - 
 
 feature_extraction_online - 

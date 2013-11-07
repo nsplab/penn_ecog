@@ -1,0 +1,115 @@
+#include <iostream>
+#include <sstream>
+#include <thread>
+#include <chrono>
+
+#include <zmq.hpp>
+
+#include <eigen3/Eigen/Dense>
+
+#include "../../libs/rse/reachstateequation.h"
+
+using namespace std;
+using namespace zmq;
+using namespace Eigen;
+
+float x=0, y=0, z=0;
+float prevx=0, prevy=0, prevz=0;
+float diffx=0.0, diffy=0.0, diffz=0.0;
+
+context_t context(2);
+
+void GenerateSignal() {
+    socket_t publisher(context, ZMQ_PUB);
+    publisher.bind("ipc:///tmp/signal.pipe");
+
+    float xSignalAmp = 2.0f;
+    float xSignalFrq = 10.0f; // Hz
+
+    float ySignalAmp = 2.0f;
+    float ySignalFrq = 20.0f; // Hz
+
+    float zSignalAmp = 2.0f;
+    float zSignalFrq = 30.0f; // Hz
+
+    size_t samplingRate = 1000; // Hz
+
+    // the synthetic signals are mixed to generate the output singnals/channels
+    int numberOfChannels = 4; // number of output channels
+    Matrix<float, Dynamic, Dynamic> mixingMatrix(numberOfChannels,3);
+    mixingMatrix << 1, 0, 0,
+                    0, 1, 0,
+                    0, 0, 1,
+                    1, 1, 1;
+
+    Matrix<float, Dynamic, Dynamic> signal(numberOfChannels,1); // output signal
+    Vector3f sample; // synthetic signal based on x,y,z from kinect
+
+    bool exit = false;
+    for (size_t timeStamp=0; !exit; timeStamp++) {
+
+        size_t i = timeStamp % samplingRate;
+        float dx = diffx;
+        float dy = diffy;
+        float dz = diffz;
+
+        // assume intended velocity is power modulated
+        float maxSpeed = 50.0;
+        float baselinePower = maxSpeed;
+        if (dx >= maxSpeed)
+            dx = maxSpeed;
+        else if (dx <= -maxSpeed)
+            dx = -maxSpeed;
+        if (dy >= maxSpeed)
+            dy = maxSpeed;
+        else if (dy <= -maxSpeed)
+            dy = -maxSpeed;
+        if (dz >= maxSpeed)
+            dz = maxSpeed;
+        else if (dz <= -maxSpeed)
+            dz = -maxSpeed;
+
+        sample(0) = cos(2.0*M_PI * float(i)/float(samplingRate) * xSignalFrq) * xSignalAmp * sqrt(dx+baselinePower);
+        sample(1) = cos(2.0*M_PI * float(i)/float(samplingRate) * ySignalFrq) * ySignalAmp * sqrt(dy+baselinePower);
+        sample(2) = cos(2.0*M_PI * float(i)/float(samplingRate) * zSignalFrq) * zSignalAmp * sqrt(dz+baselinePower);
+
+        signal = mixingMatrix * sample;
+        cout<<"signal: "<<signal<<endl;
+
+        message_t zmqMessage(sizeof(float)*numberOfChannels+sizeof(size_t));
+        memcpy(zmqMessage.data(), &timeStamp, sizeof(size_t)*1);
+        memcpy(static_cast<size_t*>(zmqMessage.data())+1, signal.data(), sizeof(float)*numberOfChannels);
+
+        publisher.send(zmqMessage);
+
+        this_thread::sleep_for(chrono::microseconds(static_cast<int>(1.0/samplingRate * 1000000.0)));
+    }
+}
+
+int main()
+{
+    thread broadcast(GenerateSignal);
+
+    double timeBin = 0.01;
+    const double reachTimeSteps = 5.0/timeBin;
+    const double maxTimeSteps = 3.0/timeBin;
+
+    reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget, timeBin);
+    RSEMatrixStruct rseParams = rseComputer.returnAnswer();
+
+    socket_t socket(context, ZMQ_SUB);
+    socket.connect("ipc:///tmp/signal.pipe");
+
+    unsigned prevTrial = -1;
+    unsigned currentTrial = -1;
+
+    for (;;)   {
+
+        diffx = x - prevx;
+        diffy = y - prevy;
+        diffz = z - prevz;
+        prevx = x; prevy = y; prevz = z;
+    }
+
+    return 0;
+}

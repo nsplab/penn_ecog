@@ -1,1 +1,0 @@
-/usr/bin/c++   -DNDEBUG -O3 -g -std=c++0x    CMakeFiles/synth.dir/main.cpp.o  -o synth -rdynamic -lzmq 
