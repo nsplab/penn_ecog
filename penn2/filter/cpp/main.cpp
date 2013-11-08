@@ -82,11 +82,11 @@ int main(int argc, char** argv) {
                            true,           // integrate velocity to get position
                            numLags
                            );
-    //filter.Run();
+    filter.Run();
     //filter.RunPredictOnly();
 
     //testRSE();
-    testJointFilter(3, filter);
+    //testJointFilter(3, filter);
 
     return 0;
 }

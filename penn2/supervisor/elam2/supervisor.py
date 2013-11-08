@@ -54,7 +54,7 @@ signal.signal(signal.SIGINT, signal_handler)
 
 trialTimeoutThread = None
 
-trialTimeout = 10  # seconds
+trialTimeout = 3  # seconds
 
 
 def StartNewTrial():
@@ -85,12 +85,13 @@ while run:
     vec_str = ssocket.recv()
     print 'vec_str ', vec_str
     vec = vec_str.split(" ")
-    gameState.hand_pos[0] = float(vec[0])
-    gameState.hand_pos[1] = float(vec[1])
-    #gameState.hand_pos[2] += float(vec[1])
-    filterState.hand_pos[0] = float(vec[0])
-    filterState.hand_pos[1] = float(vec[1])
-    #filterState.hand_pos[2] += float(vec[1])
+    if vec[0] != "no":
+        gameState.hand_pos[0] = float(vec[0])
+        gameState.hand_pos[1] = float(vec[1])
+        #gameState.hand_pos[2] += float(vec[1])
+        filterState.hand_pos[0] = float(vec[0])
+        filterState.hand_pos[1] = float(vec[1])
+        #filterState.hand_pos[2] += float(vec[1])
 
     if gameState.updateState():
         # a new trial started

@@ -105,9 +105,11 @@ jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionP
 
     // TODO: start with something of the right order of magnitude
     channelParametersHat_ = zeros<mat>(numChannels, dim * numSetsOfParams_ * numLags_ + affineParam_);
+    cout<<"constructor done"<<endl;
 }
 
 void jointRSE_filter::Predict() {
+    cout<<"predict"<<endl;
     timeStep_ ++;
 
     if (timeStep_ >= maxTimeSteps_) {
@@ -164,6 +166,7 @@ void jointRSE_filter::Predict() {
     cout<<"covariance_ size: "<<covariance_.n_rows<<" "<<covariance_.n_cols<<endl;
     cout<<"pred_x_ size: "<<pred_x_.n_rows<<" "<<pred_x_.n_cols<<endl;
     cout<<"pred_cov_ size: "<<pred_cov_.n_rows<<" "<<pred_cov_.n_cols<<endl;*/
+    cout<<"predict done"<<endl;
 }
 
 void jointRSE_filter::Update() {

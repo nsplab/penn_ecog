@@ -5,9 +5,11 @@
 
 #include <zmq.hpp>
 
+#include <armadillo>
 #include <eigen3/Eigen/Dense>
 
 #include "../../libs/rse/reachstateequation.h"
+#include "../../libs/rse/matrix.h"
 
 using namespace std;
 using namespace zmq;
@@ -91,24 +93,80 @@ int main()
     thread broadcast(GenerateSignal);
 
     double timeBin = 0.01;
-    const double reachTimeSteps = 5.0/timeBin;
-    const double maxTimeSteps = 3.0/timeBin;
+    const double reachTimeSteps = 3.0/timeBin;
+    const double maxTimeSteps = 5.0/timeBin;
+    size_t dim = 3;
+    double diagQ=1.0e-3;
+    double finalPosCov=1.0e-6;
+    double finalVelCov=1.0e-8;
 
-    reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget, timeBin);
-    RSEMatrixStruct rseParams = rseComputer.returnAnswer();
+    //reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget, timeBin);
+    RSEMatrixStruct rseParams;// = rseComputer.returnAnswer();
 
-    socket_t socket(context, ZMQ_SUB);
-    socket.connect("ipc:///tmp/signal.pipe");
+    socket_t supervisor(context, ZMQ_REQ);
+    supervisor.connect("ipc:///tmp/supervisor.pipe");
 
     unsigned prevTrial = -1;
     unsigned currentTrial = -1;
+    
+    string sendMsg("no no");
+
+    vector<float> target(3);
+    vector<float> handPos(3);
+
+    arma::vec handState;
+
+   int timeStep = 0;
 
     for (;;)   {
+
+        message_t zmq_message(sendMsg.length());
+        memcpy((char *) zmq_message.data(), sendMsg.c_str(), sendMsg.length());
+        supervisor.send(zmq_message);
+
+        message_t supervisor_msg;
+        supervisor.recv(&supervisor_msg);
+
+        string recvMsg;
+        recvMsg.resize(supervisor_msg.size(),'\0');
+        recvMsg.assign((char *)supervisor_msg.data(),supervisor_msg.size());
+        cout<<"recvMsg "<<recvMsg<<endl;
+        stringstream ss(recvMsg);
+	cout<<"timeStep "<<timeStep<<endl;
+        
+        // extract target position, hand position, trial ID, mode (training/testing)
+        // and attending value from supervisor's message
+        ss >> target[0];ss >> target[1];ss >> target[2];
+        ss >> handPos[0];ss >> handPos[1];ss >> handPos[2];
+
+        ss >> currentTrial;
+        if (currentTrial != prevTrial) {
+            cout<<"new trial"<<endl;
+            arma::mat reachTarget = arma::zeros<arma::mat>(6, 1);
+            reachTarget<<target[0]<<arma::endr<<target[1]<<arma::endr<<target[2]<<arma::endr<<0<<arma::endr<<0<<arma::endr<<0<<arma::endr;
+
+            cout<<"rse"<<endl;
+            reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget, dim, diagQ, finalPosCov, finalVelCov, timeBin);
+            rseParams = rseComputer.returnAnswer();
+            cout<<"rse"<<endl;
+            arma::vec newHandState;
+            newHandState<<handPos[0]<<handPos[1]<<handPos[2]<<0<<0<<0;
+            handState = newHandState;
+            prevTrial = currentTrial;
+            timeStep = 0;
+        }
+
+	cout<<"timeStep "<<timeStep<<endl;
+        handState = rseParams.F.slice(timeStep) * handState + /*randomNoise +*/ rseParams.b.slice(timeStep);
+        timeStep++;
+        x = handState(0); y = handState(1); z = handState(2);
 
         diffx = x - prevx;
         diffy = y - prevy;
         diffz = z - prevz;
         prevx = x; prevy = y; prevz = z;
+
+       this_thread::sleep_for(chrono::microseconds(static_cast<int>(timeBin * 1000000.0))); 
     }
 
     return 0;
