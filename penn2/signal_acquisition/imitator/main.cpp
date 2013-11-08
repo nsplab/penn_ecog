@@ -25,13 +25,13 @@ void GenerateSignal() {
     socket_t publisher(context, ZMQ_PUB);
     publisher.bind("ipc:///tmp/signal.pipe");
 
-    float xSignalAmp = 2.0f;
+    float xSignalAmp = 1.0f;
     float xSignalFrq = 10.0f; // Hz
 
-    float ySignalAmp = 2.0f;
+    float ySignalAmp = 1.0f;
     float ySignalFrq = 20.0f; // Hz
 
-    float zSignalAmp = 2.0f;
+    float zSignalAmp = 1.0f;
     float zSignalFrq = 30.0f; // Hz
 
     size_t samplingRate = 1000; // Hz
@@ -76,7 +76,7 @@ void GenerateSignal() {
         sample(2) = cos(2.0*M_PI * float(i)/float(samplingRate) * zSignalFrq) * zSignalAmp * sqrt(dz+baselinePower);
 
         signal = mixingMatrix * sample;
-        cout<<"signal: "<<signal<<endl;
+        //cout<<"signal: "<<signal<<endl;
 
         message_t zmqMessage(sizeof(float)*numberOfChannels+sizeof(size_t));
         memcpy(zmqMessage.data(), &timeStamp, sizeof(size_t)*1);
@@ -92,9 +92,9 @@ int main()
 {
     thread broadcast(GenerateSignal);
 
-    double timeBin = 0.01;
-    const double reachTimeSteps = 3.0/timeBin;
-    const double maxTimeSteps = 5.0/timeBin;
+    double timeBin = 0.1;
+    const double reachTimeSteps = 5.0/timeBin;
+    const double maxTimeSteps = 10.0/timeBin;
     size_t dim = 3;
     double diagQ=1.0e-3;
     double finalPosCov=1.0e-6;
@@ -154,6 +154,10 @@ int main()
             handState = newHandState;
             prevTrial = currentTrial;
             timeStep = 0;
+        } else {
+            handState(0) = handPos[0];
+            handState(1) = handPos[1];
+            handState(2) = handPos[2];
         }
 
 	cout<<"timeStep "<<timeStep<<endl;
@@ -166,7 +170,14 @@ int main()
         diffz = z - prevz;
         prevx = x; prevy = y; prevz = z;
 
-       this_thread::sleep_for(chrono::microseconds(static_cast<int>(timeBin * 1000000.0))); 
+        cout<<"diffx "<<diffx<<endl;
+        cout<<"diffy "<<diffy<<endl;
+        cout<<"diffz "<<diffz<<endl;
+
+        cout<<"handState: "<<handState<<endl;
+        cout<<"target: "<<target[0]<<" "<<target[1]<<" "<<target[2]<<endl;
+
+        this_thread::sleep_for(chrono::microseconds(static_cast<int>(timeBin * 1000000.0))); 
     }
 
     return 0;

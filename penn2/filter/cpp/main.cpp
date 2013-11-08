@@ -62,8 +62,8 @@ int main(int argc, char** argv) {
         testFile.close();
     }
 
-    //NaiveFilter filter;
-    jointRSE_filter filter(dimensions,     // dimension
+    NaiveFilter filter;
+    /*jointRSE_filter filter(dimensions,     // dimension
                            velocityParams, // include velocity parameters
                            positionParams, // include position parameters
                            affineParam,    // include affine parameter
@@ -82,6 +82,7 @@ int main(int argc, char** argv) {
                            true,           // integrate velocity to get position
                            numLags
                            );
+    */
     filter.Run();
     //filter.RunPredictOnly();
 
