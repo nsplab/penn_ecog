@@ -5,10 +5,12 @@
 
 class NaiveFilter : public FilterClass {
 public:
-  NaiveFilter();
+  NaiveFilter(float featureRate);
   void Update();
   void Predict();
   void Run();
+private:
+  float featureRate_;
 };
 
 #endif // NAIVE_FILTER_H

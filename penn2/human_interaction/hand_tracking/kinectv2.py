@@ -14,7 +14,7 @@ import signal
 # create the zmq socket for sending data
 context = zmq.Context()
 socket = context.socket(zmq.PUB)
-socket.bind("ipc:///tmp/ksignal.pipe")
+socket.bind("ipc:///tmp/kinecthand.pipe")
 
 # create opencv windows to show live video stream
 cv2.namedWindow('Depth')
@@ -24,6 +24,24 @@ print('Press ESC in window to stop')
 # previous hand position
 prev_point = np.array([0, 0, 0])
 first_iter = True
+
+def raw_depth_to_meters(depth):
+    if depth < 2047:
+        return 1.0/(float(depth) * -0.0030711016 + 3.3309495161)
+    return 0.0
+
+def kinect_to_world(x, y, z):
+    fx_d = 1.0 / 5.9421434211923247e+02
+    fy_d = 1.0 / 5.9104053696870778e+02
+    cx_d = 3.3930780975300314e+02
+    cy_d = 2.4273913761751615e+02
+
+    depth = raw_depth_to_meters(z)
+    xx = float((x - cx_d) * depth * fx_d)
+    yy = float((y - cy_d) * depth * fy_d)
+    zz = float(depth)
+
+    return xx, yy, zz
 
 # retrive the next rgb video frame
 def get_video():
@@ -126,12 +144,13 @@ def get_depth_raw():
     cv2.circle(timg, (int(tx), int(ty)), 10, cv2.cv.RGB(65535, 65535, 65535),
                  5, cv2.CV_AA)
 
-    signal_msg = str(tx) + " " + str(ty) + " " + str(tz)
+    xx, yy, zz = kinect_to_world(tx, ty, tz)
+    signal_msg = str(xx) + " " + str(yy) + " " + str(zz)
     socket.send(signal_msg)
 
-    print 'x: ', tx
-    print 'y: ', ty
-    print 'z: ', tz
+    print 'x: ', xx
+    print 'y: ', yy
+    print 'z: ', zz
     return timg
 
 # get depth background image, 3 times in case of bad/slow initialization

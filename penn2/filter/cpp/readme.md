@@ -1,3 +1,9 @@
+The Filter Module
+-----------------
+
+The filter module should pass the position to the supervisor module. Thus, if the velocity is decoded, then the velocity needs to be integrated and then sent to the supervisor modules.
+
+
 Testing RSE
 -----------
 

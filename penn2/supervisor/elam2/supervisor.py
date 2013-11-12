@@ -54,7 +54,7 @@ signal.signal(signal.SIGINT, signal_handler)
 
 trialTimeoutThread = None
 
-trialTimeout = 5  # seconds
+trialTimeout = 8  # seconds
 
 
 def StartNewTrial():

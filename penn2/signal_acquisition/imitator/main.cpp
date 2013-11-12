@@ -25,13 +25,13 @@ void GenerateSignal() {
     socket_t publisher(context, ZMQ_PUB);
     publisher.bind("ipc:///tmp/signal.pipe");
 
-    float xSignalAmp = 1.0f;
+    float xSignalAmp = 2.0f;
     float xSignalFrq = 10.0f; // Hz
 
-    float ySignalAmp = 1.0f;
+    float ySignalAmp = 2.0f;
     float ySignalFrq = 20.0f; // Hz
 
-    float zSignalAmp = 1.0f;
+    float zSignalAmp = 2.0f;
     float zSignalFrq = 30.0f; // Hz
 
     size_t samplingRate = 1000; // Hz
@@ -165,9 +165,9 @@ int main()
         timeStep++;
         x = handState(0); y = handState(1); z = handState(2);
 
-        diffx = x - prevx;
-        diffy = y - prevy;
-        diffz = z - prevz;
+        diffx = handState(3);//x - prevx;
+        diffy = handState(4);//y - prevy;
+        diffz = handState(5);//z - prevz;
         prevx = x; prevy = y; prevz = z;
 
         cout<<"diffx "<<diffx<<endl;
