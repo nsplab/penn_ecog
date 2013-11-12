@@ -175,6 +175,7 @@ size_t timeStamp = 0 ;
 	cout<<"baseline"<<endl;
         baselineSamples+=1;
         //acc(powers[0][8]);
+//cout<<"point[0]"<<point[0]<<endl;
         acc(point[0]);
 //        cout<<"baselineSamples "<<baselineSamples<<endl;
 //        end = high_resolution_clock::now();
