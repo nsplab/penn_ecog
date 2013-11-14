@@ -1,31 +1,22 @@
 matlab_analysis_ecog
 ====================
 
-This repo has 3 files
+This repo analyses and plots basic data using regression over different frequency bands against the force sensor input signals
 
 main:
 =============
 
-batched_analysis.m
+analyse_data.m
 
-Analyses the data using a batched approach, where the data is segmented using the retun_batch.m function.
+Is the main file, every variable is set here at the beginning, where we can set which bands to analyze, either the beta or the high gamma
+The file needs no inputs and it plots:
 
-Batches are defined by the user and subsampling frequencies are set in the file get_variables.m
-
-Right now, it appends the new batches, which may be potentially slow
-
-TODO: Precalculate the size of the spectrogram to generate a nameholder matrix to populate
-
-Parallelize the computation of the batches to further speed up the calculations.
+- Raw data and 1 selected channel's spectrogram
+- Regression weights as well as the P-values for each of the factors
+- Alginment both with rising and falling edges for beta and high gamma bands
 
 
 
-
-read_data.m
-
-This file reads the full set of data and plots the coefficients in a heatmap without any batching.
-Since it reads the whole set of data from file, it can run into very large delays, and may not be able to calculate the full
-spectrogram either.
 
 
 auxiliar
@@ -49,4 +40,5 @@ may be incomplete
 
 get_variables.m
 
-Function to consolidate all the variables of interest from all the programs, so there are no coding mistakes
+Function to consolidate all the variables of interest from all the programs, so there are no coding mistakes. Be careful to set the right number of channels
+if we do not set the right number of channels we will have problems when reading the data files from the binary format.

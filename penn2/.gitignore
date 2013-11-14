@@ -5,6 +5,7 @@
 *.slo
 *.a
 *.la
+*.m~
 CMakeCache.txt
 CMakeFiles
 Makefile
