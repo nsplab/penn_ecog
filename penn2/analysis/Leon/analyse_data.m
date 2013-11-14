@@ -25,10 +25,10 @@ first_batch = 1;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Read the data files
-root_path = ['/home/leon/Data/Penn/Oct_11'];
+root_path = ['/home/leon/Data/Penn/Nov_12'];
 time_stamps_file = [root_path '/data_click_Tue_01.10.2013_10:12:28'];
 data_file = [root_path '/data'];
-data_file = 'dummy.bin';
+%data_file = 'dummy.bin';
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -131,7 +131,7 @@ for batch_idx = first_batch:max_num_batches
     time_axis = (1:size(force,1))/samplingRate;%generate the time series of the force
     [TF, match_idx] = findNearest(T,time_axis); %is member looks up which indexes match the output from the 
     force = force(match_idx,1);%recapture the force using the matched indexes
-    force_threshold = 0.2;
+    force_threshold =  0.0170559; %This is hardocded from the baseline of the data
     labels = labelize(force, force_threshold);
     %the next part of code is to generate placeholders to prevent overflows
     %in windows computers
@@ -218,6 +218,7 @@ if plot_flag ==1
     set(findall(figureHandle,'type','text'),'fontSize',14,'fontWeight','bold')
     set(gca,'FontSize',14)
     set(gcf, 'color', [1,1,1])
+    set(gcf,'renderer', 'zbuffer');
     myaa([4 2],'raw_data_spectrogram.png');
  
     
@@ -234,11 +235,12 @@ if plot_flag ==1
     %Color scheme is black if coefficient is not significant.
     subplot(2,1,2);
     stem(stats.p, 'r')
-    %ylim([0,0.05])
+    ylim([0,0.05])
     xlabel('Coefficients for the regression')
     ylabel('P-values')
     title('P-Values for the regression');
     set(gcf, 'color', [1,1,1])
+    set(gcf,'renderer', 'zbuffer');
     myaa([4 2],'regression_weights_p_value.png')
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -270,6 +272,7 @@ if plot_flag ==1
     ylabel('Onset')
     axis tight
     set(gcf, 'color', [1,1,1])
+    set(gcf,'renderer', 'zbuffer');
     myaa([4 2],'beta_rising.png')
     
 
@@ -298,6 +301,7 @@ if plot_flag ==1
     ylabel('Force [Force Units]')
     axis tight;
     set(gcf, 'color', [1,1,1])
+    set(gcf,'renderer', 'zbuffer');
     myaa([4 2],'gamma_rising.png')
     
 
@@ -331,6 +335,7 @@ if plot_flag ==1
     ylabel('Force [Force Units]')
     axis tight;
     set(gcf, 'color', [1,1,1])
+    set(gcf,'renderer', 'zbuffer');
     myaa([4 2],'beta_falling.png')
     
 
@@ -359,6 +364,7 @@ if plot_flag ==1
     ylabel('Force [Force Units]')
     axis tight;
     set(gcf, 'color', [1,1,1])
+    set(gcf,'renderer', 'zbuffer');
     myaa([4 2],'gamma_falling.png')
     
 end

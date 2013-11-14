@@ -15,16 +15,16 @@ switch variable_name
         %desired number of channels to work with
         variable = 60;
     case 'Original_Sampling_Rate'
-        variable = 5000;
+        variable = 25000;
     case 'Desired_Sampling_Rate'
-        variable = 1024;
+        variable = 256;
     case 'Window_Size'
-        variable = 0.300;
+        variable = 0.500;
     case 'number_recorded_channels'
         %number of channels recorded
         variable = 60;
     case 'overlap_percentage'
-        variable = 0.300;
+        variable = 0.900;
     case 'Reference_Channel'
         variable = 2; %use channel 1 as reference, it can be changed to any channel 
     case 'right_limit'
