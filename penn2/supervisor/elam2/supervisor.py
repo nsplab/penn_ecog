@@ -54,8 +54,10 @@ signal.signal(signal.SIGINT, signal_handler)
 
 trialTimeoutThread = None
 
-trialTimeout = 8  # seconds
 
+trialTimeout = 8  # seconds
+if config.trackingMode:
+    trialTimeout = 100
 
 def StartNewTrial():
     global goal_is_ball, trialTimeoutThread, run
@@ -69,6 +71,8 @@ def StartNewTrial():
     trialTimeoutThread = threading.Timer(trialTimeout, StartNewTrial)
     if run:
         trialTimeoutThread.start()
+
+timestamp = 0
 
 # main loop
 while run:
@@ -86,12 +90,17 @@ while run:
     print 'vec_str ', vec_str
     vec = vec_str.split(" ")
     if vec[0] != "no":
-        gameState.hand_pos[0] = float(vec[0])
-        gameState.hand_pos[1] = float(vec[1])
-        #gameState.hand_pos[2] += float(vec[1])
-        filterState.hand_pos[0] = float(vec[0])
-        filterState.hand_pos[1] = float(vec[1])
-        #filterState.hand_pos[2] += float(vec[1])
+        if config.trackingMode:
+            timestamp = long(vec[0])
+            gameState.hand_pos[0] = float(vec[1])
+            gameState.hand_pos[1] = float(vec[2])
+            gameState.hand_pos[2] = float(vec[3])
+            print timestamp
+        else:
+            #gameState.hand_pos[2] += float(vec[1])
+            filterState.hand_pos[0] = float(vec[0])
+            filterState.hand_pos[1] = float(vec[1])
+            #filterState.hand_pos[2] += float(vec[1])
 
     if gameState.updateState():
         # a new trial started
