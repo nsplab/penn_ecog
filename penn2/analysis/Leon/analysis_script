@@ -1,5 +1,6 @@
 #!/bin/bash
 # My first script
+
 datafile=$1
 matlab -nodesktop -nosplash -r "data_file='$datafile';analyse_data;exit"
 pdflatex "\def\myvar{$datafile} \input{figures.tex}"
