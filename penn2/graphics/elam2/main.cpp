@@ -190,12 +190,12 @@ int main(int argc, char** argv)
     osg::ref_ptr<osg::Geode> timeLeftTextGeode = new osg::Geode;
 
     osg::ref_ptr<osg::Camera> camera = createHUDCamera(0, 1920, 0, 1200);
-    camera->addChild( textGeode.get() );
+    //camera->addChild( textGeode.get() );
     camera->addChild( scoreTextGeode.get() );
-    camera->addChild( targetTextGeode.get() );
-    camera->addChild( sublTextGeode.get() );
-    camera->addChild( TrialLeftGeode.get() );
-    camera->addChild( pauseTextGeode.get() );
+    //camera->addChild( targetTextGeode.get() );
+    //camera->addChild( sublTextGeode.get() );
+    //camera->addChild( TrialLeftGeode.get() );
+    //camera->addChild( pauseTextGeode.get() );
     camera->getOrCreateStateSet()->setMode(
                 GL_LIGHTING, osg::StateAttribute::OFF );
 
