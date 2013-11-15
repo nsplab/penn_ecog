@@ -24,7 +24,7 @@ switch method
         %Using the output from the smoother, we use a treshold based onset
         %detection technique
         %we check if after 25 samples, certain threshold has been passed.
-        %plot(onset_labels_)
+        plot(onset_labels_)
         mean_data = mean(data);
         std_data = std(data);
         h_value = onset_value;

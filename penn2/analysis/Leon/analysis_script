@@ -1,0 +1,7 @@
+#!/bin/bash
+# My first script
+matlab -nodesktop -nosplash -r "analyse_data;exit"
+pdflatex figures.tex
+pdflatex figures_log.tex
+pdflatex regression_plot.tex
+
