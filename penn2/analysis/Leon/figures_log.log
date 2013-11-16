@@ -1,13 +1,9 @@
-This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012/Debian) (format=pdflatex 2013.8.1)  14 NOV 2013 18:06
+This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012/Debian) (format=pdflatex 2013.8.1)  14 NOV 2013 19:31
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**figures_log.tex
-(./figures_log.tex
-LaTeX2e <2011/06/27>
-Babel <v3.8m> and hyphenation patterns for english, dumylang, nohyphenation, lo
-aded.
-(/usr/share/texlive/texmf-dist/tex/latex/base/article.cls
+**\def\myvar{/home/leon/Data/Penn/Nov_12/data} \input{figures_log.tex}
+(./figures_log.tex (/usr/share/texlive/texmf-dist/tex/latex/base/article.cls
 Document Class: article 2007/10/19 v1.4h Standard LaTeX document class
 (/usr/share/texlive/texmf-dist/tex/latex/base/size12.clo
 File: size12.clo 2007/10/19 v1.4h Standard LaTeX file (size option)
@@ -141,38 +137,38 @@ e
 File: raw_data_spectrogram.png Graphic file (type png)
 
 <use raw_data_spectrogram.png>
-Package pdftex.def Info: raw_data_spectrogram.png used on input line 10.
+Package pdftex.def Info: raw_data_spectrogram.png used on input line 12.
 (pdftex.def)             Requested size: 429.44148pt x 213.03444pt.
 
 <beta_falling_log.png, id=2, 1124.2pt x 843.15pt>
 File: beta_falling_log.png Graphic file (type png)
  <use beta_falling_log.png>
-Package pdftex.def Info: beta_falling_log.png used on input line 12.
+Package pdftex.def Info: beta_falling_log.png used on input line 14.
 (pdftex.def)             Requested size: 224.83601pt x 168.627pt.
 
 <beta_rising_log.png, id=3, 1124.2pt x 843.15pt>
 File: beta_rising_log.png Graphic file (type png)
  <use beta_rising_log.png>
-Package pdftex.def Info: beta_rising_log.png used on input line 13.
+Package pdftex.def Info: beta_rising_log.png used on input line 15.
 (pdftex.def)             Requested size: 224.83601pt x 168.627pt.
 
-Overfull \hbox (0.15291pt too wide) in paragraph at lines 12--14
+Overfull \hbox (0.15291pt too wide) in paragraph at lines 14--16
 [][] [] 
  []
 
 <gamma_falling_log.png, id=4, 1124.2pt x 843.15pt>
 File: gamma_falling_log.png Graphic file (type png)
  <use gamma_falling_log.png>
-Package pdftex.def Info: gamma_falling_log.png used on input line 15.
+Package pdftex.def Info: gamma_falling_log.png used on input line 17.
 (pdftex.def)             Requested size: 224.83601pt x 168.627pt.
 
 <gamma_rising_log.png, id=5, 1124.2pt x 843.15pt>
 File: gamma_rising_log.png Graphic file (type png)
  <use gamma_rising_log.png>
-Package pdftex.def Info: gamma_rising_log.png used on input line 16.
+Package pdftex.def Info: gamma_rising_log.png used on input line 18.
 (pdftex.def)             Requested size: 224.83601pt x 168.627pt.
 
-Overfull \hbox (0.15291pt too wide) in paragraph at lines 15--17
+Overfull \hbox (0.15291pt too wide) in paragraph at lines 17--19
 [][] [] 
  []
 
@@ -183,17 +179,17 @@ Overfull \hbox (0.15291pt too wide) in paragraph at lines 15--17
 py)> <./gamma_falling_log.png (PNG copy)> <./gamma_rising_log.png (PNG copy)>] 
 (./figures_log.aux) ) 
 Here is how much of TeX's memory you used:
- 1506 strings out of 495059
- 21881 string characters out of 3182031
- 72332 words of memory out of 3000000
- 4699 multiletter control sequences out of 15000+200000
+ 1507 strings out of 495059
+ 21886 string characters out of 3182031
+ 72400 words of memory out of 3000000
+ 4700 multiletter control sequences out of 15000+200000
  4245 words of font info for 16 fonts, out of 3000000 for 9000
  14 hyphenation exceptions out of 8191
- 37i,5n,23p,244b,111s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 38i,5n,23p,297b,111s stack positions out of 5000i,500n,10000p,200000b,50000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts
 /cm/cmbx12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cm
 r12.pfb>
-Output written on figures_log.pdf (1 page, 737049 bytes).
+Output written on figures_log.pdf (1 page, 738876 bytes).
 PDF statistics:
  21 PDF objects out of 1000 (max. 8388607)
  10 compressed objects within 1 object stream
