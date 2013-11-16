@@ -127,8 +127,11 @@ int main(int argc, char** argv)
     osg::ref_ptr<osg::Group> root = new osg::Group();
 
     // load arm model
-    osg::ref_ptr<osg::Node> model = osgDB::readNodeFile("../bare_hand_Scene.osgt");
+    osg::ref_ptr<osg::Node> tmodel = osgDB::readNodeFile("../bare_hand_Scene.osgt");
     //cout<<int(!model)<<endl;
+
+    osg::ref_ptr<osg::MatrixTransform> reverse =  new osg::MatrixTransform;
+
 
     // couldn't load the model
     if ( !model ) return 1;

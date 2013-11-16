@@ -15,23 +15,12 @@
 #include <thread>
 #include <stdint.h>
 
-// for lpt
-#include <unistd.h>
-#include <sys/io.h>
-
-#include <tclap/CmdLine.h> // tclap-1.2.1
-
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
 
-#include "fft.h"
-
 #include "GetPot.h"
-
-#define lptDataBase 0xd010           /* printer port data base address */
-//#define lptControlBase 0xd012           /* printer port control base address */
 
 using namespace std;
 using namespace chrono;
@@ -60,15 +49,6 @@ int leftRight = 0;
 void powerTh()
 {
 
-   if (ioperm(lptDataBase,1,1))
-    fprintf(stderr, "Couldn't get the port at %x\n", lptDataBase), exit(1);
-//   if (ioperm(lptControlBase,1,1))
-//    fprintf(stderr, "Couldn't get the port at %x\n", lptControlBase), exit(1);
-
-
-  outb(0x10, lptDataBase);
-//  outb(0xf, lptControlBase);
-
   size_t dataSize = sizeof(size_t) * 1;
     time_t rawtime;
     time(&rawtime);
@@ -84,20 +64,6 @@ void powerTh()
   cout<<"thread started"<<endl;
   size_t numChannels = 1;
   vector<double> point(numChannels);
-
-  size_t sampling_frq = 7500; // Hz
-  //size_t sampling_frq = 4800; // Hz
-  size_t dft_points = 2048; // points
-  //size_t dft_points = 1024; // points
-
-  Fft<double> fft(dft_points, Fft<double>::windowFunc::BLACKMAN_HARRIS, sampling_frq, numChannels);
-  vector<vector<double> > powers(numChannels);
-
-  for (size_t i=0; i<numChannels; i++) {
-    powers[i].resize(dft_points/2+1);
-    for (size_t j=0; j<dft_points/2+1; j++)
-      powers[i][j] = 0;
-  }
 
   context_t context(1);
 
@@ -210,9 +176,6 @@ size_t timeStamp = 0 ;
           if (liveAvgPow > (baselinePowerMean + baselinePowerSD*8.0)) {
               emgState = 1;
 	      if (emgState==0)
-  		outb(0x0, lptDataBase);
-  	        //outb(1, lptDataBase);
-		
               if ((prvEmgState == 0)&&!emgClick){
                 emgClick = true;
           	fwrite(&timeStamp, sizeof(size_t),1 , pFile);
@@ -222,8 +185,6 @@ size_t timeStamp = 0 ;
                 }
             } else  {
               if (emgState==1){
-//	  	      outb(0, lptDataBase);
-  outb(0x10, lptDataBase);
                 emgClick = false;
 
 }
@@ -452,8 +413,6 @@ cout<<"test"<<endl;
     }
 
   usleep(1000000);
-
-
 
   // background image
   apply_surface(0, 0, background, screen);
@@ -694,7 +653,6 @@ cout<<"test"<<endl;
           SDL_FreeSurface(message);
 
           prevImg2 = -1;
-
         }
 
       if (powerReady) {
@@ -719,7 +677,6 @@ cout<<"test"<<endl;
 
       //clicked = false;
   }
-  outb(0x0, lptDataBase);
 
   Mix_HaltMusic();
 
