@@ -15,7 +15,6 @@
 #include <thread>
 #include <stdint.h>
 
-// for lpt
 #include <unistd.h>
 #include <sys/io.h>
 #include <boost/accumulators/accumulators.hpp>
@@ -221,7 +220,6 @@ cout<<"threshold: "<<(baselinePowerMean + baselinePowerSD*8.0)<<endl;
   } // for
 
   fclose(pFile);
-  outb(0x0, lptDataBase);
 }
 
 void apply_surface( int x, int y, SDL_Surface* source, SDL_Surface* destination, SDL_Rect* clip = NULL )
