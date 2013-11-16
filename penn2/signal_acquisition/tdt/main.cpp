@@ -155,7 +155,7 @@ int main(int argc, char** argv) {
             memcpy(static_cast<size_t*>(zmq_message.data())+1, tempBuff, sizeof(float)*numberOfChannels);  
             
             if ((timeStamp % 100) == 0) {
-                if (timeStamp == 2500) {
+                if (timeStamp == 25000) {
                     outb(0x0, lptDataBase);
                 }
 	            cout<<"timeStamp: "<<timeStamp<<endl;	//every 50 timeStamps, print the timeStamp
