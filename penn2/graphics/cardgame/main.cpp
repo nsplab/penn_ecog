@@ -57,6 +57,8 @@ bool emgClick = false;
 // left = 0 / right = 1
 int leftRight = 0;
 
+bool quit = false;
+
 void powerTh()
 {
 
@@ -79,7 +81,7 @@ void powerTh()
 
   FILE* pFile;
   pFile = fopen(dataFilename.c_str(), "wb");
-  setvbuf (pFile, NULL, _IOFBF, dataSize);
+  //setvbuf (pFile, NULL, _IOFBF, dataSize);
 
   cout<<"thread started"<<endl;
   size_t numChannels = 1;
@@ -122,7 +124,7 @@ size_t timeStamp = 0 ;
 //  auto end = high_resolution_clock::now();
 //size_t timeStamp = 0;
   float buffer[64];
-  for (;;)   {
+  for (;!quit;)   {
 
 
 //  cout<<"recv"<<endl;
@@ -143,7 +145,7 @@ size_t timeStamp = 0 ;
     //cout<<"b:"<<buffer[t]<<" ";
 
 // force sensor
-    point[0] = buffer[1];
+    point[0] = buffer[0];
 
 //cout<<"p0: "<<buffer[0]<<endl;
     //fwrite(&(point[0]), 1,sizeof(float) , pFile);
@@ -172,10 +174,10 @@ size_t timeStamp = 0 ;
 
 
       if (baseline) {
-	cout<<"baseline"<<endl;
+	cout<<"baseline 2"<<endl;
         baselineSamples+=1;
         //acc(powers[0][8]);
-//cout<<"point[0]"<<point[0]<<endl;
+cout<<"point[0]"<<point[0]<<endl;
         acc(point[0]);
 //        cout<<"baselineSamples "<<baselineSamples<<endl;
 //        end = high_resolution_clock::now();
@@ -204,8 +206,12 @@ size_t timeStamp = 0 ;
       }
         } else {
           //liveAvgPow += powers[0][8]/float(livePwrSamples.capacity());
+cout<<"point[0] "<<point[0]<<endl;
           liveAvgPow += point[0]/float(livePwrSamples.capacity());
+cout<<"liveAvgPow "<<liveAvgPow<<endl;
           liveAvgPow -= livePwrSamples[0]/float(livePwrSamples.capacity());
+cout<<"liveAvgPow "<<liveAvgPow<<endl;
+cout<<"threshold: "<<(baselinePowerMean + baselinePowerSD*8.0)<<endl;
 
           if (liveAvgPow > (baselinePowerMean + baselinePowerSD*8.0)) {
               emgState = 1;
@@ -249,6 +255,9 @@ size_t timeStamp = 0 ;
   }
 
   } // for
+
+  fclose(pFile);
+  outb(0x0, lptDataBase);
 }
 
 void apply_surface( int x, int y, SDL_Surface* source, SDL_Surface* destination, SDL_Rect* clip = NULL )
@@ -483,7 +492,6 @@ cout<<"test"<<endl;
   auto end = high_resolution_clock::now();
 
   SDL_Event event;
-  bool quit = false;
   bool clicked = false;
 
   size_t prevImg = 0;
@@ -719,10 +727,13 @@ cout<<"test"<<endl;
 
       //clicked = false;
   }
-  outb(0x0, lptDataBase);
+cout<<"q2"<<endl;
 
   Mix_HaltMusic();
 
+  helper1.join();
+
+cout<<"q1"<<endl;
   //Release the surface
   for (size_t i=0; i<numImages; i++)
     SDL_FreeSurface(image[i]);

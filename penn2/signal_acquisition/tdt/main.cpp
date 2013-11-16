@@ -143,7 +143,7 @@ int main(int argc, char** argv) {
            //memcpy(&timeStamp, zmq_message.data(), sizeof(size_t)*1);
             memcpy(static_cast<size_t*>(zmq_message.data())+1, tempBuff, sizeof(float)*numberOfChannels);  
             
-            if ((timeStamp % 50) == 0) {
+            if ((timeStamp % 100) == 0) {
 	            cout<<"timeStamp: "<<timeStamp<<endl;	//every 50 timeStamps, print the timeStamp
 //            cout<<zmq_message.size()<<endl;			//
   	          cout<<numberOfSamples<<endl;			//and # of samples that were ready in the PO8e buffer
