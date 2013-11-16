@@ -1,6 +1,6 @@
 %This script loads the data from the PennPrject dataset into the matlab
 %environment
-clear
+%clear
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Set the critical variables
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -25,10 +25,11 @@ first_batch = 1;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Read the data files
-root_path = ['/home/leon/Data/Penn/Nov_12'];
-time_stamps_file = [root_path '/data_click_Tue_01.10.2013_10:12:28'];
-data_file = [root_path '/data'];
-%data_file = 'dummy.bin';
+%root_path = ['/home/leon/Data/Penn/Nov_12'];
+%time_stamps_file = [root_path '/data_click_Tue_01.10.2013_10:12:28'];
+%data_file = [root_path '/data'];
+%data_file = 'hemi_1';
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -162,10 +163,10 @@ end
 
 %align the new label using the EMG
 % onset = raw_data(:,71)- raw_data(:,70); %get the EMG data
-% EMG_Threshold = 16000;%Set a threshold for the EMG data for the Hemicraneoctomy paper data
+% EMG_Threshold = 3e5;%Set a threshold for the EMG data for the Hemicraneoctomy paper data
 % labels = onset_detection(abs(onset),'Teager',EMG_Threshold); %Generate the labels
 % large_force =onset;%Set the vector to the vector we used befor as the force sensor vector.
-% 
+
 ntp_raw_data = size(raw_data,1);%Time points in the raw data vector
 raw_time_axis = (1:ntp_raw_data)/real_sampling_rate; %Get the new time axis based on the decimated sampling rate
 fourier_sampling_rate = 1/diff(T(1:2));
@@ -199,173 +200,11 @@ if plot_flag ==1
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%Plotting Section
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    fig1 = figure('visible','off');
-    subplot(2,1,1)
-    spectogram_single_channel(1, large_power_matrix, T_axis, F)%Plot the spectrogram of the first channel
-    title('Raw Data and Spectrogram associated with the working data file')
-    xlimit = get(gca, 'XLim');
-    xlim([0, xlimit(2)])
-    figureHandle = gcf;
-    set(findall(figureHandle,'type','text'),'fontSize',14,'fontWeight','bold')
-    subplot(2,1,2)
-    plot(raw_time_axis, raw_data)%Plot the raw data
-    xlim([0, xlimit(2)])
-    set(gca,'Color',[1 1 1]);
-    grid on
-    xlabel('Time(s)')
-    ylabel('Volts')
-    figureHandle = gcf;
-    set(findall(figureHandle,'type','text'),'fontSize',14,'fontWeight','bold')
-    set(gca,'FontSize',14)
-    set(gcf, 'color', [1,1,1])
-    set(gcf,'renderer', 'zbuffer');
-    myaa([4 2],'raw_data_spectrogram.png');
- 
-    
-
-
-
-    fig2 = figure('visible','off');
-    subplot(2,1,1);
-    stem(b,'r')
-    xlabel('Coefficient for the regression')
-    ylabel('Magnitude of the coefficient')
-    title('Regression Weights')
-    %Plot whether a given power band/channel combination has a statistically significant regression coefficient.
-    %Color scheme is black if coefficient is not significant.
-    subplot(2,1,2);
-    stem(stats.p, 'r')
-    ylim([0,0.05])
-    xlabel('Coefficients for the regression')
-    ylabel('P-values')
-    title('P-Values for the regression');
-    set(gcf, 'color', [1,1,1])
-    set(gcf,'renderer', 'zbuffer');
-    myaa([4 2],'regression_weights_p_value.png')
-    
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %%Plot the aligned rising edges
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    fig3 = figure('visible','off');
-    frequency_matrix = zeros(num_chan, length(T_axis)); %matrix that has channels in the rows and time in the X, to plot averaged frequencies
-    desired_frequencies = [12:30]; %Frequencies in the Beta Band
-    for chan_idx = 1:num_chan
-        chan_power_mat = large_power_matrix(:,(chan_idx-1)*length(F)+1:chan_idx*length(F)); %extract the info for the current channel
-        channel_frequency = extract_frequency(chan_power_mat, F, desired_frequencies, 'average'); %extract the frequencies that we want
-        frequency_matrix(chan_idx,:) = channel_frequency;%assigns those frequencies to the channel
-    end
-    %surf(T_axis,[1:num_chan],10*log10(frequency_matrix),'edgecolor','none'); axis tight; %plot them
-    view(0,90)%change the vie
-    %generate the aligned values
-    [aligned_mat aligned_time] = align_data(large_labels', frequency_matrix', 'rise', 1/T(1));%align to every rise in the labels
-    [aligned_force aligned_time] = align_data(large_labels', large_force, 'rise', 1/T(1));%align to every rise in the labels
-    subplot(4,1,1:3)
-    surf(aligned_time,[1:num_chan],(mean(aligned_mat,3)'),'edgecolor','none'); axis tight;
-    colorbar
-    title('Beta band (average power at 12-30 Hz) for all channels, aligned to rising edge ')
-    ylabel('Channels')
-    view(0,90)
-    subplot(4,1,4)
-    plot(aligned_time, mean(aligned_force,3))
-    xlabel('Time[s]')
-    ylabel('Onset')
-    axis tight
-    set(gcf, 'color', [1,1,1])
-    set(gcf,'renderer', 'zbuffer');
-    myaa([4 2],'beta_rising.png')
-    
-
-    
-    frequency_matrix = zeros(num_chan, length(T_axis)); %matrix that has channels in the rows and time in the X, to plot averaged frequencies
-    desired_frequencies = [65:115]; %Frequencies in the Gamma Band
-    for chan_idx = 1:num_chan
-        chan_power_mat = large_power_matrix(:,(chan_idx-1)*length(F)+1:chan_idx*length(F)); %extract the info for the current channel
-        channel_frequency = extract_frequency(chan_power_mat, F, desired_frequencies, 'average'); %extract the frequencies that we want
-        frequency_matrix(chan_idx,:) = channel_frequency;%assigns those frequencies to the channel
-    end
-    %surf(T_axis,[1:num_chan],10*log10(frequency_matrix),'edgecolor','none'); axis tight; %plot them
-    view(0,90)%change the view
-
-    %generate the aligned values
-    [aligned_mat aligned_time] = align_data(large_labels', frequency_matrix', 'rise', 1/T(1));%align to every rise in the labels
-    [aligned_force aligned_time] = align_data(large_labels', large_force, 'rise', 1/T(1));%align to every rise in the labels for the force
-    subplot(4,1,1:3)
-    surf(aligned_time,[1:num_chan],(mean(aligned_mat,3)'),'edgecolor','none'); axis tight;
-    title('Gamma band (average power at 65-115 Hz) for all channels, aligned to rising edge ')
-    ylabel('Channels')
-    view(0,90)
-    subplot(4,1,4)
-    plot(aligned_time, mean(aligned_force,3))
-    xlabel('Time[s]')
-    ylabel('Force [Force Units]')
-    axis tight;
-    set(gcf, 'color', [1,1,1])
-    set(gcf,'renderer', 'zbuffer');
-    myaa([4 2],'gamma_rising.png')
-    
-
-
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %%Plot the aligned falling edges
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-    fig4 = figure('visible','off')
-    frequency_matrix = zeros(num_chan, length(T_axis)); %matrix that has channels in the rows and time in the X, to plot averaged frequencies
-    desired_frequencies = [12:30]; %Frequencies in the Beta Band
-    for chan_idx = 1:num_chan
-        chan_power_mat = large_power_matrix(:,(chan_idx-1)*length(F)+1:chan_idx*length(F)); %extract the info for the current channel
-        channel_frequency = extract_frequency(chan_power_mat, F, desired_frequencies, 'average'); %extract the frequencies that we want
-        frequency_matrix(chan_idx,:) = channel_frequency;%assigns those frequencies to the channel
-    end
-    %surf(T_axis,[1:num_chan],10*log10(frequency_matrix),'edgecolor','none'); axis tight; %plot them
-    view(0,90)%change the view
-
-    %generate the aligned values
-    [aligned_mat aligned_time] = align_data(large_labels', frequency_matrix', 'fall', 1/T(1));%align to every rise in the labels
-    [aligned_force aligned_time] = align_data(large_labels', large_force, 'fall', 1/T(1));%align to every rise in the labels
-    subplot(4,1,1:3)
-    surf(aligned_time,[1:num_chan],(mean(aligned_mat,3)'),'edgecolor','none'); axis tight;
-    title('Beta band (average power at 12-30 Hz) for all channels, aligned to falling edge ')
-    ylabel('Channels')
-    view(0,90)
-    subplot(4,1,4)
-    plot(aligned_time, mean(aligned_force,3))
-    xlabel('Time[s]')
-    ylabel('Force [Force Units]')
-    axis tight;
-    set(gcf, 'color', [1,1,1])
-    set(gcf,'renderer', 'zbuffer');
-    myaa([4 2],'beta_falling.png')
-    
-
-    fig5 = figure('visible','off')
-    frequency_matrix = zeros(num_chan-8, length(T_axis)); %matrix that has channels in the rows and time in the X, to plot averaged frequencies
-    desired_frequencies = [65:115]; %Frequencies in the Beta Band
-    for chan_idx = 1:num_chan
-        chan_power_mat = large_power_matrix(:,(chan_idx-1)*length(F)+1:chan_idx*length(F)); %extract the info for the current channel
-        channel_frequency = extract_frequency(chan_power_mat, F, desired_frequencies, 'average'); %extract the frequencies that we want
-        frequency_matrix(chan_idx,:) = channel_frequency;%assigns those frequencies to the channel
-    end
-    %surf(T_axis,[1:num_chan],10*log10(frequency_matrix),'edgecolor','none'); axis tight; %plot them
-    view(0,90)%change the view
-
-    %generate the aligned values
-    [aligned_mat aligned_time] = align_data(large_labels', frequency_matrix', 'fall', 1/T(1));%align to every rise in the labels
-    [aligned_force aligned_time] = align_data(large_labels', large_force, 'fall', 1/T(1));%align to every rise in the labels for the force
-    subplot(4,1,1:3)
-    surf(aligned_time,[1:num_chan],(mean(aligned_mat,3)'),'edgecolor','none'); axis tight;
-    title('Gamma band (average power at 65-115 Hz) for all channels, aligned to falling edge ')
-    ylabel('Channels')
-    view(0,90)
-    subplot(4,1,4)
-    plot(aligned_time, mean(aligned_force,3))
-    xlabel('Time[s]')
-    ylabel('Force [Force Units]')
-    axis tight;
-    set(gcf, 'color', [1,1,1])
-    set(gcf,'renderer', 'zbuffer');
-    myaa([4 2],'gamma_falling.png')
+    log_flag =1;
+    analysis_plots
+    log_flag =0;
+    analysis_plots
+    plot_regression
     
 end
 
