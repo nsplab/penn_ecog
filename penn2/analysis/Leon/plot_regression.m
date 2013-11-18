@@ -20,7 +20,7 @@ offset_time = 0.50; %offset in seconds
 [b,dev,stats] = glmfit(frequency_matrix' ,large_labels); % Logistic regression
 [XL,YL,XS,YS,BETA,PCTVAR, MSE, statspls] = plsregress(frequency_matrix', large_labels);
 [princ_comp_coeff, pcascore, latent] = princomp(frequency_matrix'); 
-pca_data = frequency_matrix'*princ_comp_coeff(:,1:8);
+pca_data = frequency_matrix'*princ_comp_coeff(:,1:5);
 [bpca,devpca,statspca] = glmfit(pca_data,large_labels); % Logistic regression
 [bpls,devpls,statspls] = glmfit(XS,large_labels); % Logistic regression
 

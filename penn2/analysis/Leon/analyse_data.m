@@ -205,6 +205,7 @@ if plot_flag ==1
     log_flag =0;
     analysis_plots
     plot_regression
+    offset_analysis
     
 end
 
