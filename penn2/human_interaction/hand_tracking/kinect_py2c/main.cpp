@@ -86,7 +86,7 @@ int main()
     char nameBuffer[24];
     tm * ptm = localtime(&rawtime);
     strftime(nameBuffer, 24, "%a_%d.%m.%Y_%H:%M:%S", ptm);
-    string dataFilename = string("data_click_")+string(nameBuffer);
+    string dataFilename = string("hand_data")+string(nameBuffer);
 
     FILE* pFile;
     pFile = fopen(dataFilename.c_str(), "wb");
