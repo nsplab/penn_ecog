@@ -177,7 +177,9 @@ signal.signal(signal.SIGINT, signal_handler)
 # main loop
 while run:
     cv2.imshow('Video', get_video())
+    print 'got video'
     cv2.imshow('Depth', get_depth_raw())
+    print 'got depth'
     if cv2.waitKey(10) == 27:
         run = False
 

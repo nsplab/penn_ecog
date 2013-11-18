@@ -15,23 +15,14 @@
 #include <thread>
 #include <stdint.h>
 
-// for lpt
 #include <unistd.h>
 #include <sys/io.h>
-
-#include <tclap/CmdLine.h> // tclap-1.2.1
-
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
 
-#include "fft.h"
-
 #include "GetPot.h"
-
-#define lptDataBase 0xd010           /* printer port data base address */
-//#define lptControlBase 0xd012           /* printer port control base address */
 
 using namespace std;
 using namespace chrono;
@@ -57,17 +48,10 @@ bool emgClick = false;
 // left = 0 / right = 1
 int leftRight = 0;
 
+bool quit = false;
+
 void powerTh()
 {
-
-   if (ioperm(lptDataBase,1,1))
-    fprintf(stderr, "Couldn't get the port at %x\n", lptDataBase), exit(1);
-//   if (ioperm(lptControlBase,1,1))
-//    fprintf(stderr, "Couldn't get the port at %x\n", lptControlBase), exit(1);
-
-
-  outb(0x10, lptDataBase);
-//  outb(0xf, lptControlBase);
 
   size_t dataSize = sizeof(size_t) * 1;
     time_t rawtime;
@@ -79,25 +63,11 @@ void powerTh()
 
   FILE* pFile;
   pFile = fopen(dataFilename.c_str(), "wb");
-  setvbuf (pFile, NULL, _IOFBF, dataSize);
+  //setvbuf (pFile, NULL, _IOFBF, dataSize);
 
   cout<<"thread started"<<endl;
   size_t numChannels = 1;
   vector<double> point(numChannels);
-
-  size_t sampling_frq = 7500; // Hz
-  //size_t sampling_frq = 4800; // Hz
-  size_t dft_points = 2048; // points
-  //size_t dft_points = 1024; // points
-
-  Fft<double> fft(dft_points, Fft<double>::windowFunc::BLACKMAN_HARRIS, sampling_frq, numChannels);
-  vector<vector<double> > powers(numChannels);
-
-  for (size_t i=0; i<numChannels; i++) {
-    powers[i].resize(dft_points/2+1);
-    for (size_t j=0; j<dft_points/2+1; j++)
-      powers[i][j] = 0;
-  }
 
   context_t context(1);
 
@@ -122,7 +92,7 @@ size_t timeStamp = 0 ;
 //  auto end = high_resolution_clock::now();
 //size_t timeStamp = 0;
   float buffer[64];
-  for (;;)   {
+  for (;!quit;)   {
 
 
 //  cout<<"recv"<<endl;
@@ -143,7 +113,7 @@ size_t timeStamp = 0 ;
     //cout<<"b:"<<buffer[t]<<" ";
 
 // force sensor
-    point[0] = buffer[1];
+    point[0] = buffer[0];
 
 //cout<<"p0: "<<buffer[0]<<endl;
     //fwrite(&(point[0]), 1,sizeof(float) , pFile);
@@ -172,10 +142,10 @@ size_t timeStamp = 0 ;
 
 
       if (baseline) {
-	cout<<"baseline"<<endl;
+	cout<<"baseline 2"<<endl;
         baselineSamples+=1;
         //acc(powers[0][8]);
-//cout<<"point[0]"<<point[0]<<endl;
+cout<<"point[0]"<<point[0]<<endl;
         acc(point[0]);
 //        cout<<"baselineSamples "<<baselineSamples<<endl;
 //        end = high_resolution_clock::now();
@@ -204,15 +174,16 @@ size_t timeStamp = 0 ;
       }
         } else {
           //liveAvgPow += powers[0][8]/float(livePwrSamples.capacity());
+cout<<"point[0] "<<point[0]<<endl;
           liveAvgPow += point[0]/float(livePwrSamples.capacity());
+cout<<"liveAvgPow "<<liveAvgPow<<endl;
           liveAvgPow -= livePwrSamples[0]/float(livePwrSamples.capacity());
+cout<<"liveAvgPow "<<liveAvgPow<<endl;
+cout<<"threshold: "<<(baselinePowerMean + baselinePowerSD*8.0)<<endl;
 
           if (liveAvgPow > (baselinePowerMean + baselinePowerSD*8.0)) {
               emgState = 1;
 	      if (emgState==0)
-  		outb(0x0, lptDataBase);
-  	        //outb(1, lptDataBase);
-		
               if ((prvEmgState == 0)&&!emgClick){
                 emgClick = true;
           	fwrite(&timeStamp, sizeof(size_t),1 , pFile);
@@ -222,8 +193,6 @@ size_t timeStamp = 0 ;
                 }
             } else  {
               if (emgState==1){
-//	  	      outb(0, lptDataBase);
-  outb(0x10, lptDataBase);
                 emgClick = false;
 
 }
@@ -249,6 +218,8 @@ size_t timeStamp = 0 ;
   }
 
   } // for
+
+  fclose(pFile);
 }
 
 void apply_surface( int x, int y, SDL_Surface* source, SDL_Surface* destination, SDL_Rect* clip = NULL )
@@ -453,8 +424,6 @@ cout<<"test"<<endl;
 
   usleep(1000000);
 
-
-
   // background image
   apply_surface(0, 0, background, screen);
 
@@ -483,7 +452,6 @@ cout<<"test"<<endl;
   auto end = high_resolution_clock::now();
 
   SDL_Event event;
-  bool quit = false;
   bool clicked = false;
 
   size_t prevImg = 0;
@@ -694,7 +662,6 @@ cout<<"test"<<endl;
           SDL_FreeSurface(message);
 
           prevImg2 = -1;
-
         }
 
       if (powerReady) {
@@ -719,10 +686,13 @@ cout<<"test"<<endl;
 
       //clicked = false;
   }
-  outb(0x0, lptDataBase);
+cout<<"q2"<<endl;
 
   Mix_HaltMusic();
 
+  helper1.join();
+
+cout<<"q1"<<endl;
   //Release the surface
   for (size_t i=0; i<numImages; i++)
     SDL_FreeSurface(image[i]);
