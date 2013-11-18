@@ -13,10 +13,6 @@ frequency_matrix = zeros(num_chan, length(T_axis)); %matrix that has channels in
         frequency_matrix(chan_idx,:) = channel_frequency;%assigns those frequencies to the channel and generate a new features vector
     end
 
-offset_time = 0.50; %offset in seconds
-%[large_labels, large_power_matrix] = offset_label(large_power_matrix, large_labels', offset_time, 'positive');%add an offset to the labels
-%large_labels = large_labels';
-
 [b,dev,stats] = glmfit(frequency_matrix' ,large_labels); % Logistic regression
 [XL,YL,XS,YS,BETA,PCTVAR, MSE, statspls] = plsregress(frequency_matrix', large_labels);
 [princ_comp_coeff, pcascore, latent] = princomp(frequency_matrix'); 

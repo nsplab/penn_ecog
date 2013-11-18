@@ -1,8 +1,8 @@
-This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012/Debian) (format=pdflatex 2013.8.1)  18 NOV 2013 10:53
+This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012/Debian) (format=pdflatex 2013.8.1)  18 NOV 2013 15:50
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**\def\myvar{/home/leon/Data/Penn/Nov_12/data} \input{regression_plot.tex}
+**\def\myvar{/home/leon/Data/Penn/Oct_1/data} \input{regression_plot.tex}
 (./regression_plot.tex
 (/usr/share/texlive/texmf-dist/tex/latex/base/article.cls
 Document Class: article 2007/10/19 v1.4h Standard LaTeX document class
@@ -194,85 +194,22 @@ Overfull \hbox (0.15291pt too wide) in paragraph at lines 19--21
 ue.png (PNG copy)> <./glmfit_regression_pls.png (PNG copy)> <./pls_regression_w
 eights_pctvar.png (PNG copy)> <./PLS_heatmap.png (PNG copy)> <./PCA_regression_
 weights_p_value.png (PNG copy)> <./PCA_heatmap.png (PNG copy)>]
-<regression_r_value_forward.png, id=14, 1124.2pt x 843.15pt>
-File: regression_r_value_forward.png Graphic file (type png)
-
-<use regression_r_value_forward.png>
-Package pdftex.def Info: regression_r_value_forward.png used on input line 23.
-(pdftex.def)             Requested size: 224.83601pt x 168.627pt.
-
-<regression_r_value_backward.png, id=15, 1124.2pt x 843.15pt>
-File: regression_r_value_backward.png Graphic file (type png)
-
-<use regression_r_value_backward.png>
-Package pdftex.def Info: regression_r_value_backward.png used on input line 24.
-
-(pdftex.def)             Requested size: 224.83601pt x 168.627pt.
-
-Overfull \hbox (0.15291pt too wide) in paragraph at lines 23--25
-[][] [] 
- []
-
-<pca_regression_r_value_forward.png, id=16, 1124.2pt x 843.15pt>
-File: pca_regression_r_value_forward.png Graphic file (type png)
-
-<use pca_regression_r_value_forward.png>
-Package pdftex.def Info: pca_regression_r_value_forward.png used on input line 
-26.
-(pdftex.def)             Requested size: 224.83601pt x 168.627pt.
-
-<pca_regression_r_value_backward.png, id=17, 1124.2pt x 843.15pt>
-File: pca_regression_r_value_backward.png Graphic file (type png)
-
-<use pca_regression_r_value_backward.png>
-Package pdftex.def Info: pca_regression_r_value_backward.png used on input line
- 27.
-(pdftex.def)             Requested size: 224.83601pt x 168.627pt.
-
-Overfull \hbox (0.15291pt too wide) in paragraph at lines 26--28
-[][] [] 
- []
-
-<pls_regression_r_value_forward.png, id=18, 1124.2pt x 843.15pt>
-File: pls_regression_r_value_forward.png Graphic file (type png)
-
-<use pls_regression_r_value_forward.png>
-Package pdftex.def Info: pls_regression_r_value_forward.png used on input line 
-29.
-(pdftex.def)             Requested size: 224.83601pt x 168.627pt.
-
-<pls_regression_r_value_backward.png, id=19, 1124.2pt x 843.15pt>
-File: pls_regression_r_value_backward.png Graphic file (type png)
-
-<use pls_regression_r_value_backward.png>
-Package pdftex.def Info: pls_regression_r_value_backward.png used on input line
- 30.
-(pdftex.def)             Requested size: 224.83601pt x 168.627pt.
-
-Overfull \hbox (0.15291pt too wide) in paragraph at lines 29--31
-[][] [] 
- []
-
-[2 <./regression_r_value_forward.png (PNG copy)> <./regression_r_value_backward
-.png (PNG copy)> <./pca_regression_r_value_forward.png (PNG copy)> <./pca_regre
-ssion_r_value_backward.png (PNG copy)> <./pls_regression_r_value_forward.png (P
-NG copy)> <./pls_regression_r_value_backward.png (PNG copy)>]
 (./regression_plot.aux) ) 
 Here is how much of TeX's memory you used:
- 1542 strings out of 495059
- 23290 string characters out of 3182031
- 72408 words of memory out of 3000000
- 4728 multiletter control sequences out of 15000+200000
+ 1512 strings out of 495059
+ 22181 string characters out of 3182031
+ 72407 words of memory out of 3000000
+ 4704 multiletter control sequences out of 15000+200000
  4245 words of font info for 16 fonts, out of 3000000 for 9000
  14 hyphenation exceptions out of 8191
- 38i,5n,23p,301b,111s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 38i,5n,23p,300b,111s stack positions out of 5000i,500n,10000p,200000b,50000s
 </usr/share/texlive/texmf-dist/fonts/type1/public/amsf
 onts/cm/cmbx12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/c
 m/cmr12.pfb>
-Output written on regression_plot.pdf (2 pages, 688087 bytes).
+Output written on regression_plot.pdf (1 page, 286461 bytes).
 PDF statistics:
- 31 PDF objects out of 1000 (max. 8388607)
- 12 compressed objects within 1 object stream
+ 22 PDF objects out of 1000 (max. 8388607)
+ 10 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
- 61 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 31 words of extra memory for PDF output out of 10000 (max. 10000000)
 

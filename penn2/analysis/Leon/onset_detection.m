@@ -20,7 +20,10 @@ switch method
         for time_idx = 2:time-1 %Here we Apply the Teager-Kaiser smoother
             onset_labels_(time_idx,1) = (data(time_idx))^2-(data(time_idx-1))*(data(time_idx+1));
         end
-        onset_labels_ = smooth(abs(onset_labels_),100);
+        plot(onset_labels_)
+        hold on
+        
+        onset_labels_ = smooth(abs(onset_labels_),10);
         %Using the output from the smoother, we use a treshold based onset
         %detection technique
         %we check if after 25 samples, certain threshold has been passed.
@@ -29,7 +32,8 @@ switch method
         std_data = std(data);
         h_value = onset_value;
         Thresh = mean_data + h_value*std_data
+        %Thresh = h_value
         %get a logical array to get points where the threshold was passed
-        onset_labels = labelize_sequence(onset_labels_,Thresh);
+        onset_labels = labelize(onset_labels_,Thresh);
         
 end

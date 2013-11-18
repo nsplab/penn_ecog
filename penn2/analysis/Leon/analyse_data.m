@@ -28,7 +28,7 @@ first_batch = 1;
 %root_path = ['/home/leon/Data/Penn/Nov_12'];
 %time_stamps_file = [root_path '/data_click_Tue_01.10.2013_10:12:28'];
 %data_file = [root_path '/data'];
-%data_file = 'hemi_1';
+data_file = 'hemi_1';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -162,16 +162,18 @@ for batch_idx = first_batch:max_num_batches
 end
 
 %align the new label using the EMG
-% onset = raw_data(:,71)- raw_data(:,70); %get the EMG data
-% EMG_Threshold = 3e5;%Set a threshold for the EMG data for the Hemicraneoctomy paper data
-% labels = onset_detection(abs(onset),'Teager',EMG_Threshold); %Generate the labels
-% large_force =onset;%Set the vector to the vector we used befor as the force sensor vector.
+
+onset = large_force; %get the EMG data
+EMG_Threshold = 1000;%Set a threshold for the EMG data for the Hemicraneoctomy paper data
+large_labels = onset_detection(abs(onset),'Teager',EMG_Threshold); %Generate the labels
+large_force = large_labels;
 
 ntp_raw_data = size(raw_data,1);%Time points in the raw data vector
 raw_time_axis = (1:ntp_raw_data)/real_sampling_rate; %Get the new time axis based on the decimated sampling rate
 fourier_sampling_rate = 1/diff(T(1:2));
-% [TF, match_idx] = findNearest(T_axis, raw_time_axis);
-% large_labels = labels(match_idx,1);
+[TF, match_idx] = findNearest(T_axis, raw_time_axis);
+%large_labels = labels(match_idx,1);
+%large_force = large_force(match_idx,1);
 %Here we get the features to do the regression
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -205,7 +207,6 @@ if plot_flag ==1
     log_flag =0;
     analysis_plots
     plot_regression
-    offset_analysis
     
 end
 

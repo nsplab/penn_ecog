@@ -42,6 +42,7 @@ labels = zeros(time_samples, 4); %labels variable refers to the simulated force 
                                 %Int his case, labels is just 0s
                                 %The 4 is hard coded for the format that we
                                 %are using
+labels(:,1) = eegdata(:,71) - eegdata(:,70);
                                 
 for writing_idx=1:time_samples %iterate over time samples
     fwrite(fid,time_data(writing_idx),'uint64');%8 byte unsigned int
