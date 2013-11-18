@@ -6,6 +6,7 @@ bool openHand = false;
 float ball_x = 0;
 float ball_y = 0;
 float ball_z = 0;
+bool rightHand = true;
 
 bool pauseGame = false;
 
@@ -185,14 +186,18 @@ bool GuiKeyboardEventHandler::handle(const osgGA::GUIEventAdapter& ea,osgGA::GUI
             return false;
             break;
         case 'r':
-            if (!handState)
+            /*(if (!handState)
                 return false;
             std::cout << " r key pressed" << std::endl;
             //graspObj(false, *(boneFinder), step);
             if (step >= GRASP_STEPS)
                 step = 0;
-            handState = false;
-
+            handState = false;*/
+            rightHand = true;
+            return false;
+            break;
+        case 'l':
+            rightHand = false;
             return false;
             break;
         case 'q':

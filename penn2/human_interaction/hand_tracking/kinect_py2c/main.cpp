@@ -81,6 +81,18 @@ int main()
 
     thread getTime(GetTimestamp);
 
+    time_t rawtime;
+    time(&rawtime);
+    char nameBuffer[24];
+    tm * ptm = localtime(&rawtime);
+    strftime(nameBuffer, 24, "%a_%d.%m.%Y_%H:%M:%S", ptm);
+    string dataFilename = string("hand_data")+string(nameBuffer);
+
+    FILE* pFile;
+    pFile = fopen(dataFilename.c_str(), "wb");
+
+
+
     for (;!kbhit();)   {
         message_t ksig_msg;
         subscriber.recv(&ksig_msg);
@@ -91,10 +103,19 @@ int main()
 
         cout<<"t: "<<timestamp<<" :"<<x<<" "<<y<<" "<<z<<endl;
 
+        fwrite(&timestamp, sizeof(size_t),1 , pFile);
+        fwrite(&x, sizeof(float),1 , pFile);
+        fwrite(&y, sizeof(float),1 , pFile);
+        fwrite(&z, sizeof(float),1 , pFile);
+
         x = -x*30.0; y = -y*30.0;
         z = (z-1.0) * 30.0;
 
         cout<<"t: "<<timestamp<<" :"<<x<<" "<<y<<" "<<z<<endl;
+
+        fwrite(&x, sizeof(float),1 , pFile);
+        fwrite(&y, sizeof(float),1 , pFile);
+        fwrite(&z, sizeof(float),1 , pFile);
 
         stringstream message;
         message<<timestamp<<" "<<x<<" "<<y<<" "<<z<<endl;
@@ -106,6 +127,7 @@ int main()
 
     }
 
+    fclose(pFile);
     quit = true;
     getTime.join();
 

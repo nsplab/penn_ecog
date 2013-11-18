@@ -50,6 +50,8 @@ int leftRight = 0;
 
 bool quit = false;
 
+size_t timeStamp = 0;
+
 void powerTh()
 {
 
@@ -71,7 +73,6 @@ void powerTh()
 
   context_t context(1);
 
-size_t timeStamp = 0 ;
   socket_t subscriber(context, ZMQ_SUB);
   uint64_t hwm = 1; 
   //subscriber.setsockopt(ZMQ_HWM, &hwm, sizeof(hwm));
@@ -163,7 +164,8 @@ cout<<"point[0]"<<point[0]<<endl;
         //liveAvgPow = mean(acc);
         baselinePowerMean = mean(acc);
         baselinePowerSD = sqrt(variance(acc));
-	ofstream sensorFile("force_sensor_threshold.txt");
+        string thresholdFilename = string("force_sensor_threshold_")+string(nameBuffer)+string(".txt");
+    ofstream sensorFile(thresholdFilename.c_str());
 	sensorFile<<"baseline mean = "<<baselinePowerMean<<endl;
 	sensorFile<<"baseline standard deviation = "<<baselinePowerSD<<endl;
 	sensorFile<<"if (sensor value > 'baseline mean' + 'baseline standard deviation' * 8) a click is registered"<<endl;

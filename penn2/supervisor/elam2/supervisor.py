@@ -74,6 +74,9 @@ def StartNewTrial():
 
 timestamp = 0
 
+
+f = open('supervisor_event.txt', 'w')
+
 # main loop
 while run:
 
@@ -136,8 +139,20 @@ while run:
 
     print 'filterState.trial ', filterState.trial
 
+    f.write(timestamp)
+    f.write(' ')
+    f.write(filterState.trial)
+    f.write(' ')
+    f.write(gameState.pickedBall)
+    f.write(' ')
+    f.write(gameState.box_pos)
+    f.write(' ')
+    f.write(gameState.ball_pos)
+    f.write('\n')
+
     #gameState.hand_pos[0] = (float(vec[0]) - 320) / 26.0
     #gameState.hand_pos[1] = -(float(vec[1]) - 240) / 26.0
     #gameState.hand_pos[2] = -(float(vec[1]) - 12) / 3.0
 
 trialTimeoutThread.cancel()
+f.close()

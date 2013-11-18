@@ -128,18 +128,25 @@ int main(int argc, char** argv)
 
     // load arm model
     osg::ref_ptr<osg::Node> tmodel = osgDB::readNodeFile("../bare_hand_Scene.osgt");
-    //cout<<int(!model)<<endl;
-
-    osg::ref_ptr<osg::MatrixTransform> reverse =  new osg::MatrixTransform;
-
-
     // couldn't load the model
-    if ( !model ) return 1;
+    if ( !tmodel ) return 1;
 
     // add axes and arm to scene graph
     root->addChild(createAxis());
 
     osg::ref_ptr<osg::PositionAttitudeTransform> pat = new osg::PositionAttitudeTransform();
+
+    osg::ref_ptr<osg::PositionAttitudeTransform> pat2 = new osg::PositionAttitudeTransform();
+    pat2->setAttitude(osg::Quat(-3.141592/2.0, osg::Vec3d(1,0,0)) * osg::Quat(3.141592/2.0, osg::Vec3d(0,1,0)) * osg::Quat(3.141592/4.0, osg::Vec3d(0,0,1)));
+    pat2->setPosition(osg::Vec3f(-2.2, 1.2, -11.0));
+
+    pat2->addChild(tmodel);
+    osg::ref_ptr<osg::MatrixTransform> model =  new osg::MatrixTransform;
+    model->preMult(osg::Matrix::translate(0.0f, 0.0f, 0.0f) *
+    osg::Matrix::scale(-1.0f, 1.0f, 1.0f) *
+    osg::Matrix::translate(0.0f, 0.0f, 0.0f) );
+    model->addChild( pat2.get() );
+
     pat->addChild(model);
     root->addChild(pat);
 
@@ -371,8 +378,8 @@ int main(int argc, char** argv)
         ss>>subLevel;
 
 
-        pat->setAttitude(osg::Quat(-3.141592/2.0, osg::Vec3d(1,0,0)) * osg::Quat(3.141592/2.0, osg::Vec3d(0,1,0)) * osg::Quat(3.141592/4.0, osg::Vec3d(0,0,1)));
-        pat->setPosition(osg::Vec3f(handX-2.2, handY+1.2, handZ-11.0));
+        //pat->setAttitude(osg::Quat(-3.141592/2.0, osg::Vec3d(1,0,0)) * osg::Quat(3.141592/2.0, osg::Vec3d(0,1,0)) * osg::Quat(3.141592/4.0, osg::Vec3d(0,0,1)));
+        pat->setPosition(osg::Vec3f(handX, handY, handZ));
         sph_trans->setPosition(osg::Vec3f(ballX, ballY, ballZ));
         box_trans->setPosition(osg::Vec3f(boxX, boxY, boxZ));
 
