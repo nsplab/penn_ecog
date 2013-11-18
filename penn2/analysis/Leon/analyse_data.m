@@ -28,7 +28,7 @@ first_batch = 1;
 %root_path = ['/home/leon/Data/Penn/Nov_12'];
 %time_stamps_file = [root_path '/data_click_Tue_01.10.2013_10:12:28'];
 %data_file = [root_path '/data'];
-data_file = 'hemi_1';
+%data_file = 'hemi_1';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -163,10 +163,10 @@ end
 
 %align the new label using the EMG
 
-onset = large_force; %get the EMG data
-EMG_Threshold = 1000;%Set a threshold for the EMG data for the Hemicraneoctomy paper data
-large_labels = onset_detection(abs(onset),'Teager',EMG_Threshold); %Generate the labels
-large_force = large_labels;
+%onset = large_force; %get the EMG data
+%EMG_Threshold = 1000;%Set a threshold for the EMG data for the Hemicraneoctomy paper data
+%large_labels = onset_detection(abs(onset),'Teager',EMG_Threshold); %Generate the labels
+%large_force = large_labels;
 
 ntp_raw_data = size(raw_data,1);%Time points in the raw data vector
 raw_time_axis = (1:ntp_raw_data)/real_sampling_rate; %Get the new time axis based on the decimated sampling rate
