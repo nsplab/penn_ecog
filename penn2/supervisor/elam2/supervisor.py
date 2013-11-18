@@ -74,6 +74,9 @@ def StartNewTrial():
 
 timestamp = 0
 
+
+f = open('supervisor_event.txt','w')
+
 # main loop
 while run:
 
@@ -135,6 +138,8 @@ while run:
     print 'filterState.serialize() ', filterState.serialize()
 
     print 'filterState.trial ', filterState.trial
+
+    f.write('\n')
 
     #gameState.hand_pos[0] = (float(vec[0]) - 320) / 26.0
     #gameState.hand_pos[1] = -(float(vec[1]) - 240) / 26.0
