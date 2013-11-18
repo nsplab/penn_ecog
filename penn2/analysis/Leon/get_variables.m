@@ -15,9 +15,9 @@ switch variable_name
         %desired number of channels to work with
         variable = 60;
     case 'Original_Sampling_Rate'
-        variable = 2048;
+        variable = 25000;
     case 'Desired_Sampling_Rate'
-        variable = 256;
+        variable = 512;
     case 'Window_Size'
         variable = 0.700;
     case 'number_recorded_channels'
