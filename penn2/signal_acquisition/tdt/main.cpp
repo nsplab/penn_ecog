@@ -154,7 +154,7 @@ int main(int argc, char** argv) {
            //memcpy(&timeStamp, zmq_message.data(), sizeof(size_t)*1);
             memcpy(static_cast<size_t*>(zmq_message.data())+1, tempBuff, sizeof(float)*numberOfChannels);  
             
-            if ((timeStamp % 100) == 0) {
+            if ((timeStamp % 1000) == 0) {
                 if (timeStamp == 25000) {
                     outb(0x0, lptDataBase);
                 }

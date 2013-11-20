@@ -20,7 +20,7 @@ class GameState(object):
         self.trial = 1
         self.timeThread = None
         self.ballTimerStarted = False
-        self.holdTime = 2.0  # seconds
+        self.holdTime = 1.0  # seconds
         self.numTrials = 3
         self.numSublevels = 2
         self.pickedBall = False
