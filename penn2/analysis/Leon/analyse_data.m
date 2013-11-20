@@ -13,7 +13,6 @@ desired_reg_frequencies = get_variables('beta'); %Get the desired frequencies to
 ref_channel = get_variables('Reference_Channel');
 decimate_factor = floor(originalSamplingRate/desired_samplingRate);%set the decimation factor
 samplingRate = originalSamplingRate/decimate_factor; %The 25000 is hardcoded to the sampling rate we used to do the data capture.
-real_sampling_rate = originalSamplingRate/decimate_factor;
 %window_size = get_variables('Window_Size'); %size of the window in seconds
 window_size = floor(window_size * samplingRate); %transform the window size to samples
 overlap_perc = get_variables('overlap_percentage');
@@ -176,7 +175,7 @@ end
 >>>>>>> 9bfdaaedd2d88811cc6c3a4546b6d5c070ec9378
 
 ntp_raw_data = size(raw_data,1);%Time points in the raw data vector
-raw_time_axis = (1:ntp_raw_data)/real_sampling_rate; %Get the new time axis based on the decimated sampling rate
+raw_time_axis = (1:ntp_raw_data)/samplingRate; %Get the new time axis based on the decimated sampling rate
 fourier_sampling_rate = 1/diff(T(1:2));
 [TF, match_idx] = findNearest(T_axis, raw_time_axis);
 %large_labels = labels(match_idx,1);
