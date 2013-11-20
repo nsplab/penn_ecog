@@ -162,10 +162,18 @@ for batch_idx = first_batch:max_num_batches
 end
 
 %align the new label using the EMG
+<<<<<<< HEAD
 % onset = large_force; %get the EMG data
 % EMG_Threshold = 1000;%Set a threshold for the EMG data for the Hemicraneoctomy paper data
 % large_labels = onset_detection(abs(onset),'Teager',EMG_Threshold); %Generate the labels
 % large_force = large_labels;
+=======
+
+%onset = large_force; %get the EMG data
+%EMG_Threshold = 1000;%Set a threshold for the EMG data for the Hemicraneoctomy paper data
+%large_labels = onset_detection(abs(onset),'Teager',EMG_Threshold); %Generate the labels
+%large_force = large_labels;
+>>>>>>> 9bfdaaedd2d88811cc6c3a4546b6d5c070ec9378
 
 ntp_raw_data = size(raw_data,1);%Time points in the raw data vector
 raw_time_axis = (1:ntp_raw_data)/real_sampling_rate; %Get the new time axis based on the decimated sampling rate

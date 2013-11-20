@@ -17,7 +17,7 @@ switch variable_name
     case 'Original_Sampling_Rate'
         variable = 25000;
     case 'Desired_Sampling_Rate'
-        variable = 256;
+        variable = 512;
     case 'Window_Size'
         variable = 0.900;
     case 'number_recorded_channels'
