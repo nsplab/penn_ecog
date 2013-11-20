@@ -105,7 +105,7 @@ void powerTh()
 //cout<<"recvd"<<endl;
 //  cout<<"sz "<<sig_msg.size()<<endl;
 //  memcpy(&timeStamp, sig_msg.data(), sizeof(size_t));
-//cout<<"timestamp: "<<timeStamp<<endl;
+cout<<"timestamp: "<<timeStamp<<endl;
 
   memcpy(buffer, (size_t*)sig_msg.data()+1, sig_msg.size()-sizeof(size_t));
   //cout<<"done"<<endl;
