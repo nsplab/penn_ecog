@@ -114,7 +114,7 @@ for batch_idx = first_batch:max_num_batches
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %calculate the spectrogram for the first channel to generate the matrix
-    [S,F,T,P] = spectrogram(channels_data(:,1), flattopwin(window_size), win_overlap, window_size, samplingRate);
+    [S,F,T,P] = spectrogram(channels_data(:,1), hann(window_size), win_overlap, window_size, samplingRate);
     [power_p, time_p] = size(P);
     power_matrix = zeros(time_p, power_p * num_chan); %generate the nameholder matrix for the pwoers
     power_matrix(:,1:power_p) = P'; %allocate the powers from the first channels
