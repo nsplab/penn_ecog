@@ -1,8 +1,9 @@
-This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012/Debian) (format=pdflatex 2013.8.1)  18 NOV 2013 15:50
+This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012/Debian) (format=pdflatex 2013.8.1)  19 NOV 2013 18:11
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**\def\myvar{/home/leon/Data/Penn/Oct_1/data} \input{figures_log.tex}
+**\def\myvar{/home/leon/Data/Penn/Nov_18/data_Mon_18.11.2013_12:09:35} \def\win
+dow{0.900} \input{figures_log.tex}
 (./figures_log.tex (/usr/share/texlive/texmf-dist/tex/latex/base/article.cls
 Document Class: article 2007/10/19 v1.4h Standard LaTeX document class
 (/usr/share/texlive/texmf-dist/tex/latex/base/size12.clo
@@ -56,7 +57,13 @@ Package: ltxcmds 2011/11/09 v1.22 LaTeX kernel commands for general use (HO)
 Package: fullpage 1999/02/23 1.1 (PWD)
 \FP@margin=\skip43
 )
-(./figures_log.aux)
+(/usr/share/texlive/texmf-dist/tex/latex/base/fontenc.sty
+Package: fontenc 2005/09/27 v1.99g Standard LaTeX package
+
+(/usr/share/texlive/texmf-dist/tex/latex/base/t1enc.def
+File: t1enc.def 2005/09/27 v1.99g Standard LaTeX file
+LaTeX Font Info:    Redeclaring font encoding T1 on input line 43.
+)) (./figures_log.aux)
 \openout1 = `figures_log.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 5.
@@ -137,38 +144,38 @@ e
 File: raw_data_spectrogram.png Graphic file (type png)
 
 <use raw_data_spectrogram.png>
-Package pdftex.def Info: raw_data_spectrogram.png used on input line 12.
+Package pdftex.def Info: raw_data_spectrogram.png used on input line 14.
 (pdftex.def)             Requested size: 426.0689pt x 207.69453pt.
 
 <beta_falling_log.png, id=2, 1124.2pt x 843.15pt>
 File: beta_falling_log.png Graphic file (type png)
  <use beta_falling_log.png>
-Package pdftex.def Info: beta_falling_log.png used on input line 14.
+Package pdftex.def Info: beta_falling_log.png used on input line 16.
 (pdftex.def)             Requested size: 224.83601pt x 168.627pt.
 
 <beta_rising_log.png, id=3, 1124.2pt x 843.15pt>
 File: beta_rising_log.png Graphic file (type png)
  <use beta_rising_log.png>
-Package pdftex.def Info: beta_rising_log.png used on input line 15.
+Package pdftex.def Info: beta_rising_log.png used on input line 17.
 (pdftex.def)             Requested size: 224.83601pt x 168.627pt.
 
-Overfull \hbox (0.15291pt too wide) in paragraph at lines 14--16
+Overfull \hbox (0.15231pt too wide) in paragraph at lines 16--18
 [][] [] 
  []
 
 <gamma_falling_log.png, id=4, 1124.2pt x 843.15pt>
 File: gamma_falling_log.png Graphic file (type png)
  <use gamma_falling_log.png>
-Package pdftex.def Info: gamma_falling_log.png used on input line 17.
+Package pdftex.def Info: gamma_falling_log.png used on input line 19.
 (pdftex.def)             Requested size: 224.83601pt x 168.627pt.
 
 <gamma_rising_log.png, id=5, 1124.2pt x 843.15pt>
 File: gamma_rising_log.png Graphic file (type png)
  <use gamma_rising_log.png>
-Package pdftex.def Info: gamma_rising_log.png used on input line 18.
+Package pdftex.def Info: gamma_rising_log.png used on input line 20.
 (pdftex.def)             Requested size: 224.83601pt x 168.627pt.
 
-Overfull \hbox (0.15291pt too wide) in paragraph at lines 17--19
+Overfull \hbox (0.15231pt too wide) in paragraph at lines 19--21
 [][] [] 
  []
 
@@ -177,22 +184,79 @@ Overfull \hbox (0.15291pt too wide) in paragraph at lines 17--19
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map} <./raw_data_spectrogram.png
  (PNG copy)> <./beta_falling_log.png (PNG copy)> <./beta_rising_log.png (PNG co
 py)> <./gamma_falling_log.png (PNG copy)> <./gamma_rising_log.png (PNG copy)>] 
-(./figures_log.aux) ) 
+<log_plot_1_aligned_trials.png, id=13, 1124.2pt x 843.15pt>
+File: log_plot_1_aligned_trials.png Graphic file (type png)
+
+<use log_plot_1_aligned_trials.png>
+Package pdftex.def Info: log_plot_1_aligned_trials.png used on input line 32.
+(pdftex.def)             Requested size: 224.83601pt x 168.627pt.
+
+<log_plot_2_aligned_trials.png, id=14, 1124.2pt x 843.15pt>
+File: log_plot_2_aligned_trials.png Graphic file (type png)
+
+<use log_plot_2_aligned_trials.png>
+Package pdftex.def Info: log_plot_2_aligned_trials.png used on input line 33.
+(pdftex.def)             Requested size: 224.83601pt x 168.627pt.
+
+Overfull \hbox (0.15231pt too wide) in paragraph at lines 32--34
+[][] [] 
+ []
+
+<log_plot_3_aligned_trials.png, id=15, 1124.2pt x 843.15pt>
+File: log_plot_3_aligned_trials.png Graphic file (type png)
+
+<use log_plot_3_aligned_trials.png>
+Package pdftex.def Info: log_plot_3_aligned_trials.png used on input line 35.
+(pdftex.def)             Requested size: 224.83601pt x 168.627pt.
+
+<log_plot_4_aligned_trials.png, id=16, 1124.2pt x 843.15pt>
+File: log_plot_4_aligned_trials.png Graphic file (type png)
+
+<use log_plot_4_aligned_trials.png>
+Package pdftex.def Info: log_plot_4_aligned_trials.png used on input line 36.
+(pdftex.def)             Requested size: 224.83601pt x 168.627pt.
+
+Overfull \hbox (0.15231pt too wide) in paragraph at lines 35--37
+[][] [] 
+ []
+
+<log_plot_5_aligned_trials.png, id=17, 1124.2pt x 843.15pt>
+File: log_plot_5_aligned_trials.png Graphic file (type png)
+
+<use log_plot_5_aligned_trials.png>
+Package pdftex.def Info: log_plot_5_aligned_trials.png used on input line 38.
+(pdftex.def)             Requested size: 224.83601pt x 168.627pt.
+
+<log_plot_6_aligned_trials.png, id=18, 1124.2pt x 843.15pt>
+File: log_plot_6_aligned_trials.png Graphic file (type png)
+
+<use log_plot_6_aligned_trials.png>
+Package pdftex.def Info: log_plot_6_aligned_trials.png used on input line 39.
+(pdftex.def)             Requested size: 224.83601pt x 168.627pt.
+
+Overfull \hbox (0.15231pt too wide) in paragraph at lines 38--40
+[][] [] 
+ []
+
+[2 <./log_plot_1_aligned_trials.png (PNG copy)> <./log_plot_2_aligned_trials.pn
+g (PNG copy)> <./log_plot_3_aligned_trials.png (PNG copy)> <./log_plot_4_aligne
+d_trials.png (PNG copy)> <./log_plot_5_aligned_trials.png (PNG copy)> <./log_pl
+ot_6_aligned_trials.png (PNG copy)>] (./figures_log.aux) ) 
 Here is how much of TeX's memory you used:
- 1507 strings out of 495059
- 21886 string characters out of 3182031
- 72399 words of memory out of 3000000
- 4700 multiletter control sequences out of 15000+200000
- 4245 words of font info for 16 fonts, out of 3000000 for 9000
+ 1748 strings out of 495059
+ 24456 string characters out of 3182031
+ 72505 words of memory out of 3000000
+ 4929 multiletter control sequences out of 15000+200000
+ 5478 words of font info for 17 fonts, out of 3000000 for 9000
  14 hyphenation exceptions out of 8191
- 38i,5n,23p,296b,111s stack positions out of 5000i,500n,10000p,200000b,50000s
-</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts
-/cm/cmbx12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cm
-r12.pfb>
-Output written on figures_log.pdf (1 page, 734477 bytes).
+ 38i,5n,23p,340b,113s stack positions out of 5000i,500n,10000p,200000b,50000s
+ </home/leon/.texmf-v
+ar/fonts/pk/ljfour/jknappen/ec/ecrm1200.600pk> </home/leon/.texmf-var/fonts/pk/
+ljfour/jknappen/ec/ecbx1200.600pk>
+Output written on figures_log.pdf (2 pages, 1039143 bytes).
 PDF statistics:
- 21 PDF objects out of 1000 (max. 8388607)
- 10 compressed objects within 1 object stream
+ 70 PDF objects out of 1000 (max. 8388607)
+ 14 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
- 26 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 56 words of extra memory for PDF output out of 10000 (max. 10000000)
 

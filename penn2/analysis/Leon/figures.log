@@ -1,8 +1,9 @@
-This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012/Debian) (format=pdflatex 2013.8.1)  18 NOV 2013 15:50
+This is pdfTeX, Version 3.1415926-2.4-1.40.13 (TeX Live 2012/Debian) (format=pdflatex 2013.8.1)  19 NOV 2013 18:11
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**\def\myvar{/home/leon/Data/Penn/Oct_1/data} \input{figures.tex}
+**\def\myvar{/home/leon/Data/Penn/Nov_18/data_Mon_18.11.2013_12:09:35} \def\win
+dow{0.900} \input{figures.tex}
 (./figures.tex (/usr/share/texlive/texmf-dist/tex/latex/base/article.cls
 Document Class: article 2007/10/19 v1.4h Standard LaTeX document class
 (/usr/share/texlive/texmf-dist/tex/latex/base/size12.clo
@@ -135,38 +136,38 @@ e
 File: raw_data_spectrogram.png Graphic file (type png)
 
 <use raw_data_spectrogram.png>
-Package pdftex.def Info: raw_data_spectrogram.png used on input line 12.
+Package pdftex.def Info: raw_data_spectrogram.png used on input line 13.
 (pdftex.def)             Requested size: 426.0689pt x 207.69453pt.
  <beta_falling.png, id=2, 1124.2pt x 843.15pt>
 File: beta_falling.png Graphic file (type png)
 
 <use beta_falling.png>
-Package pdftex.def Info: beta_falling.png used on input line 14.
+Package pdftex.def Info: beta_falling.png used on input line 15.
 (pdftex.def)             Requested size: 224.83601pt x 168.627pt.
  <beta_rising.png, id=3, 1124.2pt x 843.15pt>
 File: beta_rising.png Graphic file (type png)
 
 <use beta_rising.png>
-Package pdftex.def Info: beta_rising.png used on input line 15.
+Package pdftex.def Info: beta_rising.png used on input line 16.
 (pdftex.def)             Requested size: 224.83601pt x 168.627pt.
 
-Overfull \hbox (0.15291pt too wide) in paragraph at lines 14--16
+Overfull \hbox (0.15291pt too wide) in paragraph at lines 15--17
 [][] [] 
  []
 
 <gamma_falling.png, id=4, 1124.2pt x 843.15pt>
 File: gamma_falling.png Graphic file (type png)
  <use gamma_falling.png>
-Package pdftex.def Info: gamma_falling.png used on input line 17.
+Package pdftex.def Info: gamma_falling.png used on input line 18.
 (pdftex.def)             Requested size: 224.83601pt x 168.627pt.
 
 <gamma_rising.png, id=5, 1124.2pt x 843.15pt>
 File: gamma_rising.png Graphic file (type png)
  <use gamma_rising.png>
-Package pdftex.def Info: gamma_rising.png used on input line 18.
+Package pdftex.def Info: gamma_rising.png used on input line 19.
 (pdftex.def)             Requested size: 224.83601pt x 168.627pt.
 
-Overfull \hbox (0.15291pt too wide) in paragraph at lines 17--19
+Overfull \hbox (0.15291pt too wide) in paragraph at lines 18--20
 [][] [] 
  []
 
@@ -174,22 +175,80 @@ Overfull \hbox (0.15291pt too wide) in paragraph at lines 17--19
 
 {/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map} <./raw_data_spectrogram.png
  (PNG copy)> <./beta_falling.png (PNG copy)> <./beta_rising.png (PNG copy)> <./
-gamma_falling.png (PNG copy)> <./gamma_rising.png (PNG copy)>] (./figures.aux) 
-) 
+gamma_falling.png (PNG copy)> <./gamma_rising.png (PNG copy)>]
+<plot_1_aligned_trials.png, id=13, 1124.2pt x 843.15pt>
+File: plot_1_aligned_trials.png Graphic file (type png)
+
+<use plot_1_aligned_trials.png>
+Package pdftex.def Info: plot_1_aligned_trials.png used on input line 31.
+(pdftex.def)             Requested size: 224.83601pt x 168.627pt.
+
+<plot_2_aligned_trials.png, id=14, 1124.2pt x 843.15pt>
+File: plot_2_aligned_trials.png Graphic file (type png)
+
+<use plot_2_aligned_trials.png>
+Package pdftex.def Info: plot_2_aligned_trials.png used on input line 32.
+(pdftex.def)             Requested size: 224.83601pt x 168.627pt.
+
+Overfull \hbox (0.15291pt too wide) in paragraph at lines 31--33
+[][] [] 
+ []
+
+<plot_3_aligned_trials.png, id=15, 1124.2pt x 843.15pt>
+File: plot_3_aligned_trials.png Graphic file (type png)
+
+<use plot_3_aligned_trials.png>
+Package pdftex.def Info: plot_3_aligned_trials.png used on input line 34.
+(pdftex.def)             Requested size: 224.83601pt x 168.627pt.
+
+<plot_4_aligned_trials.png, id=16, 1124.2pt x 843.15pt>
+File: plot_4_aligned_trials.png Graphic file (type png)
+
+<use plot_4_aligned_trials.png>
+Package pdftex.def Info: plot_4_aligned_trials.png used on input line 35.
+(pdftex.def)             Requested size: 224.83601pt x 168.627pt.
+
+Overfull \hbox (0.15291pt too wide) in paragraph at lines 34--36
+[][] [] 
+ []
+
+<plot_5_aligned_trials.png, id=17, 1124.2pt x 843.15pt>
+File: plot_5_aligned_trials.png Graphic file (type png)
+
+<use plot_5_aligned_trials.png>
+Package pdftex.def Info: plot_5_aligned_trials.png used on input line 37.
+(pdftex.def)             Requested size: 224.83601pt x 168.627pt.
+
+<plot_6_aligned_trials.png, id=18, 1124.2pt x 843.15pt>
+File: plot_6_aligned_trials.png Graphic file (type png)
+
+<use plot_6_aligned_trials.png>
+Package pdftex.def Info: plot_6_aligned_trials.png used on input line 38.
+(pdftex.def)             Requested size: 224.83601pt x 168.627pt.
+
+Overfull \hbox (0.15291pt too wide) in paragraph at lines 37--39
+[][] [] 
+ []
+
+[2 <./plot_1_aligned_trials.png (PNG copy)> <./plot_2_aligned_trials.png (PNG c
+opy)> <./plot_3_aligned_trials.png (PNG copy)> <./plot_4_aligned_trials.png (PN
+G copy)> <./plot_5_aligned_trials.png (PNG copy)> <./plot_6_aligned_trials.png 
+(PNG copy)>] (./figures.aux) ) 
 Here is how much of TeX's memory you used:
- 1507 strings out of 495059
- 21770 string characters out of 3182031
- 72391 words of memory out of 3000000
- 4700 multiletter control sequences out of 15000+200000
+ 1538 strings out of 495059
+ 22640 string characters out of 3182031
+ 72423 words of memory out of 3000000
+ 4725 multiletter control sequences out of 15000+200000
  4245 words of font info for 16 fonts, out of 3000000 for 9000
  14 hyphenation exceptions out of 8191
- 38i,5n,23p,292b,111s stack positions out of 5000i,500n,10000p,200000b,50000s
-</usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr
-/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb>
-Output written on figures.pdf (1 page, 734112 bytes).
+ 38i,5n,23p,336b,111s stack positions out of 5000i,500n,10000p,200000b,50000s
+</usr/share/texlive/texmf-dist/fonts/type1/public
+/amsfonts/cm/cmbx12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfo
+nts/cm/cmr12.pfb>
+Output written on figures.pdf (2 pages, 1026831 bytes).
 PDF statistics:
- 21 PDF objects out of 1000 (max. 8388607)
- 10 compressed objects within 1 object stream
+ 30 PDF objects out of 1000 (max. 8388607)
+ 12 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
- 26 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 56 words of extra memory for PDF output out of 10000 (max. 10000000)
 

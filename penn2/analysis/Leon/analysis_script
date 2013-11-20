@@ -2,8 +2,9 @@
 # My first script
 
 datafile=$1
-matlab -nodesktop -nosplash -r "data_file='$datafile';analyse_data;exit"
-pdflatex "\def\myvar{$datafile} \input{figures.tex}"
-pdflatex "\def\myvar{$datafile} \input{figures_log.tex}"
-pdflatex "\def\myvar{$datafile} \input{regression_plot.tex}"
+windowsize=$2
+matlab -nodesktop -nosplash -r "data_file='$datafile';window_size=$windowsize;analyse_data;exit"
+pdflatex "\def\myvar{$datafile} \def\window{$windowsize} \input{figures.tex}"
+pdflatex "\def\myvar{$datafile} \def\window{$windowsize} \input{figures_log.tex}"
+pdflatex "\def\myvar{$datafile} \def\window{$windowsize} \input{regression_plot.tex}"
 

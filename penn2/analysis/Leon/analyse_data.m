@@ -14,7 +14,7 @@ ref_channel = get_variables('Reference_Channel');
 decimate_factor = floor(originalSamplingRate/desired_samplingRate);%set the decimation factor
 samplingRate = floor(originalSamplingRate/decimate_factor); %The 25000 is hardcoded to the sampling rate we used to do the data capture.
 real_sampling_rate = originalSamplingRate/decimate_factor;
-window_size = get_variables('Window_Size'); %size of the window in seconds
+%window_size = get_variables('Window_Size'); %size of the window in seconds
 window_size = floor(window_size * samplingRate); %transform the window size to samples
 overlap_perc = get_variables('overlap_percentage');
 win_overlap = floor(window_size * overlap_perc);
@@ -28,7 +28,7 @@ first_batch = 1;
 %root_path = ['/home/leon/Data/Penn/Nov_12'];
 %time_stamps_file = [root_path '/data_click_Tue_01.10.2013_10:12:28'];
 %data_file = [root_path '/data'];
-data_file = 'hemi_1';
+%data_file = 'hemi_1';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -42,7 +42,7 @@ num_rows = dinfo.bytes/(8+num_4_byte_column*4);% we need to divide the total amo
 total_time = num_rows/originalSamplingRate;%calculate the total time of captured data
 batch_size_samples = floor((size_of_batch/total_time)*num_rows);%calculate the number of samples that correspond to the desired size
 %calculate the maximum number of batches
-max_num_batches = ceil(total_time/size_of_batch);
+max_num_batches = ceil(total_time/size_of_batch)-1;
 %max_num_batches = 10;
 %finsih reading data files
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -90,9 +90,9 @@ for batch_idx = first_batch:max_num_batches
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
     %Adding Reference to the channels
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %reference_data = repmat(mean(channels_data,2),1,num_chan);%obtain the mean and repeat it over the number of channels for the later operation.
+    reference_data = repmat(mean(channels_data,2),1,num_chan);%obtain the mean and repeat it over the number of channels for the later operation.
     %reference_data = repmat(channels_data(:,ref_channel),1,num_chan);
-    %channels_data=channels_data-reference_data; %rest the mean to normalize
+    channels_data=channels_data-reference_data; %rest the mean to normalize
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%Check if it is the first iteration to generate the placeholder
@@ -162,11 +162,10 @@ for batch_idx = first_batch:max_num_batches
 end
 
 %align the new label using the EMG
-
-onset = large_force; %get the EMG data
-EMG_Threshold = 1000;%Set a threshold for the EMG data for the Hemicraneoctomy paper data
-large_labels = onset_detection(abs(onset),'Teager',EMG_Threshold); %Generate the labels
-large_force = large_labels;
+% onset = large_force; %get the EMG data
+% EMG_Threshold = 1000;%Set a threshold for the EMG data for the Hemicraneoctomy paper data
+% large_labels = onset_detection(abs(onset),'Teager',EMG_Threshold); %Generate the labels
+% large_force = large_labels;
 
 ntp_raw_data = size(raw_data,1);%Time points in the raw data vector
 raw_time_axis = (1:ntp_raw_data)/real_sampling_rate; %Get the new time axis based on the decimated sampling rate
@@ -202,11 +201,15 @@ if plot_flag ==1
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%Plotting Section
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    log_flag =1;
+    log_flag = 1;
     analysis_plots
+    analyze_hemi
     log_flag =0;
     analysis_plots
+    analyze_hemi
     plot_regression
+    %regression_full
+    offset_analysis
     
 end
 
