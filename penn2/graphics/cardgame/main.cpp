@@ -105,6 +105,7 @@ void powerTh()
 //cout<<"recvd"<<endl;
 //  cout<<"sz "<<sig_msg.size()<<endl;
 //  memcpy(&timeStamp, sig_msg.data(), sizeof(size_t));
+  if (timestamp % 1000 == 0)
 cout<<"timestamp: "<<timeStamp<<endl;
 
   memcpy(buffer, (size_t*)sig_msg.data()+1, sig_msg.size()-sizeof(size_t));
@@ -190,8 +191,12 @@ cout<<"threshold: "<<(baselinePowerMean + baselinePowerSD*8.0)<<endl;
                 emgClick = true;
           	fwrite(&timeStamp, sizeof(size_t),1 , pFile);
           	fwrite(&leftRight, sizeof(int),1 , pFile);
-                cout<<"* EMG clicked * <<<<<<< "<<endl;
-		prvEmgState = 1;
+            cout<<"* EMG clicked * <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< "<<endl;
+            cout<<"* EMG clicked * <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< "<<endl;
+            cout<<"* EMG clicked * <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< "<<endl;
+            cout<<"* EMG clicked * <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< "<<endl;
+            cout<<"* EMG clicked * <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< "<<endl;
+        prvEmgState = 1;
                 }
             } else  {
               if (emgState==1){
