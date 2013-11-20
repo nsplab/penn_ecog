@@ -97,7 +97,7 @@ while run:
             timestamp = long(vec[0])
             gameState.hand_pos[0] = float(vec[1])
             gameState.hand_pos[1] = float(vec[2])
-            gameState.hand_pos[2] = float(vec[3])
+            #gameState.hand_pos[2] = float(vec[3])
             print timestamp
         else:
             #gameState.hand_pos[2] += float(vec[1])
@@ -139,15 +139,15 @@ while run:
 
     print 'filterState.trial ', filterState.trial
 
-    f.write(timestamp)
+    f.write(str(timestamp))
     f.write(' ')
-    f.write(filterState.trial)
+    f.write(str(filterState.trial))
     f.write(' ')
-    f.write(gameState.pickedBall)
+    f.write(str(gameState.pickedBall))
     f.write(' ')
-    f.write(gameState.box_pos)
+    f.write(str(gameState.box_pos))
     f.write(' ')
-    f.write(gameState.ball_pos)
+    f.write(str(gameState.ball_pos))
     f.write('\n')
 
     #gameState.hand_pos[0] = (float(vec[0]) - 320) / 26.0
