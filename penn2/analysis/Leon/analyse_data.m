@@ -13,7 +13,7 @@ desired_reg_frequencies = get_variables('beta'); %Get the desired frequencies to
 ref_channel = get_variables('Reference_Channel');
 decimate_factor = floor(originalSamplingRate/desired_samplingRate);%set the decimation factor
 samplingRate = originalSamplingRate/decimate_factor; %The 25000 is hardcoded to the sampling rate we used to do the data capture.
-%window_size = get_variables('Window_Size'); %size of the window in seconds
+window_size = get_variables('Window_Size'); %size of the window in seconds
 window_size = floor(window_size * samplingRate); %transform the window size to samples
 overlap_perc = get_variables('overlap_percentage');
 win_overlap = floor(window_size * overlap_perc);
@@ -161,18 +161,10 @@ for batch_idx = first_batch:max_num_batches
 end
 
 %align the new label using the EMG
-<<<<<<< HEAD
 % onset = large_force; %get the EMG data
 % EMG_Threshold = 1000;%Set a threshold for the EMG data for the Hemicraneoctomy paper data
 % large_labels = onset_detection(abs(onset),'Teager',EMG_Threshold); %Generate the labels
 % large_force = large_labels;
-=======
-
-%onset = large_force; %get the EMG data
-%EMG_Threshold = 1000;%Set a threshold for the EMG data for the Hemicraneoctomy paper data
-%large_labels = onset_detection(abs(onset),'Teager',EMG_Threshold); %Generate the labels
-%large_force = large_labels;
->>>>>>> 9bfdaaedd2d88811cc6c3a4546b6d5c070ec9378
 
 ntp_raw_data = size(raw_data,1);%Time points in the raw data vector
 raw_time_axis = (1:ntp_raw_data)/samplingRate; %Get the new time axis based on the decimated sampling rate
