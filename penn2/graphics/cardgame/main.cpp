@@ -178,13 +178,14 @@ cout<<"point[0]"<<point[0]<<endl;
         } else {
           //liveAvgPow += powers[0][8]/float(livePwrSamples.capacity());
 cout<<"point[0] "<<point[0]<<endl;
-          liveAvgPow += point[0]/float(livePwrSamples.capacity());
-cout<<"liveAvgPow "<<liveAvgPow<<endl;
-          liveAvgPow -= livePwrSamples[0]/float(livePwrSamples.capacity());
-cout<<"liveAvgPow "<<liveAvgPow<<endl;
+//          liveAvgPow += point[0]/float(livePwrSamples.capacity());
+//cout<<"liveAvgPow "<<liveAvgPow<<endl;
+//          liveAvgPow -= livePwrSamples[0]/float(livePwrSamples.capacity());
+//cout<<"liveAvgPow "<<liveAvgPow<<endl;
 cout<<"threshold: "<<(baselinePowerMean + baselinePowerSD*8.0)<<endl;
 
-          if (liveAvgPow > (baselinePowerMean + baselinePowerSD*8.0)) {
+
+          if (point[0] > (baselinePowerMean + baselinePowerSD*8.0)) {
               emgState = 1;
 	      if (emgState==0)
               if ((prvEmgState == 0)&&!emgClick){
