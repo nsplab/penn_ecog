@@ -191,7 +191,8 @@ cout<<"prvEmgState "<<prvEmgState<<endl;
 
           if (point[0] > (baselinePowerMean + baselinePowerSD*8.0)) {
               emgState = 1;
-          if (emgState==0) {
+          //if (emgState==0) {
+
               if ((prvEmgState == 0)&&!emgClick){
                 emgClick = true;
           	fwrite(&timeStamp, sizeof(size_t),1 , pFile);
@@ -203,8 +204,12 @@ cout<<"prvEmgState "<<prvEmgState<<endl;
             cout<<"* EMG clicked * <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< "<<endl;
             prvEmgState = 1;
                 }
-            } } else  { //if (emgState==1)
+            //}
+          } else  {
+              if (emgState==1) {
                 emgClick = false;
+              }
+
               emgState = 0;
               prvEmgState = 0;
             }
