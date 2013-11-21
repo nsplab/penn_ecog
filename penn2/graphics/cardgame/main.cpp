@@ -193,7 +193,7 @@ cout<<"prvEmgState "<<prvEmgState<<endl;
               emgState = 1;
           //if (emgState==0) {
 
-              if ((prvEmgState == 0)&&!emgClick){
+              if ((prvEmgState == 0)&&(!emgClick)){
                 emgClick = true;
           	fwrite(&timeStamp, sizeof(size_t),1 , pFile);
           	fwrite(&leftRight, sizeof(int),1 , pFile);
@@ -291,6 +291,9 @@ cout<<"test"<<endl;
 
   size_t dCorrectSwitch = ifile("displayCorrectIncorrect", 0);
   cout<<"dCorrectSwitch: "<<dCorrectSwitch<<endl;
+
+  size_t dScoreSwitch = ifile("displayScore", 0);
+  cout<<"dScoreSwitch: "<<dScoreSwitch<<endl;
 
   boost::circular_buffer<double> pwrCBuff1;
   pwrCBuff1.set_capacity(50);
@@ -508,9 +511,11 @@ cout<<"test"<<endl;
       // show score
       ostringstream scoreSS;
       scoreSS<<"Score: "<<score;
-      SDL_Surface *message = TTF_RenderText_Blended(fontMed, scoreSS.str().c_str(), textColorBlue);
-      apply_surface(sw/2-image[0]->w/2 - 50, 150, message, screen);
-      SDL_FreeSurface(message);
+      if (dScoreSwitch) {
+        SDL_Surface *message = TTF_RenderText_Blended(fontMed, scoreSS.str().c_str(), textColorBlue);
+        apply_surface(sw/2-image[0]->w/2 - 50, 150, message, screen);
+        SDL_FreeSurface(message);
+      }
 
       ostringstream handSS;
       if (leftRight == 0)
