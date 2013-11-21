@@ -176,6 +176,7 @@ cout<<"point[0]"<<point[0]<<endl;
 //	usleep(10000000);
       }
         } else {
+          baselinePowerMean = 0.03;
           //liveAvgPow += powers[0][8]/float(livePwrSamples.capacity());
 cout<<"point[0] "<<point[0]<<endl;
 //          liveAvgPow += point[0]/float(livePwrSamples.capacity());
