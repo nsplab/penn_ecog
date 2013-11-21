@@ -63,9 +63,11 @@ void powerTh()
     strftime(nameBuffer, 24, "%a_%d.%m.%Y_%H:%M:%S", ptm);
     string dataFilename = string("data_click_")+string(nameBuffer);
 
+
   FILE* pFile;
   pFile = fopen(dataFilename.c_str(), "wb");
   //setvbuf (pFile, NULL, _IOFBF, dataSize);
+
 
   cout<<"thread started"<<endl;
   size_t numChannels = 1;
@@ -252,6 +254,20 @@ void apply_surface( int x, int y, SDL_Surface* source, SDL_Surface* destination,
 
 int main(int argc, char** argv)
 {
+    time_t rawtime;
+    time(&rawtime);
+    char nameBuffer[24];
+    tm * ptm = localtime(&rawtime);
+    strftime(nameBuffer, 24, "%a_%d.%m.%Y_%H:%M:%S", ptm);
+    string imageFilename = string("data_image_")+string(nameBuffer);
+    string pauseFilename = string("data_pause_")+string(nameBuffer);
+
+    FILE* pFileImage;
+    pFileImage = fopen(imageFilename.c_str(), "wb");
+
+    FILE* pFilePause;
+    pFilePause = fopen(pauseFilename.c_str(), "wb");
+
   /*TCLAP::CmdLine cmd("n-back game", ' ', "0.1");
   TCLAP::ValueArg<int> numImagesArg("n","nimages","number of images", true, 5, "int", cmd);
   TCLAP::SwitchArg smallSwitch("s","small"," small cards", cmd, false);
@@ -293,7 +309,7 @@ cout<<"test"<<endl;
   size_t dCorrectSwitch = ifile("displayCorrectIncorrect", 0);
   cout<<"dCorrectSwitch: "<<dCorrectSwitch<<endl;
 
-  size_t dScoreSwitch = ifile("displayScore", 0);
+  size_t dScoreSwitch = ifile("displayScore", 1);
   cout<<"dScoreSwitch: "<<dScoreSwitch<<endl;
 
   boost::circular_buffer<double> pwrCBuff1;
@@ -445,6 +461,9 @@ cout<<"test"<<endl;
   // background image
   apply_surface(0, 0, background, screen);
 
+  size_t firstImage = 0;
+  fwrite(&timeStamp, sizeof(size_t),1 , pFileImage);
+  fwrite(&firstImage, sizeof(size_t),1 , pFileImage);
   //Blit the first image to the backbuffer
   SDL_BlitSurface(image[0], &src, screen, &dest);
 
@@ -535,14 +554,13 @@ cout<<"test"<<endl;
           if( event.type == SDL_MOUSEBUTTONDOWN ) {
             clicked = true;
             printf("Mouse Button 1(left) is pressed.\n");
-
-
           }
 
           if( event.type == SDL_KEYDOWN ) {
               switch( event.key.keysym.sym ){
                 case SDLK_SPACE:
                   pause = !pause;
+                  fwrite(&timeStamp, sizeof(size_t),1 , pFilePause);
                   if ((!pause) && midSession) {
                     startTrial = high_resolution_clock::now();
                     midSession = false;
@@ -578,6 +596,7 @@ cout<<"test"<<endl;
       if (msTrial.count() > 90000) {
         pause = true;
         midSession = true;
+        fwrite(&timeStamp, sizeof(size_t),1 , pFilePause);
 
         apply_surface(0, 0, background, screen);
 
@@ -659,6 +678,8 @@ cout<<"test"<<endl;
                 // first black to refresh the page
                 //SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0));
                 SDL_BlitSurface(image[imgNum], &src, screen, &dest);
+                fwrite(&timeStamp, sizeof(size_t),1 , pFileImage);
+                fwrite(&imgNum, sizeof(size_t),1 , pFileImage);
 
                 SDL_Flip(screen);
 
@@ -711,6 +732,9 @@ cout<<"q2"<<endl;
   Mix_HaltMusic();
 
   helper1.join();
+
+  fclose(pFilePause);
+  fclose(pFileImage);
 
 cout<<"q1"<<endl;
   //Release the surface
