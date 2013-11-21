@@ -106,7 +106,7 @@ void powerTh()
 //  cout<<"sz "<<sig_msg.size()<<endl;
 //  memcpy(&timeStamp, sig_msg.data(), sizeof(size_t));
 //  if (timeStamp % 1000 == 0)
-//cout<<"timestamp: "<<timeStamp<<endl;
+cout<<"timestamp: "<<timeStamp<<endl;
 
   memcpy(buffer, (size_t*)sig_msg.data()+1, sig_msg.size()-sizeof(size_t));
   //cout<<"done"<<endl;
@@ -124,7 +124,7 @@ void powerTh()
   //cout<<endl;
 
   loop += 1;
-  if (loop > 150) {
+  if (loop > 5) {
 //  cout<<"timestamp: "<<timeStamp<<endl;
 //      cout<<"l: "<<loop<<endl;
 /*    if (fft.Process()) {
@@ -154,7 +154,7 @@ cout<<"point[0]"<<point[0]<<endl;
 //        milliseconds ms = duration_cast<milliseconds>(end - start);
 //        cout<<"ms "<<ms.count()<<endl;
 
-      if (baselineSamples > 1200){
+      if (baselineSamples > 1000){
         baseline = false;
         cout<<" *********************** "<<endl;
         cout<<" *********************** "<<endl;
@@ -186,11 +186,12 @@ cout<<"threshold: "<<(baselinePowerMean + baselinePowerSD*8.0)<<endl;
 cout<<"emgState: "<<emgState<<endl;
 cout<<"emgClick: "<<int(emgClick)<<endl;
 cout<<"timsestamp: "<<timeStamp<<endl;
+cout<<"prvEmgState "<<prvEmgState<<endl;
 
 
           if (point[0] > (baselinePowerMean + baselinePowerSD*8.0)) {
               emgState = 1;
-	      if (emgState==0)
+          if (emgState==0) {
               if ((prvEmgState == 0)&&!emgClick){
                 emgClick = true;
           	fwrite(&timeStamp, sizeof(size_t),1 , pFile);
@@ -200,13 +201,10 @@ cout<<"timsestamp: "<<timeStamp<<endl;
             cout<<"* EMG clicked * <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< "<<endl;
             cout<<"* EMG clicked * <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< "<<endl;
             cout<<"* EMG clicked * <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< "<<endl;
-        prvEmgState = 1;
+            prvEmgState = 1;
                 }
-            } else  {
-              if (emgState==1){
+            } } else  { //if (emgState==1)
                 emgClick = false;
-
-}
               emgState = 0;
               prvEmgState = 0;
             }
