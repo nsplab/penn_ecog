@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
     string dataFilename = string("data_")+string(nameBuffer);
     FILE* pFile;
     pFile = fopen(dataFilename.c_str(), "wb");
-    setvbuf (pFile, NULL, _IOFBF, numberOfChannels*sizeof(float));
+    //setvbuf (pFile, NULL, _IOFBF, numberOfChannels*sizeof(float));
 
 
     // check the PO8e card to:
@@ -115,7 +115,7 @@ int main(int argc, char** argv) {
     						//size = 1. This means that if no module has accessed a
     						//value written through ZMQ, new values will be dropped
     						//until any module reads the value
-    //publisher.setsockopt(ZMQ_HWM, &hwm, sizeof(hwm));
+    publisher.setsockopt(ZMQ_HWM, &hwm, sizeof(hwm));
     publisher.bind("ipc:///tmp/sig.pipe");	//gives address of data that other modules can reference
 						//ipc (interprocess communication) is a Linux standard
 						//for communication between programs, used by ZMQ

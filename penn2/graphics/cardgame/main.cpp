@@ -183,6 +183,7 @@ cout<<"point[0] "<<point[0]<<endl;
 //          liveAvgPow -= livePwrSamples[0]/float(livePwrSamples.capacity());
 //cout<<"liveAvgPow "<<liveAvgPow<<endl;
 cout<<"threshold: "<<(baselinePowerMean + baselinePowerSD*8.0)<<endl;
+cout<<"emgState: "<<emgState<<endl;
 
 
           if (point[0] > (baselinePowerMean + baselinePowerSD*8.0)) {
