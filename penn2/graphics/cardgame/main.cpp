@@ -105,8 +105,8 @@ void powerTh()
 //cout<<"recvd"<<endl;
 //  cout<<"sz "<<sig_msg.size()<<endl;
 //  memcpy(&timeStamp, sig_msg.data(), sizeof(size_t));
-  if (timeStamp % 1000 == 0)
-cout<<"timestamp: "<<timeStamp<<endl;
+//  if (timeStamp % 1000 == 0)
+//cout<<"timestamp: "<<timeStamp<<endl;
 
   memcpy(buffer, (size_t*)sig_msg.data()+1, sig_msg.size()-sizeof(size_t));
   //cout<<"done"<<endl;
@@ -184,6 +184,8 @@ cout<<"point[0] "<<point[0]<<endl;
 //cout<<"liveAvgPow "<<liveAvgPow<<endl;
 cout<<"threshold: "<<(baselinePowerMean + baselinePowerSD*8.0)<<endl;
 cout<<"emgState: "<<emgState<<endl;
+cout<<"emgClick: "<<int(emgClick)<<endl;
+cout<<"timsestamp: "<<timeStamp<<endl;
 
 
           if (point[0] > (baselinePowerMean + baselinePowerSD*8.0)) {
