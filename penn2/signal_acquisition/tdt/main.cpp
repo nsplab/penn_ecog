@@ -33,10 +33,10 @@ int kbhit() {	//detects if keyboard is hit or not. this is used to press any key
 }
 
 int main(int argc, char** argv) {
-    if (ioperm(lptDataBase,1,1))
-        fprintf(stderr, "Couldn't get the port at %x\n", lptDataBase), exit(1);
+//    if (ioperm(lptDataBase,1,1))
+//        fprintf(stderr, "Couldn't get the port at %x\n", lptDataBase), exit(1);
 
-    outb(0x10, lptDataBase);
+//    outb(0x10, lptDataBase);
 
     // parse command line arguments
     GetPot cl(argc, argv);
@@ -156,7 +156,7 @@ int main(int argc, char** argv) {
             
             if ((timeStamp % 1000) == 0) {
                 if (timeStamp == 25000) {
-                    outb(0x0, lptDataBase);
+                    //outb(0x0, lptDataBase);
                 }
 	            cout<<"timeStamp: "<<timeStamp<<endl;	//every 50 timeStamps, print the timeStamp
 //            cout<<zmq_message.size()<<endl;			//
