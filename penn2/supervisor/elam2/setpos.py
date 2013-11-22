@@ -77,7 +77,7 @@ def SetBallBoxPos(hand_pos):
 
     dist = np.sqrt(ball_pos.dot(box_pos))
 
-    while dist < 2.0:
+    while dist < 3.0:
         box_pos[0] = random.random() * -5.0
         box_pos[1] = random.random() * -2.0 - 4.0
         box_pos[2] = random.random() * -4.0 + 2.0

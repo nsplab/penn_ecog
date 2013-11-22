@@ -61,6 +61,7 @@ float roll,pitch,yaw, roll2,pitch2,yaw2, roll3,pitch3,yaw3;
 bool subLevelFlag = false;
 
 extern bool openHand;
+extern bool rightHand;
 
 extern float ball_x;
 extern float ball_y;
