@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
 //    if (ioperm(lptDataBase,1,1))
 //        fprintf(stderr, "Couldn't get the port at %x\n", lptDataBase), exit(1);
 
-    signal(SIGINT, signal_callback_handler);
+//    signal(SIGINT, signal_callback_handler);
 
 
 //    if (ioperm(lptDataBase,1,1))
@@ -100,6 +100,7 @@ int main(int argc, char** argv) {
         return 1;
     }
     card = PO8e::connectToCard(0);	//returns a pointer to an instance of the PO8e class
+    card->stopCollecting();
     if (! card->startCollecting()) {	//connectToCard(0) checks card 0
         cout<<"startCollecting() failed with: "<<card->getLastError()<<endl;
         PO8e::releaseCard(card);
