@@ -40,6 +40,8 @@ void signal_callback_handler(int signum) {
 
 
 int main(int argc, char** argv) {
+//    if (ioperm(lptDataBase,1,1))
+//        fprintf(stderr, "Couldn't get the port at %x\n", lptDataBase), exit(1);
 
     signal(SIGINT, signal_callback_handler);
 
