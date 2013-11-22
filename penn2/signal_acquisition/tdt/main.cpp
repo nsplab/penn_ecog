@@ -4,10 +4,11 @@
 #include <sys/resource.h>
 #include <iostream>
 #include <stdint.h>
+#include <signal.h>
 
 // for lpt
-#include <unistd.h>
-#include <sys/io.h>
+//#include <unistd.h>
+//#include <sys/io.h>
 
 #include <zmq.hpp>  //provides protocol for communicating between different modules in the ECoG system
 
@@ -15,7 +16,7 @@
 #include "PO8e.h"   //code provided by TDT to stream/read signal amplitudes
 #include "GetPot.h" //code for reading config files (eg. signal.cfg) that contain parameters for the experiment
 
-#define lptDataBase 0xd010           /* printer port data base address */
+//#define lptDataBase 0xd010           /* printer port data base address */
 //#define lptControlBase 0xd012           /* printer port control base address */
 
 using namespace std;
@@ -32,11 +33,21 @@ int kbhit() {	//detects if keyboard is hit or not. this is used to press any key
     return select(1, &fds, NULL, NULL, &tv);
 }
 
-int main(int argc, char** argv) {
-    if (ioperm(lptDataBase,1,1))
-        fprintf(stderr, "Couldn't get the port at %x\n", lptDataBase), exit(1);
+bool quit = false;
+void signal_callback_handler(int signum) {
+    quit = true;
+}
 
-    outb(0x10, lptDataBase);
+
+int main(int argc, char** argv) {
+
+    signal(SIGINT, signal_callback_handler);
+
+
+//    if (ioperm(lptDataBase,1,1))
+//        fprintf(stderr, "Couldn't get the port at %x\n", lptDataBase), exit(1);
+
+//    outb(0x10, lptDataBase);
 
     // parse command line arguments
     GetPot cl(argc, argv);
@@ -130,7 +141,7 @@ int main(int argc, char** argv) {
 
 
     // main loop - runs an infinite loop until any key on the keyboard is hit.
-    while(!kbhit()) {
+    while(!quit) {
 
         numberOfSamples = card->samplesReady();  // how many samples are currently available for reading from the PO8e
 
@@ -155,9 +166,9 @@ int main(int argc, char** argv) {
             memcpy(static_cast<size_t*>(zmq_message.data())+1, tempBuff, sizeof(float)*numberOfChannels);  
             
             if ((timeStamp % 1000) == 0) {
-                if (timeStamp == 25000) {
-                    outb(0x0, lptDataBase);
-                }
+                //if (timeStamp == 25000) {
+                    //outb(0x0, lptDataBase);
+                //}
 	            cout<<"timeStamp: "<<timeStamp<<endl;	//every 50 timeStamps, print the timeStamp
 //            cout<<zmq_message.size()<<endl;			//
   	          cout<<numberOfSamples<<endl;			//and # of samples that were ready in the PO8e buffer
