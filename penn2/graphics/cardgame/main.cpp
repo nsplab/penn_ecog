@@ -697,6 +697,7 @@ cout<<"test"<<endl;
 
           SDL_Surface *message = TTF_RenderText_Blended(fontBigBack, "PAUSED", textColorBlue);
           apply_surface(sw/2-message->w/2, 100, message, screen);
+          SDL_FreeSurface(message);
           message = TTF_RenderText_Blended(fontBig, "PAUSED", textColor);
           apply_surface(sw/2-message->w/2, 100, message, screen);
           SDL_Flip(screen);

@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
 //    if (ioperm(lptDataBase,1,1))
 //        fprintf(stderr, "Couldn't get the port at %x\n", lptDataBase), exit(1);
 
-//    signal(SIGINT, signal_callback_handler);
+    signal(SIGINT, signal_callback_handler);
 
 
 //    if (ioperm(lptDataBase,1,1))
@@ -197,6 +197,7 @@ int main(int argc, char** argv) {
     fclose(pFile);		//close the data file that records all TDT channels with timeStamp onto the PC (Puget)
     PO8e::releaseCard(card);	//for PO8e
     publisher.close();		//for ZMQ
+    cout<<"terminated gracefully"<<endl;
 
     return 0;
 }
