@@ -34,10 +34,10 @@ end
 ha = axes('Position',[0 0 1 1],'Xlim',[0 1],'Ylim',[0 1],'Box','off','Visible','off','Units','normalized', 'clipping' , 'off');
 if log_flag == 1
     title = ['\bf Single trial analysis for ' num2str(frequency_range(1)) ' to ' num2str(frequency_range(end)) ' Hz with log scale'];
-    plot_title = [num2str(frequency_range(1)) '_to_' num2str(frequency_range(end)) '_all_single_trial_channel_' num2str(channels_to_plot(1)) '.png'];
+    plot_title = [num2str(frequency_range(1)) '_to_' num2str(frequency_range(end)) '_all_single_trial_channel.png'];
 else
     title = ['\bf Single trial analysis for' num2str(frequency_range(1)) ' to ' num2str(frequency_range(end)) ' Hz'];
-    plot_title = ['log_' num2str(frequency_range(1)) '_to_' num2str(frequency_range(end)) '_all_single_trial_channel_' num2str(channels_to_plot(1)) '.png'];
+    plot_title = ['log_' num2str(frequency_range(1)) '_to_' num2str(frequency_range(end)) '_all_single_trial_channel.png'];
 end
 text(0.5, 1,title,'HorizontalAlignment' ,'center','VerticalAlignment', 'top')
 data_title = ['Trials:' num2str(num_trials) ', Window Size:' num2str(get_variables('Window_Size')) '[sec], ' (num2str(floor(size(T,2)/T(end)))) '[FFT/sec]'];
@@ -82,10 +82,10 @@ end
 ha = axes('Position',[0 0 1 1],'Xlim',[0 1],'Ylim',[0 1],'Box','off','Visible','off','Units','normalized', 'clipping' , 'off');
 if log_flag == 1
     title = ['\bf Averaged trials from ' num2str(frequency_range(1)) ' to ' num2str(frequency_range(end)) ' Hz with log scale'];
-    plot_title = ['log_' num2str(frequency_range(1)) '_to_' num2str(frequency_range(end)) '_all_average_channel_' num2str(channels_to_plot(1)) '.png'];
+    plot_title = ['log_' num2str(frequency_range(1)) '_to_' num2str(frequency_range(end)) '_all_average_channel.png'];
 else
     title = ['\bf Averaged trials' num2str(frequency_range(1)) ' to ' num2str(frequency_range(end)) ' Hz'];
-    plot_title = [num2str(frequency_range(1)) '_to_' num2str(frequency_range(end)) '_all_average_channel_' num2str(channels_to_plot(1)) '.png'];
+    plot_title = [num2str(frequency_range(1)) '_to_' num2str(frequency_range(end)) '_all_average_channel.png'];
 
 end
 text(0.5, 1,title,'HorizontalAlignment' ,'center','VerticalAlignment', 'top')
