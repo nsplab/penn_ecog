@@ -24,10 +24,11 @@ xD that has the desired frequencoies
 %first we need to find the nearest value in the frequency array from the
 %desired frequencies
     [val, near_index] = findNearest(desired_frequencies, frequency_array);
-    near_index = unique(near_index); %if there are repeatede indexes, this takes care of that
     freq_array = spectrogram_data(:,near_index);%we extract only the elements of interest
     switch freq_mode
         case 'average'
+            near_index = unique(near_index); %if there are repeatede indexes, this takes care of that
+            freq_array = spectrogram_data(:,near_index);%we extract only the elements of interest
             freq_array = mean(freq_array, 2);
         case 'single'
     end

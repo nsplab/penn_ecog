@@ -8,7 +8,8 @@ frequency_elem = size(large_power_matrix,2)/num_chan; %get the offset for each f
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %This code generates the plots that is in the Figure 6 in the
 %Hemicraneoctomy Paper, here it createsa plot per channel.
-plots_to_save = [58, 43, 41, 40, 25, 22];% set an array of plots to save in a pdf file on a generic name (1,2,3,4,5,6)
+%plots_to_save = [58, 43, 41, 40, 25, 22];% set an array of plots to save in a pdf file on a generic name (1,2,3,4,5,6)
+plots_to_save = [1:17];
 freq_down = 70;
 freq_up = 110;
 rise_or_fall = 'rise';
@@ -23,7 +24,7 @@ for chan_idx = 1:num_chan
     [aligned_force aligned_time] = align_data(large_labels', large_force, rise_or_fall,fourier_sampling_rate);%align to every rise in the labels for the force
     [time_freq, channel_f, num_trials] = size(aligned_mat);%get the features toi create the window
     trial_matrix = zeros(num_trials, time_freq);%create the place holder matrix
-    for trial_idx = 4:num_trials
+    for trial_idx = 1:num_trials
         channel_frequency = extract_frequency(aligned_mat(:,:,trial_idx), F, desired_frequencies, 'average'); %extract the frequencies that we want
         trial_matrix(trial_idx,:) = channel_frequency;%assigns those frequencies to the channel
     end

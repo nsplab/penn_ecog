@@ -17,9 +17,9 @@ switch variable_name
     case 'Original_Sampling_Rate'
         variable = 25000;
     case 'Desired_Sampling_Rate'
-        variable = 512;
+        variable = 256;
     case 'Window_Size'
-        variable = 0.900;
+        variable = 0.500;
     case 'number_recorded_channels'
         %number of channels recorded
         variable = 60;
@@ -28,9 +28,9 @@ switch variable_name
     case 'Reference_Channel'
         variable = 2; %use channel 1 as reference, it can be changed to any channel 
     case 'right_limit'
-        variable = 0.5; %limit of the right side in seconds
+        variable = 1; %limit of the right side in seconds
     case 'left_limit'
-        variable = 0.5; %limit of the left side in seconds
+        variable = 1; %limit of the left side in seconds
     case 'beta'
         variable = [12:30];
     case 'High Gamma'

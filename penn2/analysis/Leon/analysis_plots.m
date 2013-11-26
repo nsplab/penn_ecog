@@ -73,7 +73,7 @@ myaa([4 2],file_id)
 %figure
 fig4 = figure('visible','off');
 frequency_matrix = zeros(num_chan, length(T_axis)); %matrix that has channels in the rows and time in the X, to plot averaged frequencies
-desired_frequencies = [65:115]; %Frequencies in the Gamma Band
+desired_frequencies = [80:100]; %Frequencies in the Gamma Band
 for chan_idx = 1:num_chan
     chan_power_mat = large_power_matrix(:,(chan_idx-1)*length(F)+1:chan_idx*length(F)); %extract the info for the current channel
     channel_frequency = extract_frequency(chan_power_mat, F, desired_frequencies, 'average'); %extract the frequencies that we want
@@ -152,7 +152,7 @@ myaa([4 2],file_id)
 fig6 = figure('visible','off')
 %figure
 frequency_matrix = zeros(num_chan-8, length(T_axis)); %matrix that has channels in the rows and time in the X, to plot averaged frequencies
-desired_frequencies = [65:115]; %Frequencies in the Beta Band
+desired_frequencies = [80:100]; %Frequencies in the Gamma Band
 for chan_idx = 1:num_chan
     chan_power_mat = large_power_matrix(:,(chan_idx-1)*length(F)+1:chan_idx*length(F)); %extract the info for the current channel
     channel_frequency = extract_frequency(chan_power_mat, F, desired_frequencies, 'average'); %extract the frequencies that we want
