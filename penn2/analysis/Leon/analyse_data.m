@@ -18,7 +18,7 @@ window_size = floor(window_size * samplingRate); %transform the window size to s
 overlap_perc = get_variables('overlap_percentage');
 win_overlap = floor(window_size * overlap_perc);
 size_of_batch = 30; %size of the batch in seconds
-first_batch = 5;
+first_batch = 1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 

@@ -6,7 +6,7 @@ log_flag = 0;
 figure('visible','off');
 %figure
 for chan_idx = 1:num_chan
-    plot_idx
+    
     subplot(31,6,[plot_idx, plot_idx+6, plot_idx+12])
     num_trials = single_trial_plot( large_power_matrix, large_labels, large_force, chan_idx, F, frequency_range, rise_or_fall, fourier_sampling_rate, log_flag);
     %colorbar('location','SouthOutside')
