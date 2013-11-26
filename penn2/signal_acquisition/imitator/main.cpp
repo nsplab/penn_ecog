@@ -45,6 +45,7 @@ void GenerateSignal() {
                     1, 1, 1;
 
     Matrix<float, Dynamic, Dynamic> signal(numberOfChannels,1); // output signal
+    Matrix<float, Dynamic, Dynamic> tsignal(60,1); // output signal
     Vector3f sample; // synthetic signal based on x,y,z from kinect
 
     bool exit = false;
@@ -77,10 +78,13 @@ void GenerateSignal() {
 
         signal = mixingMatrix * sample;
         //cout<<"signal: "<<signal<<endl;
+        cout<<"t: "<<timeStamp<<endl;
 
-        message_t zmqMessage(sizeof(float)*numberOfChannels+sizeof(size_t));
+        //message_t zmqMessage(sizeof(float)*numberOfChannels+sizeof(size_t));
+        message_t zmqMessage(sizeof(float)*60+sizeof(size_t));
         memcpy(zmqMessage.data(), &timeStamp, sizeof(size_t)*1);
-        memcpy(static_cast<size_t*>(zmqMessage.data())+1, signal.data(), sizeof(float)*numberOfChannels);
+        //memcpy(static_cast<size_t*>(zmqMessage.data())+1, signal.data(), sizeof(float)*numberOfChannels);
+        memcpy(static_cast<size_t*>(zmqMessage.data())+1, tsignal.data(), sizeof(float)*60);
 
         publisher.send(zmqMessage);
 

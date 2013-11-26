@@ -46,7 +46,7 @@ size_t prvEmgState = 0;
 bool emgClick = false;
   
 // left = 0 / right = 1
-int leftRight = 0;
+int leftRight = 1;
 
 bool quit = false;
 
@@ -452,11 +452,11 @@ cout<<"test"<<endl;
 
       SDL_Flip(screen);
 
-      usleep(1000000);
+      usleep(1500000);
 
     }
 
-  usleep(1000000);
+  usleep(1500000);
 
   // background image
   apply_surface(0, 0, background, screen);
@@ -593,7 +593,7 @@ cout<<"test"<<endl;
       end = high_resolution_clock::now();
       milliseconds ms = duration_cast<milliseconds>(end - start);
       milliseconds msTrial = duration_cast<milliseconds>(end - startTrial);
-      if (msTrial.count() > 90000) {
+      if (msTrial.count() > 100000) {
         pause = true;
         midSession = true;
         fwrite(&timeStamp, sizeof(size_t),1 , pFilePause);
@@ -609,7 +609,7 @@ cout<<"test"<<endl;
 
       if (!pause) {
         if (state == 0) {
-            if (ms.count() >= 2000) {
+            if (ms.count() >= 3000) {
                 cout<<"Elapsed nanosecs: "<<ms.count()<<endl;
 
                 if (prevImg2 != -1) { // Score not changed for first image
@@ -645,7 +645,7 @@ cout<<"test"<<endl;
             }
         }
         else if (state == 1) {
-            if (ms.count() < 1000) {
+            if (ms.count() < 2000) {
                 // show a black screen between two images
                 //SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0));
 

@@ -35,18 +35,18 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    MatrixXf coefMx;
-    loadMatrix(coefMx, matrixFile);
+    //MatrixXf coefMx;
+    //loadMatrix(coefMx, matrixFile);
 
-    MatrixXf spatialFilterMx;
-    loadMatrix(spatialFilterMx, spatialFilterFile);
+    //MatrixXf spatialFilterMx;
+    //loadMatrix(spatialFilterMx, spatialFilterFile);
 
 
-    VectorXf powers;
+    //VectorXf powers;
 
     // this allows selecting channels by the spatial filter matrix, before
     // computing the FFT
-    size_t numChannels = spatialFilterMx.rows();
+    size_t numChannels = 10;//spatialFilterMx.rows();
     // compute fft window size in number of samples
     size_t fftWinSizeSamples;
     size_t samplingRate;
@@ -58,19 +58,28 @@ int main(int argc, char** argv)
     Fft<float> fft(fftWinSizeSamples, Fft<float>::windowFunc::BLACKMAN_HARRIS, samplingRate, numChannels);
 
     context_t context(2);
-    socket_t publisher(context, ZMQ_PUB);
+    socket_t publisher(context, ZMQ_REQ);
     socket_t subscriber(context, ZMQ_SUB);
-    publisher.bind("ipc:///tmp/features.pipe");
+    publisher.bind("ipc:///tmp/supervisor.pipe");
     subscriber.connect("ipc:///tmp/signal.pipe");
     subscriber.setsockopt(ZMQ_SUBSCRIBE, "", 0);
 
-    float buffer[numChannels];
+    float buffer[64];
     vector<float> points(numChannels);
 
     size_t numberOfSamplesSkip = samplingRate / outputRate;
     size_t prevProcSample = 0;
 
     bool quit = false;
+
+    unsigned freqRange = fftWinSizeSamples / 2 + 1;
+    vector<vector<float> > powers(numChannels);
+    for (unsigned i=0; i<numChannels; i++){
+        powers[i].resize(freqRange);
+    }
+
+    float alpha = 0.1;
+    float movingAvg = 0.0;
 
     while (!quit) {
         message_t signal;
@@ -84,34 +93,38 @@ int main(int argc, char** argv)
         memcpy(buffer, (size_t*)signal.data()+1, signal.size()-sizeof(size_t));
 
         // spatial filter
-        VectorXf signalVector;
-        signalVector.resize(numChannels);
-        memcpy(signalVector.data(), buffer, signal.size()-sizeof(size_t));
-        VectorXf signalSpatialFiltered = spatialFilterMx * signalVector;
-        memcpy(buffer, signalSpatialFiltered.data(), signalSpatialFiltered.rows()*sizeof(float));
+        //VectorXf signalVector;
+        //signalVector.resize(numChannels);
+        //memcpy(signalVector.data(), buffer, signal.size()-sizeof(size_t));
+        //VectorXf signalSpatialFiltered = spatialFilterMx * signalVector;
+        //memcpy(buffer, signalSpatialFiltered.data(), signalSpatialFiltered.rows()*sizeof(float));
 
-        points.resize(signalSpatialFiltered.rows());
+        //points.resize(signalSpatialFiltered.rows());
 
         // compute FFT
-        copy(&(buffer[0]), &(buffer[points.size()]), points.begin());
+        //copy(&(buffer[0]), &(buffer[points.size()]), points.begin());
         //for (size_t i=0; i<numChannels; i++)
         //    cout<<"p "<<i<<" : "<< points[i]<<endl;
+
+        memcpy(points.data(), &(buffer[4]), sizeof(float) * numChannels);
 
         fft.AddPoints(points);
         if ((prevProcSample + numberOfSamplesSkip) > timestamp){
             continue;
         }
+        if (timestamp % (24400/10) == 0)
         if (fft.Process()) {
             prevProcSample = timestamp;
-            fft.GetPowerOneVec(powers);
-            VectorXf features = coefMx * powers;
+            //fft.GetPowerOneVec(powers);
+            //VectorXf features = coefMx * powers;
+            fft.GetPower(powers);
 
-            cout<<"timestamp: "<<timestamp<<endl;
-            cout<<"message size: "<<(signal.size()-sizeof(size_t))/sizeof(float)<<endl;
-            cout<<"features: "<<features<<endl;
+            //cout<<"timestamp: "<<timestamp<<endl;
+            //cout<<"message size: "<<(signal.size()-sizeof(size_t))/sizeof(float)<<endl;
+            //cout<<"features: "<<features<<endl;
 
 
-            if (isnan(features(0))) {
+            /*if (isnan(features(0))) {
                 cout<<"NaN"<<endl;
 
                 cout<<"features "<<features<<endl;
@@ -130,12 +143,34 @@ int main(int argc, char** argv)
 
 
                 break;
+            }*/
+
+            float avgPower = 0.0;
+            for (unsigned i=0; i<10; i++) {
+                for (unsigned j=36;j<46;j++) {
+                    avgPower += powers[i][j];
+                }
             }
 
-            message_t featuesMsg(sizeof(size_t)+features.rows()*sizeof(float));
-            memcpy(featuesMsg.data(), &timestamp, sizeof(size_t));
-            memcpy(static_cast<size_t*>(featuesMsg.data())+1, features.data(), features.rows()*sizeof(float));
-            publisher.send(featuesMsg);
+            movingAvg = alpha * avgPower + (1.0 - alpha) * movingAvg;
+
+            cout<<"movingAvg: "<<movingAvg<<endl;
+
+            stringstream sendMsg;
+            sendMsg<<timestamp<<" "<<(movingAvg*500.0-15.0);
+
+            message_t zmq_message(sendMsg.str().length());
+            memcpy((char *) zmq_message.data(), sendMsg.str().c_str(), sendMsg.str().length());
+            publisher.send(zmq_message);
+
+            message_t supervisor_msg;
+            publisher.recv(&supervisor_msg);
+
+
+            //message_t featuesMsg(sizeof(size_t)+features.rows()*sizeof(float));
+            //memcpy(featuesMsg.data(), &timestamp, sizeof(size_t));
+            //memcpy(static_cast<size_t*>(featuesMsg.data())+1, features.data(), features.rows()*sizeof(float));
+            //publisher.send(featuesMsg);
         }
     }
 
@@ -181,7 +216,7 @@ int parsConfig(string& signalConfig, string& matrixFile, size_t& fftWinSize,
         testFile.close();
     }
 
-    spatialFilterFile = ifile("spatialFilterFile", "");
+    /*spatialFilterFile = ifile("spatialFilterFile", "");
     // check if spatialFilterFile exists
     testFile.open(spatialFilterFile.c_str());
     if (! testFile.good()) {
@@ -189,11 +224,11 @@ int parsConfig(string& signalConfig, string& matrixFile, size_t& fftWinSize,
         return 1;
     } else {
         testFile.close();
-    }
+    }*/
 
-    fftWinSize = ifile("fftWinSize", 300);
+    fftWinSize = ifile("fftWinSize", 500);
     fftWinType = ifile("fftWinSize", 0);
-    outputRate = ifile("outputRate", 3);
+    outputRate = ifile("outputRate", 10);
 
     return 0;
 }

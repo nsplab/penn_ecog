@@ -144,7 +144,7 @@ int main(int argc, char** argv)
     pat2->addChild(tmodel);
     osg::ref_ptr<osg::MatrixTransform> model =  new osg::MatrixTransform;
     model->preMult(osg::Matrix::translate(0.0f, 0.0f, 0.0f) *
-    osg::Matrix::scale(-1.0f, 1.0f, 1.0f) *
+    osg::Matrix::scale(1.0f, 1.0f, 1.0f) *
     osg::Matrix::translate(0.0f, 0.0f, 0.0f) );
     model->addChild( pat2.get() );
 
@@ -366,9 +366,13 @@ int main(int argc, char** argv)
         float handX=0.0, handY=0.0, handZ=0.0;
         float ballX=0.0, ballY=0.0, ballZ=0.0;
         float boxX=0.0, boxY=0.0, boxZ=0.0;
-        ss>>handX>>handZ>>handY;
-        ss>>ballX>>ballZ>>ballY;
-        ss>>boxX>>boxZ>>boxY;
+        ss>>handZ>>handY>>handX;
+        ss>>ballZ>>ballY>>ballX;
+        ss>>boxZ>>boxY>>boxX;
+
+        //ss>>handX>>handZ>>handY;
+        //ss>>ballX>>ballZ>>ballY;
+        //ss>>boxX>>boxZ>>boxY;
 
         int closedHand = 0;
         ss>>closedHand;

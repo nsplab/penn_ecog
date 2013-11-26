@@ -17,6 +17,8 @@ import config
 
 import threading
 
+import datetime
+
 # the state machines to present the state of the graphics and filter modules
 from state import GameState
 from state import FilterState
@@ -74,8 +76,8 @@ def StartNewTrial():
 
 timestamp = 0
 
-
-f = open('supervisor_event.txt', 'w')
+filename = 'supervisor_event_%s.txt'%datetime.datetime.utcnow().strftime("%Y-%m-%d-%H%M%S")
+f = open(filename, 'w')
 
 # main loop
 while run:
@@ -96,14 +98,15 @@ while run:
         if config.trackingMode:
             timestamp = long(vec[0])
             gameState.hand_pos[0] = float(vec[1])
-            gameState.hand_pos[1] = float(vec[2])
-            #gameState.hand_pos[2] = float(vec[3])
+            if config.dimension > 1:
+                gameState.hand_pos[1] = float(vec[2])
+                #gameState.hand_pos[2] = float(vec[3])
             print timestamp
         else:
             #gameState.hand_pos[2] += float(vec[1])
             filterState.hand_pos[0] = float(vec[0])
             filterState.hand_pos[1] = float(vec[1])
-            #filterState.hand_pos[2] += float(vec[1])
+            filterState.hand_pos[2] = float(vec[1])
 
     if gameState.updateState():
         # a new trial started

@@ -1,5 +1,5 @@
 
 # workspace dimensionality
-dimension = 2
+dimension = 1
 
-trackingMode = True
+trackingMode = False
