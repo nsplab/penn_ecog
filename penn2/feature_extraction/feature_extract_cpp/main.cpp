@@ -157,7 +157,7 @@ int main(int argc, char** argv)
             cout<<"movingAvg: "<<movingAvg<<endl;
 
             stringstream sendMsg;
-            sendMsg<<timestamp<<" "<<(movingAvg*1000.0);
+            sendMsg<<timestamp<<" "<<(movingAvg*500.0-15.0);
 
             message_t zmq_message(sendMsg.str().length());
             memcpy((char *) zmq_message.data(), sendMsg.str().c_str(), sendMsg.str().length());
