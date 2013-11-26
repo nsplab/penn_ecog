@@ -216,7 +216,7 @@ int parsConfig(string& signalConfig, string& matrixFile, size_t& fftWinSize,
         testFile.close();
     }
 
-    spatialFilterFile = ifile("spatialFilterFile", "");
+    /*spatialFilterFile = ifile("spatialFilterFile", "");
     // check if spatialFilterFile exists
     testFile.open(spatialFilterFile.c_str());
     if (! testFile.good()) {
@@ -224,7 +224,7 @@ int parsConfig(string& signalConfig, string& matrixFile, size_t& fftWinSize,
         return 1;
     } else {
         testFile.close();
-    }
+    }*/
 
     fftWinSize = ifile("fftWinSize", 500);
     fftWinType = ifile("fftWinSize", 0);
