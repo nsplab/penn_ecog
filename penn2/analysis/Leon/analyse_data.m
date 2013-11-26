@@ -13,12 +13,12 @@ desired_reg_frequencies = get_variables('beta'); %Get the desired frequencies to
 ref_channel = get_variables('Reference_Channel');
 decimate_factor = floor(originalSamplingRate/desired_samplingRate);%set the decimation factor
 samplingRate = originalSamplingRate/decimate_factor; %The 25000 is hardcoded to the sampling rate we used to do the data capture.
-window_size = get_variables('Window_Size'); %size of the window in seconds
+%window_size = get_variables('Window_Size'); %size of the window in seconds
 window_size = floor(window_size * samplingRate); %transform the window size to samples
 overlap_perc = get_variables('overlap_percentage');
 win_overlap = floor(window_size * overlap_perc);
-size_of_batch = 10; %size of the batch in seconds
-first_batch = 1;
+size_of_batch = 30; %size of the batch in seconds
+first_batch = 5;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -62,11 +62,17 @@ T_axis=[];
 large_force =[];
 %Start the batched analysis
 for batch_idx = first_batch:max_num_batches
+    batch_idx
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     channels_data = return_batch(data_file, size_of_batch, originalSamplingRate, batch_idx, 'eeg');
     force = return_batch(data_file, size_of_batch, originalSamplingRate, batch_idx, 'force');
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %The following code denoises the singla using Andrew's technique.
+    %for ch_idx = 1:num_chan
+    %    denoised_channel = mtmlinenoise(channels_data(:,ch_idx),2.5,window_size, originalSamplingRate, [62]);
+    %    channels_data(:,ch_idx) = channels_data(:,ch_idx) - denoised_channel;
+    %end
 
     %pre process data files (trim, decimate)
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -89,17 +95,19 @@ for batch_idx = first_batch:max_num_batches
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%5
     %Adding Reference to the channels
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    reference_data = repmat(mean(channels_data,2),1,num_chan);%obtain the mean and repeat it over the number of channels for the later operation.
+    %channels_data = reference_strip(channels_data, 'baseline');
+    %reference_data = repmat(mean(channels_data,2),1,num_chan);%obtain the mean and repeat it over the number of channels for the later operation.
     %reference_data = repmat(channels_data(:,ref_channel),1,num_chan);
-    channels_data=channels_data-reference_data; %rest the mean to normalize
-    
+    %channels_data=channels_data-reference_data; %rest the mean to normalize
+
+        
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%%Check if it is the first iteration to generate the placeholder
     %%%matrix for the raw data
     [time, data] = size(channels_data); %get the size of the data
 
-    if batch_idx == 1
-        raw_data =zeros(time*(max_num_batches-1), data);% generate the place holder matrix
+    if batch_idx == first_batch
+        raw_data =zeros(time*(max_num_batches-first_batch), data);% generate the place holder matrix
       
     end
     start_idx = (batch_idx-1)*time+1;
@@ -122,7 +130,7 @@ for batch_idx = first_batch:max_num_batches
       
     
     for chidx = 2:num_chan
-        [S,F,T,P] = spectrogram(channels_data(:,chidx), hann(window_size), win_overlap, window_size, samplingRate);  %transform the channel
+        [S,F,T,P] = spectrogram(channels_data(:,chidx), blackmanharris(window_size), win_overlap, window_size, samplingRate);  %transform the channel
         pow_idx = (chidx-1)*power_p+1;
         power_matrix(:,pow_idx:chidx*power_p) = P'; %allocate the powers from the channels
     end
@@ -200,15 +208,13 @@ if plot_flag ==1
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %%Plotting Section
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    log_flag = 1;
-    analysis_plots
-    analyze_hemi
-    log_flag =0;
-    analysis_plots
-    analyze_hemi
-    plot_regression
-    %regression_full
-    offset_analysis
+    frequency_range = [12:40];
+    analyse_all_channels
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    frequency_range = [72:82];
+    analyse_all_channels
+    
     
 end
 

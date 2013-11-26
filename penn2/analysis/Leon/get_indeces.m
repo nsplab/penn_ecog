@@ -2,11 +2,12 @@ function [edge_idx] = get_indeces(labels, edges)
 %GET_INDECES gets the indexes of the rising and falling edges
 %%input:
 %labels: sets of 1s and 0s to align the data with
-%data: original data, which is already aligned, so it shares the same
+%edges: A vairable that is either 'raise' or 'fall' that controls whether
+%we are looking for rising edges or falling edges.
 %indexes
 %output:
 %It generates a plot of the aligned data.
-%data_array: Is a TimexFeatxTrials matrix
+%edge_idx: Has the indexes for the desired events
 %Set Parameters
 switch edges
     case 'rise'
