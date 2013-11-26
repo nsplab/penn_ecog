@@ -17,6 +17,7 @@ function [batch_data] = return_batch( data_file, size_of_batch, samplingRate, ba
 %Before using the function we recomend to calculate the number of batches
 %first, although if there is a mismatch, the function will indicate which is
 %this.
+time_stamp_bytes = 8;
 num_chan = get_variables('number_of_channels');
 num_record_chan =  get_variables('number_recorded_channels');
 num_4_byte_column = 4+num_record_chan; %number of columns that have 4 bytes 
@@ -40,22 +41,22 @@ else
         switch data_id
             case 'eeg'
                 %first we read one of the channels to create the matrix
-                fseek(fid, batch_size_samples*(batch_number-1)*(8+4*num_4_byte_column)+(8+4*4), 'bof');%the second parameter of fseek indicates where we start reading
-                ch1 = fread(fid, batch_size_samples, 'float', 4*(num_4_byte_column-1)+8);
+                fseek(fid, batch_size_samples*(batch_number-1)*(time_stamp_bytes+4*num_4_byte_column)+(time_stamp_bytes+4*4), 'bof');%the second parameter of fseek indicates where we start reading
+                ch1 = fread(fid, batch_size_samples, 'float', 4*(num_4_byte_column-1)+time_stamp_bytes);
                 channels_data = zeros(size(ch1,1), num_chan);
                 channels_data(:,1) = ch1;
                 clear ch1; %remove ch1 from the workspace to free up memory
                 %now loop through all the channels to populate the data file
                 for chidx=2:num_chan
                     channel_offset = 3+chidx; %channel ofsset is the offset to move in the binary file
-                    fseek(fid, batch_size_samples*(batch_number-1)*(8+4*num_4_byte_column)+(8+channel_offset*4), 'bof');%fseek moves the pointer over the binary file
-                    channels_data (:,chidx) = fread(fid, batch_size_samples, 'float', 4*(num_4_byte_column-1)+8);%copy everything to the pre created array
+                    fseek(fid, batch_size_samples*(batch_number-1)*(time_stamp_bytes+4*num_4_byte_column)+(time_stamp_bytes+channel_offset*4), 'bof');%fseek moves the pointer over the binary file
+                    channels_data (:,chidx) = fread(fid, batch_size_samples, 'float', 4*(num_4_byte_column-1)+time_stamp_bytes);%copy everything to the pre created array
                 end
                 batch_data = channels_data;
             case 'force'
                 fid = fopen(data_file,'r');%open the file
-                fseek(fid, batch_size_samples*(batch_number-1)*(8+4*num_4_byte_column)+8, 'bof');%set the pointer in the correct part of the file
-                force = fread(fid, batch_size_samples, 'float', 8+4*(num_4_byte_column-1)); %read the file, and then skip, so the next read will be in the same position
+                fseek(fid, batch_size_samples*(batch_number-1)*(time_stamp_bytes+4*num_4_byte_column)+time_stamp_bytes, 'bof');%set the pointer in the correct part of the file
+                force = fread(fid, batch_size_samples, 'float', time_stamp_bytes+4*(num_4_byte_column-1)); %read the file, and then skip, so the next read will be in the same position
                 batch_data = force; %write the file in the ouput
         end
         fclose(fid);
