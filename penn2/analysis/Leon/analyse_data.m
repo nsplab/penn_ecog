@@ -34,7 +34,7 @@ first_batch = 1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Given the batch size and the sampling rate we calculate the number of
 %batches to iterate over
-time_stamp_bytes = 8;
+time_stamp_bytes = get_variables('Time_stamp_bytes');
 num_4_byte_column = 4+num_record_chan; %number of columns that have 4 bytes 
 dinfo = dir(data_file); %get the information of the data file
 num_rows = dinfo.bytes/(time_stamp_bytes+num_4_byte_column*4);% we need to divide the total amount of bytes by the amount of bytes per row.

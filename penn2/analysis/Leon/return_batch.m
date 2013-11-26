@@ -17,7 +17,7 @@ function [batch_data] = return_batch( data_file, size_of_batch, samplingRate, ba
 %Before using the function we recomend to calculate the number of batches
 %first, although if there is a mismatch, the function will indicate which is
 %this.
-time_stamp_bytes = 8;
+time_stamp_bytes = get_variables('Time_stamp_bytes');;
 num_chan = get_variables('number_of_channels');
 num_record_chan =  get_variables('number_recorded_channels');
 num_4_byte_column = 4+num_record_chan; %number of columns that have 4 bytes 
