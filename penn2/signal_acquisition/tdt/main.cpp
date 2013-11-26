@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include <signal.h>
 
+#include <chrono>
+
 // for lpt
 //#include <unistd.h>
 //#include <sys/io.h>
@@ -82,7 +84,7 @@ int main(int argc, char** argv) {
     string dataFilename = string("data_")+string(nameBuffer);
     FILE* pFile;
     pFile = fopen(dataFilename.c_str(), "wb");
-    //setvbuf (pFile, NULL, _IOFBF, numberOfChannels*sizeof(float));
+    setvbuf (pFile, NULL, _IOFBF, 10*numberOfChannels*sizeof(float));
 
 
     // check the PO8e card to:
@@ -118,7 +120,8 @@ int main(int argc, char** argv) {
 
     // temporary buffer to copy data from PO8e's buffer.
     // this buffer only contains one float per channel
-    float tempBuff[numberOfChannels];
+    float dBuff[numberOfChannels * 10000];
+    float* tempBuff;
 
 
     //Initializing ZMQ protocol that allows us to communicate between modules of the code
@@ -142,6 +145,7 @@ int main(int argc, char** argv) {
     						//such as the value of an on-screen stimulus
 
 
+    std::chrono::time_point<std::chrono::system_clock> start, end;
 
     // main loop - runs an infinite loop until any key on the keyboard is hit.
     while(!quit) {
@@ -151,15 +155,22 @@ int main(int argc, char** argv) {
         if (numberOfSamples < 1)		//if no samples are ready, 
             continue;				//skip remaining code in the while loop and start a new cycle
 
-        for(size_t i = 0; i < numberOfSamples; i++, timeStamp++) {//increment timeStamp based on number of samples received - assumes samples reeceived regularly
-            if (card->readBlock(tempBuff, 1) != 1) {	//readblock(tempBuff,1) loads one sample from every channel into tempBuff, returning 1 if successful, and advances to the next sample
-                cout<<"reading sample "<<i<<" failed!"<<endl;  //if there is a problem accessing the buffer, print failure message to terminal
+            start = std::chrono::system_clock::now();
+            if (card->readBlock(dBuff, numberOfSamples) != numberOfSamples) {	//readblock(tempBuff,1) loads one sample from every channel into tempBuff, returning 1 if successful, and advances to the next sample
+                cout<<"reading sample "<<" failed!"<<endl;  //if there is a problem accessing the buffer, print failure message to terminal
                 return 1;
             }
+            end = std::chrono::system_clock::now();
+
+            // advance PO8e buffer pointer
+            card->flushBufferedData(numberOfSamples);
+
+        for(size_t i = 0; i < numberOfSamples; i++, timeStamp++) {//increment timeStamp based on number of samples received - assumes samples reeceived regularly
 
 	//use the ZMQ protocol to broadcast the following values:
 	//	tempBuff - the single current sample from every channel
 	//	timeStamp - the counter on the PC that serves as the system clock to align ECoG with task events
+            tempBuff = &(dBuff[i * numberOfChannels]);
 	
             zmq::message_t zmq_message(sizeof(float)*numberOfChannels+sizeof(size_t)); //form a ZMQ message object; note this will cause problems if it is moved out from the loop
             //form the zmq message that contains timeStamp and tempBuff
@@ -168,13 +179,15 @@ int main(int argc, char** argv) {
            //memcpy(&timeStamp, zmq_message.data(), sizeof(size_t)*1);
             memcpy(static_cast<size_t*>(zmq_message.data())+1, tempBuff, sizeof(float)*numberOfChannels);  
             
-            if ((timeStamp % 1000) == 0) {
+            if ((timeStamp % 24000) == 0) {
                 //if (timeStamp == 25000) {
                     //outb(0x0, lptDataBase);
                 //}
-	            cout<<"timeStamp: "<<timeStamp<<endl;	//every 50 timeStamps, print the timeStamp
+	            cout<<"t: "<<timeStamp<<endl;	//every 50 timeStamps, print the timeStamp
 //            cout<<zmq_message.size()<<endl;			//
   	          cout<<numberOfSamples<<endl;			//and # of samples that were ready in the PO8e buffer
+            std::chrono::duration<double> elapsed_seconds = end-start;
+            cout<<"elapsed time: " << elapsed_seconds.count() << "s\n";
 		}            
             
 //char tstr[] = "10001 this that";
@@ -184,13 +197,11 @@ int main(int argc, char** argv) {
             //s_sendmore(publisher, "A");
             publisher.send(zmq_message);	//ZMQ command to trigger the broadcast of tempBuff and timeStamp
 
-            // advance PO8e buffer pointer
-            card->flushBufferedData(1);
 
-            // write timeStamp and tempBuff into the data file on the PC harddrive
-            fwrite(&timeStamp, sizeof(size_t), 1, pFile);
-            fwrite(&tempBuff, sizeof(float), numberOfChannels, pFile);
         }
+            // write timeStamp and tempBuff into the data file on the PC harddrive
+            // fwrite(&timeStamp, sizeof(size_t), 1, pFile);
+            fwrite(&(dBuff[0]), sizeof(float), numberOfChannels*numberOfSamples, pFile);
 
     } // end of main loop
 
