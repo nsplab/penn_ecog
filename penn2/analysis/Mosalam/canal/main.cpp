@@ -19,7 +19,7 @@ int main()
     //ofstream spectroFile("/media/ssd/outSpectro.bin", ios::out | ios::binary);
     FILE* pFile;
     pFile = fopen("/media/ssd/outSpectro.bin", "wb");
-    setvbuf(pFile, NULL, _IOFBF, sizeof(float)*(25000/2+1));
+    setvbuf(pFile, NULL, _IOFBF, sizeof(float)*(24400/2+1));
 
     FILE* pFileForce;
     pFileForce = fopen("/media/ssd/outForce.bin", "wb");
@@ -27,8 +27,8 @@ int main()
     FILE* pFilePower;
     pFilePower = fopen("/media/ssd/outPower.bin", "wb");
 
-    unsigned int fftWinSizeSamples = 25000/2;
-    unsigned int samplingRate = 25000;
+    unsigned int fftWinSizeSamples = 24400/2;
+    unsigned int samplingRate = 24400;
     unsigned int numChannels = 30;
     unsigned freqRange = fftWinSizeSamples / 2 + 1;
     Fft<float> fft(fftWinSizeSamples, Fft<float>::windowFunc::BLACKMAN_HARRIS, samplingRate, numChannels);
@@ -42,23 +42,23 @@ int main()
         powers[i].resize(freqRange);
     }
 
-    unsigned int bin70 = int(70.0 / (samplingRate/fftWinSizeSamples));
-    unsigned int bin100 = int(85.0 / (samplingRate/fftWinSizeSamples));
+    unsigned int bin70 = int(75.0 / (samplingRate/fftWinSizeSamples));
+    unsigned int bin100 = int(90.0 / (samplingRate/fftWinSizeSamples));
 
-    float alpha = 0.2;
+    float alpha = 1.0;
     float movingAvg = 0.0;
 
     while(dataFile) {
         dataFile.read((char *) &(row.timeStamp), sizeof(size_t));
         dataFile.read((char *) (row.cols.data()), sizeof(float) * 64);
-        if ((row.timeStamp % 25000) == 0)
+        if ((row.timeStamp % 24400) == 0)
             cout<<row.timeStamp<<endl;
 
         memcpy(points.data(), row.cols.data()+4, sizeof(float) * 30);
 
         fft.AddPoints(points);
 
-        if (row.timeStamp % (25000/10) == 0)
+        if (row.timeStamp % (24400/20) == 0)
         if (fft.Process()) {
             //cout << "t: " << row.timeStamp << endl;
             fft.GetPower(powers);
@@ -69,7 +69,7 @@ int main()
             }
 
             float avgPower = 0.0;
-            for (unsigned i=3; i<12; i++) {
+            for (unsigned i=3; i<13; i++) {
                 for (unsigned j=bin70;j<bin100;j++) {
                     avgPower += powers[i][j];
                 }
@@ -78,7 +78,7 @@ int main()
             movingAvg = alpha * avgPower + (1.0 - alpha) * movingAvg;
 
             fwrite(row.cols.data(), sizeof(float), 1, pFileForce);
-            fwrite(&avgPower, sizeof(float), 1, pFilePower);
+            fwrite(&movingAvg, sizeof(float), 1, pFilePower);
         }
 
     }
