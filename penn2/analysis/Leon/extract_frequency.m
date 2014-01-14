@@ -8,8 +8,7 @@ function [freq_array] = extract_frequency(spectrogram_data, frequency_array, des
 %frequency bands
 %frequency_array: Is the F vector generated from the spectrogram function
 %that has the identities of each column in the spectrogram _data
-%desired_frequencies: Has an array of 1
-xD that has the desired frequencoies
+%desired_frequencies: Has an array of 1xD that has the desired frequencoies
 %to analyse.
 %freq_mode: text variable that can be "average" if we want a single channel
 %with the average of the desired frequencies or "single" if we want an

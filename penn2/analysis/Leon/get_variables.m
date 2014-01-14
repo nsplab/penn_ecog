@@ -35,6 +35,8 @@ switch variable_name
         variable = [12:30];
     case 'High Gamma'
         variable = [65:115];
+    case 'Time_stamp_bytes'
+        variable = 0;
    
         
         
