@@ -73,7 +73,6 @@ extern osg::ref_ptr<osgText::Font> g_font;
 
 extern osg::ref_ptr<osgText::Font> c_font;
 
-
 int main(int argc, char** argv)
 {
     string cfgFile("../elam2.cfg");
@@ -307,7 +306,7 @@ int main(int argc, char** argv)
     context_t context(1);
     socket_t subscriber(context, ZMQ_SUB);
     uint64_t hwm = 1;
-    subscriber.setsockopt(ZMQ_HWM, &hwm, sizeof(hwm));
+    //subscriber.setsockopt(ZMQ_HWM, &hwm, sizeof(hwm));
     subscriber.connect("ipc:///tmp/graphics.pipe");
     subscriber.setsockopt(ZMQ_SUBSCRIBE, "", 0);
 

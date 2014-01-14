@@ -47,6 +47,7 @@ int main(int argc, char** argv) {
     double initialArmPosVar = ifile("initialArmPosVar", 1.0);
     double initialArmVelVar = ifile("initialArmVelVar", 1.0);
     unsigned numLags = ifile("numLags", 1);
+    unsigned filterType = ifile("filterType", 0);
 
     string featureConfig = ifile("featureConfig", "feature.cfg");
     GetPot ifileFeature(featureConfig.c_str(), "#", "\n");
@@ -62,8 +63,12 @@ int main(int argc, char** argv) {
         testFile.close();
     }
 
-    //NaiveFilter filter(featureRate);
-    jointRSE_filter filter(dimensions,     // dimension
+
+    if (filterType == 0) {
+        NaiveFilter filter(featureRate);
+        filter.Run();
+    } else {
+        jointRSE_filter filter(dimensions,     // dimension
                            velocityParams, // include velocity parameters
                            positionParams, // include position parameters
                            affineParam,    // include affine parameter
@@ -82,8 +87,10 @@ int main(int argc, char** argv) {
                            true,           // integrate velocity to get position
                            numLags
                            );
+        filter.Run();
+    }
     
-    filter.Run();
+
     //filter.RunPredictOnly();
 
     //testRSE();

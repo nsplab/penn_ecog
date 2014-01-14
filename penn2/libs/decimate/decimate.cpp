@@ -59,8 +59,8 @@ Decimate::Decimate(size_t numberOfChannels)
 {
     currentSub = true;
 
-    samplesSub1.reserve(numberOfChannels);
-    samplesSub2.reserve(numberOfChannels);
+    samplesSub1.resize(numberOfChannels);
+    samplesSub2.resize(numberOfChannels);
 
     for (size_t i=0; i<numberOfChannels; i++) {
         samplesSub1[i].set_capacity(HALF_FILTER_SIZE);
@@ -87,7 +87,7 @@ bool Decimate::AddSample(std::vector<float>& samples) {
         currentSub = true;
     }
 
-    return (samplesSub2[0].size() == samplesSub2[0].capacity());
+    return ((samplesSub2[0].size() == samplesSub2[0].capacity()) && currentSub);
 }
 
 void Decimate::GetDecSample(std::vector<float> &samples) {

@@ -37,6 +37,7 @@ int kbhit() {	//detects if keyboard is hit or not. this is used to press any key
 
 bool quit = false;
 void signal_callback_handler(int signum) {
+    signal(signum, SIG_IGN);
     quit = true;
 }
 
@@ -171,14 +172,14 @@ int main(int argc, char** argv) {
 	//	tempBuff - the single current sample from every channel
 	//	timeStamp - the counter on the PC that serves as the system clock to align ECoG with task events
             tempBuff = &(dBuff[i * numberOfChannels]);
-	
+
             zmq::message_t zmq_message(sizeof(float)*numberOfChannels+sizeof(size_t)); //form a ZMQ message object; note this will cause problems if it is moved out from the loop
             //form the zmq message that contains timeStamp and tempBuff
             //(memcpy is a standard C function that copies the timeStamp into the memory address given by zmq_message.data())
             memcpy(zmq_message.data(), &timeStamp, sizeof(size_t)*1);  
            //memcpy(&timeStamp, zmq_message.data(), sizeof(size_t)*1);
             memcpy(static_cast<size_t*>(zmq_message.data())+1, tempBuff, sizeof(float)*numberOfChannels);  
-            
+
             if ((timeStamp % 24000) == 0) {
                 //if (timeStamp == 25000) {
                     //outb(0x0, lptDataBase);
@@ -189,7 +190,7 @@ int main(int argc, char** argv) {
             std::chrono::duration<double> elapsed_seconds = end-start;
             cout<<"elapsed time: " << elapsed_seconds.count() << "s\n";
 		}            
-            
+
 //char tstr[] = "10001 this that";
 //            memcpy(zmq_message.data(), tstr, strlen(tstr));
         //snprintf ((char *) zmq_message.data(), 20 ,

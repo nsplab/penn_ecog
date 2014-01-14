@@ -51,9 +51,11 @@ void GetTimestamp() {
 
     for (; !quit;) {
         message_t signal_msg;
+        cout<<"recv"<<endl;
         signal.recv(&signal_msg);
+        cout<<"recvd"<<endl;
         memcpy(&timestamp, signal_msg.data(), sizeof(size_t));
-        //cout<<"timestamp "<<timestamp<<endl;
+        cout<<"timestamp "<<timestamp<<endl;
     }
 }
 
@@ -75,9 +77,6 @@ int main()
 
     socket_t supervisor(context, ZMQ_REQ);
     supervisor.connect("ipc:///tmp/supervisor.pipe");
-
-    subscriber.connect("ipc:///tmp/kinecthand.pipe");
-    subscriber.setsockopt(ZMQ_SUBSCRIBE, "", 0);
 
     thread getTime(GetTimestamp);
 

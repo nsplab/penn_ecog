@@ -25,10 +25,12 @@ print('Press ESC in window to stop')
 prev_point = np.array([0, 0, 0])
 first_iter = True
 
+
 def raw_depth_to_meters(depth):
     if depth < 2047:
-        return 1.0/(float(depth) * -0.0030711016 + 3.3309495161)
+        return 1.0 / (float(depth) * -0.0030711016 + 3.3309495161)
     return 0.0
+
 
 def kinect_to_world(x, y, z):
     fx_d = 1.0 / 5.9421434211923247e+02
@@ -42,6 +44,7 @@ def kinect_to_world(x, y, z):
     zz = float(depth)
 
     return xx, yy, zz
+
 
 # retrive the next rgb video frame
 def get_video():
@@ -64,6 +67,7 @@ alpha = 0.5
 tx = 0
 ty = 0
 tz = 0
+
 
 # retrive the next depth video frame
 def get_depth_raw():

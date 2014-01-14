@@ -9,7 +9,7 @@ import zmq
 # to capture the kill signal and terminate the process gracefully
 import signal
 
-# provides th function to reinitialize the hand and target positions
+# provides the function to reinitialize the hand and target positions
 import setpos
 
 # contains the configuration parameters
@@ -32,7 +32,7 @@ ssocket.bind("ipc:///tmp/supervisor.pipe")
 
 # socket to publish state to graphics modules
 gsocket = context.socket(zmq.PUB)
-gsocket.setsockopt(zmq.HWM, 1)
+#gsocket.setsockopt(zmq.HWM, 1)
 gsocket.bind("ipc:///tmp/graphics.pipe")
 
 # parameters
@@ -61,6 +61,7 @@ trialTimeout = 8  # seconds
 if config.trackingMode:
     trialTimeout = 100
 
+
 def StartNewTrial():
     global goal_is_ball, trialTimeoutThread, run
     global gameState, filterState
@@ -76,7 +77,7 @@ def StartNewTrial():
 
 timestamp = 0
 
-filename = 'supervisor_event_%s.txt'%datetime.datetime.utcnow().strftime("%Y-%m-%d-%H%M%S")
+filename = 'supervisor_event_%s.txt' % datetime.datetime.utcnow().strftime("%Y-%m-%d-%H%M%S")
 f = open(filename, 'w')
 
 # main loop
@@ -94,7 +95,7 @@ while run:
     vec_str = ssocket.recv()
     print 'vec_str ', vec_str
     vec = vec_str.split(" ")
-    if vec[0] != "no":
+    if vec[0] != "pass":
         if config.trackingMode:
             timestamp = long(vec[0])
             gameState.hand_pos[0] = float(vec[1])
@@ -103,10 +104,11 @@ while run:
                 #gameState.hand_pos[2] = float(vec[3])
             print timestamp
         else:
+            timestamp = long(vec[0])
             #gameState.hand_pos[2] += float(vec[1])
-            filterState.hand_pos[0] = float(vec[0])
-            filterState.hand_pos[1] = float(vec[1])
-            filterState.hand_pos[2] = float(vec[1])
+            filterState.hand_pos[0] = float(vec[1])
+            filterState.hand_pos[1] = float(vec[2])
+            filterState.hand_pos[2] = float(vec[3])
 
     if gameState.updateState():
         # a new trial started

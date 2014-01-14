@@ -45,6 +45,7 @@ void FilterClass::GrabFeatures() {
 
 void FilterClass::SendHandPosGetState(const vector<float>& hand_movement) {
     stringstream message;
+    message<<featureTimestamp_<<" ";
     for (vector<float>::const_iterator it=hand_movement.begin();
          it<hand_movement.end(); it++) {
       message<<*it<<" ";
@@ -58,7 +59,7 @@ void FilterClass::SendHandPosGetState(const vector<float>& hand_movement) {
     // receive data from supervisor
     zmq::message_t supervisor_msg;
     supervisor_.recv(&supervisor_msg);
-    // convert reveived data into c++ string/sstream
+    // convert received data into c++ string/sstream
     string feat_str;
     feat_str.resize(supervisor_msg.size(),'\0');
     feat_str.assign((char *)supervisor_msg.data(),supervisor_msg.size());

@@ -43,6 +43,7 @@ public:
   ~Fft();
   void AddPoints(std::vector<T>& p);
   bool Process();
+  unsigned GetBin(unsigned f) { return(f / (float(frq)/windowSize)); }
   void GetPower(std::vector<std::vector<T> >& pow);
   void GetPowerOneVec(Eigen::VectorXf& pow);
   void GetPhase(std::vector<std::vector<T> >& pha, std::vector<T>* phaseShift=NULL);
@@ -59,6 +60,7 @@ private:
   windowFunc winf;
   double winFuncSum;
   size_t frq;
+  size_t windowSize;
   std::vector<T*> tapers;
   std::vector<T> tapersWeights;
   static const std::string dpssVectors;
@@ -82,10 +84,15 @@ const std::unordered_map<std::string, Fft<float>::windowFunc> Fft<T>::winTypeMap
 template<class T>
 Fft<T>::Fft(size_t winSize, windowFunc winf_, size_t frq_, size_t numChannels,
             size_t numTapers) :
-  winf(winf_), frq(frq_) {
-  fftwf_init_threads();
+  windowSize(winSize), winf(winf_), frq(frq_) {
+  int okay = fftwf_init_threads();
+  if (okay == 0) {
+      std::cout<<"error in thread initilization"<<std::endl;
+  }
+  omp_set_dynamic(false);
+  omp_set_num_threads(6);
   //fftw_plan_with_nthreads(omp_get_max_threads());
-  fftwf_plan_with_nthreads(1);
+  fftwf_plan_with_nthreads(4);
   out = (fftwf_complex *)fftwf_malloc(sizeof(fftwf_complex) * ((winSize/2)+1) );
   in = (T*)fftwf_malloc(sizeof(T) * winSize);
   inTmp = (T*)fftwf_malloc(sizeof(T) * winSize);
@@ -224,6 +231,7 @@ void Fft<T>::GetPower(std::vector<std::vector<T> >& pow) {
   for (size_t sig=0; sig<buffer.size(); sig++) {
     for (size_t i = 0; i < nc; i++) {
       pow[sig][i] = sqrt(outVec[sig][i][0]*outVec[sig][i][0] + outVec[sig][i][1]*outVec[sig][i][1]);
+      //std::cout<<"pow: "<<pow[sig][i]<<std::endl;
       pow[sig][i] *= winFuncSum;
     }
   }

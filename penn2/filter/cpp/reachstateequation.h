@@ -23,7 +23,7 @@ public:
     RSEMatrixStruct answer_;
     RSEMatrixStruct returnAnswer(){return answer_;}
 private:
-    static const double timeBin = 0.01;
+    const double timeBin = 0.01;
 };
 
 class timeInvariantRSE
@@ -42,7 +42,7 @@ public:
     RSEMatrixStruct answer_;
     RSEMatrixStruct returnAnswer(){return answer_;}
 private:
-    static const double timeBin = 0.01;
+    const double timeBin = 0.01;
 };
 
 #endif // REACHSTATEEQUATION_H
