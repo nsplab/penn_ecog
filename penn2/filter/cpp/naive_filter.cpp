@@ -46,20 +46,23 @@ void NaiveFilter::Update() {
     handPos_[1] += vely;
     handPos_[2] += velz;*/
 
-    ewmaValues[0] = alpha_ * features_[0] + (1.0 - alpha_) * ewmaValues[0];
+    //ewmaValues[0] = alpha_ * (features_[0] - means[0]) + (1.0 - alpha_) * ewmaValues[0];
 
-    double velx = double(features_[0] - means[0]) / (3.0 * sqrt(ewmaVariances[0]));
-    double vely = double(features_[1] - means[1]) / (3.0 * sqrt(ewmaVariances[1]));
-    double velz = double(features_[2] - means[2]) / (3.0 * sqrt(ewmaVariances[2]));
+    //double velx = double(features_[0] - means[0]) / (3.0 * sqrt(ewmaVariances[0]));
+    float scaleX = scale_;
+    float meanX = 39.7484;
+    double velx = double(features_[0] - meanX) * scaleX;
+    double vely = 0; //double(features_[1] - means[1]) / (3.0 * sqrt(ewmaVariances[1]));
+    double velz = 0; //double(features_[2] - means[2]) / (3.0 * sqrt(ewmaVariances[2]));
 
-    cout<<"features_[0] - means[0] "<<double(features_[0] - means[0])<<endl;
+    //cout<<"features_[0] - means[0] "<<double(features_[0] - means[0])<<endl;
 
     cout<<"velx "<<velx<<endl;
     cout<<"vely "<<vely<<endl;
     cout<<"velz "<<velz<<endl;
 
-    cout<<"features_[0]  "<<features_[0]<<endl;
-    cout<<"mean: "<<means[0]<<"  var: "<<ewmaVariances[0]<<endl;
+    //cout<<"features_[0]  "<<features_[0]<<endl;
+    //cout<<"mean: "<<means[0]<<"  var: "<<ewmaVariances[0]<<endl;
 
     handPos_[0] = velx;
     handPos_[1] = vely;
@@ -82,6 +85,8 @@ void NaiveFilter::Run() {
     }
     ewmaVariances.resize(variances.size());
     updateEwmaVariances();
+
+    ewmaValues.resize(3, 0);
 
   for (;;) {
       if (updated) {

@@ -33,7 +33,9 @@ void FilterClass::GrabFeatures() {
 
   cout<<"vec size: "<<vec_size<<endl;
 
-  features_.resize(vec_size);
+  if (features_.size() != vec_size) {
+    features_.resize(vec_size);
+  }
   memcpy(features_.data(), static_cast<size_t*>(features_msg.data())+1, vec_size * sizeof(float));
 
   cout<<"features: ";

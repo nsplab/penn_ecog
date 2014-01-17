@@ -81,22 +81,22 @@ void GenerateSignal() {
 
         // change this to above baseline threshold (3 times variance + mean) : + velocity otherwise - velocity
 
-        cout<<"v0 "<<v(0)<<endl;
-        cout<<"v1 "<<v(1)<<endl;
-        cout<<"v2 "<<v(2)<<endl;
+        //cout<<"v0 "<<v(0)<<endl;
+        //cout<<"v1 "<<v(1)<<endl;
+        //cout<<"v2 "<<v(2)<<endl;
 
-        sample(0) = cos(2.0*M_PI * float(i)/float(samplingRate) * xSignalFrq) * xSignalAmp * sqrt(dx+baselinePower + v(0) * noiseToSignalRatio);
-        sample(1) = cos(2.0*M_PI * float(i)/float(samplingRate) * ySignalFrq) * ySignalAmp * sqrt(dy+baselinePower + v(1) * noiseToSignalRatio);
-        sample(2) = cos(2.0*M_PI * float(i)/float(samplingRate) * zSignalFrq) * zSignalAmp * sqrt(dz+baselinePower + v(2) * noiseToSignalRatio);
+        sample(0) = cos(2.0*M_PI * float(i)/float(samplingRate) * xSignalFrq) * xSignalAmp * sqrt(dx+baselinePower);// + v(0) * noiseToSignalRatio);
+        sample(1) = cos(2.0*M_PI * float(i)/float(samplingRate) * ySignalFrq) * ySignalAmp * sqrt(dy+baselinePower);// + v(1) * noiseToSignalRatio);
+        sample(2) = cos(2.0*M_PI * float(i)/float(samplingRate) * zSignalFrq) * zSignalAmp * sqrt(dz+baselinePower);// + v(2) * noiseToSignalRatio);
 
         signal = mixingMatrix * sample;
-        cout<<"signal: "<<signal<<endl;
-        cout<<"numberOfChannels "<<numberOfChannels<<endl;
-        cout<<"t: "<<timeStamp<<endl;
+        //cout<<"signal: "<<signal<<endl;
+        //cout<<"numberOfChannels "<<numberOfChannels<<endl;
+        //cout<<"t: "<<timeStamp<<endl;
 
         //message_t zmqMessage(sizeof(float)*numberOfChannels+sizeof(size_t));
         message_t zmqMessage(sizeof(float)*numberOfChannels+sizeof(size_t));
-        memcpy(zmqMessage.data(), &timeStamp, sizeof(size_t)*1);
+        memcpy(zmqMessage.data(), &timeStamp, sizeof(size_t));
         memcpy(static_cast<size_t*>(zmqMessage.data())+1, signal.data(), sizeof(float)*numberOfChannels);
         //memcpy(static_cast<size_t*>(zmqMessage.data())+1, tsignal.data(), sizeof(float)*60);
 
@@ -158,7 +158,9 @@ int main()
         ss >> handPos[0];ss >> handPos[1];ss >> handPos[2];
 
         ss >> currentTrial;
-        if (currentTrial != prevTrial) {
+        // RSE control
+        /*
+         *if (currentTrial != prevTrial) {
             cout<<"new trial"<<endl;
             arma::mat reachTarget = arma::zeros<arma::mat>(6, 1);
             reachTarget<<target[0]<<arma::endr<<target[1]<<arma::endr<<target[2]<<arma::endr<<0<<arma::endr<<0<<arma::endr<<0<<arma::endr;
@@ -179,8 +181,11 @@ int main()
         }
 
         cout<<"timeStep "<<timeStep<<endl;
-        handState = rseParams.F.slice(timeStep) * handState + /*randomNoise +*/ rseParams.b.slice(timeStep);
-        timeStep++;
+        handState = rseParams.F.slice(timeStep) * handState + // randomNoise +
+                    rseParams.b.slice(timeStep);
+        if (timeStep < (maxTimeSteps-1)) {
+            timeStep++;
+        }
         x = handState(0); y = handState(1); z = handState(2);
 
         diffx = handState(3);//x - prevx;
@@ -194,6 +199,13 @@ int main()
 
         cout<<"handState: "<<handState<<endl;
         cout<<"target: "<<target[0]<<" "<<target[1]<<" "<<target[2]<<endl;
+        cout<<"currentTrial: "<<currentTrial<<endl;
+        */ // RSE control
+
+
+        // time-invariant control
+        diffx = (target[0] - handPos[0]) / 10.0;
+        cout<<"diffx "<<diffx<<endl;
 
         this_thread::sleep_for(chrono::microseconds(static_cast<int>(timeBin * 1000000.0)));
     }

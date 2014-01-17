@@ -133,6 +133,8 @@ int main(int argc, char** argv)
     // if running in the baseline mode feature statistics are collected and stored in a text file
     boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::variance> > acc[rows.size()];
 
+    ofstream dataLogFile("datalog.txt");
+
     size_t counter = 0;
     while (!quit) {
         message_t signal;
@@ -191,12 +193,16 @@ int main(int argc, char** argv)
                     if (baseline == 1) {
                         acc[ch](pwr);
                     }
-                    //cout<<"ch: "<<ch<<" pwr:"<<pwr<<"\t";
+                    cout<<"ch: "<<ch<<" pwr:"<<pwr<<"\t";
                 }
-                //cout<<endl;
+                cout<<endl;
 
-                message_t zmq_message(rows.size() * sizeof(float));
-                memcpy(zmq_message.data(), pwrFeature.data(), zmq_message.size());
+                dataLogFile<<pwrFeature[0]<<endl;
+
+                // should add the timestamp to the feature message
+                message_t zmq_message(numFeatureChannels * sizeof(float) + sizeof(size_t));
+                memcpy(zmq_message.data(), &timestamp, sizeof(size_t));
+                memcpy(static_cast<size_t*>(zmq_message.data())+1, pwrFeature.data(), zmq_message.size());
                 publisher.send(zmq_message);
 
                 end = std::chrono::system_clock::now();
@@ -288,6 +294,7 @@ int main(int argc, char** argv)
             //publisher.send(featuesMsg);
         //}
     }
+    dataLogFile.close();
 
     cout<<"stats"<<endl;
     if (baseline == 1) {
