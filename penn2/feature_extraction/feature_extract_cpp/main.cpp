@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <string.h>
-#include <iomanip>>
+#include <iomanip>
 #include <fstream>
 
 #include <signal.h>
@@ -16,6 +16,7 @@
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/variance.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/tail_quantile.hpp>
 
 #include "GetPot.h"
 #include "../../libs/stft/fft.h"
@@ -24,6 +25,9 @@
 using namespace std;
 using namespace zmq;
 using namespace Eigen;
+
+typedef boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::tail_quantile<boost::accumulators::right> > > accumulator_t_right;
+typedef boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::tail_quantile<boost::accumulators::left> > > accumulator_t_left;
 
 int parsConfig(string& signalConfig, string& matrixFile, size_t& fftWinSize,
                size_t& fftWinType, size_t& outputRate, string& spatialFilterFile,
@@ -45,6 +49,20 @@ void signal_callback_handler(int signum) {
 
 int main(int argc, char** argv)
 {
+
+    time_t rawtime;
+    time(&rawtime);
+    char nameBuffer[40];
+    tm * ptm = localtime(&rawtime);
+    strftime(nameBuffer, 24, "%a_%d.%m.%Y_%H:%M:%S.txt", ptm);
+    string dataFilename = string("baselineData_")+string(nameBuffer);
+    ofstream baselineDataFile(dataFilename);
+    ofstream baselineDataFileCopy("baselineData.txt");
+
+    baselineDataFile.precision(10);
+    baselineDataFileCopy.precision(10);
+
+
     signal(SIGINT, signal_callback_handler);
 
     string signalConfig;
@@ -102,7 +120,7 @@ int main(int argc, char** argv)
     unsigned binFrom = fft.GetBin(frqRangeFrom);
     unsigned binTo = fft.GetBin(frqRangeTo);
 
-    context_t context(2);
+    context_t context(3);
     socket_t publisher(context, ZMQ_PUB);
     socket_t subscriber(context, ZMQ_SUB);
     publisher.bind("ipc:///tmp/features.pipe");
@@ -119,7 +137,7 @@ int main(int argc, char** argv)
 
     unsigned freqRange = fftWinSizeSamples / 2 + 1;
     vector<vector<float> > powers(numFeatureChannels);
-    for (unsigned i=0; i<numChannels; i++) {
+    for (unsigned i=0; i<numFeatureChannels; i++) {
         powers[i].resize(freqRange);
     }
 
@@ -128,10 +146,14 @@ int main(int argc, char** argv)
 
     Decimate decimater(numChannels);
 
-    MatrixXf spatialFilteredChannels(numChannels, 1);
+    MatrixXf spatialFilteredChannels(numFeatureChannels, 1);
 
     // if running in the baseline mode feature statistics are collected and stored in a text file
-    boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::variance> > acc[rows.size()];
+    boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::variance> > acc[numFeatureChannels];
+    const int c = 10000;
+    accumulator_t_right accRight( boost::accumulators::tag::tail<boost::accumulators::right>::cache_size = c );
+    accumulator_t_left accLeft( boost::accumulators::tag::tail<boost::accumulators::left>::cache_size = c );
+
 
     ofstream dataLogFile("datalog.txt");
 
@@ -166,6 +188,9 @@ int main(int argc, char** argv)
                 counter ++;
             //}
 
+            /// TODO: FIXME
+            // baseline assume first feature is the one we want
+
             MatrixXf decVec(numChannels,1);
             decVec = Map<MatrixXf>(decimatedPoints.data(), numChannels, 1);
             spatialFilteredChannels = spatialFilterMx * decVec;
@@ -194,6 +219,11 @@ int main(int argc, char** argv)
                         acc[ch](pwr);
                     }
                     cout<<"ch: "<<ch<<" pwr:"<<pwr<<"\t";
+                }
+
+                if (baseline == 1) {
+                    baselineDataFile<<pwrFeature[0]<<endl;
+                    baselineDataFileCopy<<pwrFeature[0]<<endl;
                 }
                 cout<<endl;
 
@@ -313,12 +343,13 @@ int main(int argc, char** argv)
         baselineFile.precision(10);
         baselineFileCopy.precision(10);
 
-        for (unsigned ch=0; ch<rows.size(); ch++) {
+        for (unsigned ch=0; ch<numFeatureChannels; ch++) {
             baselineFile<<boost::accumulators::mean(acc[ch])<<" ";
             baselineFile<<boost::accumulators::variance(acc[ch])<<endl;
             baselineFileCopy<<boost::accumulators::mean(acc[ch])<<" ";
             baselineFileCopy<<boost::accumulators::variance(acc[ch])<<endl;
         }
+        cout<<"files are written"<<endl;
     }
 
     return 0;

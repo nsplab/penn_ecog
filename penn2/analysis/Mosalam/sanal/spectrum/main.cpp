@@ -135,7 +135,7 @@ class audioInput {
     pause = false;
     channels = 1;             // mono
     bytes_per_frame = 2 * channels;      // 16-bit
-    req_rate = 44100;         // audio sampling rate in Hz
+    req_rate = 256;         // audio sampling rate in Hz
     frames_per_period = (int)(req_rate/60.0);   // 735 = 44100Hz/60fps assumed
     nperiods = 2;             // >=2, see ALSA manual
     t_memory = 20.0;            // memory of our circular buffer in secs
@@ -157,7 +157,7 @@ class audioInput {
     setupWindowFunc(winf, win_size);    // windowing function
      // set up fast in-place single-precision real-to-half-complex DFT:
     fftw_p = fftwf_plan_r2r_1d(win_size, bwin, bwin, FFTW_R2HC, FFTW_MEASURE);
-    n_f = 560;  // # freqs   ...spectrogram stuff
+    n_f = 120;  // # freqs   ...spectrogram stuff
     specslice = new float[n_f];
     n_tw = 940; // # time windows: should be multiple of 4 for glDrawPixels
     sg_size = n_f * n_tw;
@@ -761,7 +761,7 @@ int main(int argc, char** argv)
   verb = 0;          // 0 silent, 1 debug, etc
   scn.scroll_fac = 2;    // how many vSyncs to wait before scrolling sg
   param.windowtype = 2;  // Gaussian
-  param.twowinsize = 13; // 8192 samples (around 0.19 sec). Remains fixed
+  param.twowinsize = 7; // 8192 samples (around 0.19 sec). Remains fixed
 
   for (int i=1; i<argc; ++i) {  // .....Parse cmd line options....
     if (!strcmp(argv[i], "-f"))  // option -f makes full screen

@@ -40,6 +40,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.*/
 #include <osg/NodeVisitor>
 #include <osg/ShapeDrawable>
 #include <osgFX/Effect>
+#include <osgFX/Cartoon>
+
+#include <osgText/Font>
+#include <osgText/Text>
 
 #include <osgParticle/ParticleSystemUpdater>
 #include <osgParticle/ModularEmitter>
@@ -69,22 +73,22 @@ osgParticle::ParticleSystem* createFireParticles(
     ps->getDefaultParticleTemplate().setShape(
     osgParticle::Particle::QUAD );
     ps->getDefaultParticleTemplate().setSizeRange(
-    osgParticle::rangef(1.0f, 0.1f) );
+    osgParticle::rangef(0.5f, 0.05f) );
     ps->getDefaultParticleTemplate().setAlphaRange(
-    osgParticle::rangef(1.0f, 0.5f) );
+    osgParticle::rangef(0.6f, 0.1f) );
     ps->getDefaultParticleTemplate().setColorRange(
     osgParticle::rangev4(osg::Vec4(0.1f,0.3f,0.4f,1.0f),
-    osg::Vec4(0.0f,0.4f,0.4f,1.0f)) );
+    osg::Vec4(0.0f,0.1f,0.3f,0.5f)) );
     ps->setDefaultAttributes("smoke.rgb", true, false );
 
     osg::ref_ptr<osgParticle::RandomRateCounter> rrc =
     new osgParticle::RandomRateCounter;
-    rrc->setRateRange( 30, 50 );
+    rrc->setRateRange( 5, 20 );
     osg::ref_ptr<osgParticle::RadialShooter> shooter =
     new osgParticle::RadialShooter;
-    shooter->setThetaRange( -osg::PI_4/2.0, osg::PI_4/2.0 );
-    shooter->setPhiRange( -osg::PI_4/2.0, osg::PI_4/2.0 );
-    shooter->setInitialSpeedRange( 5.0f, 7.5f );
+    shooter->setThetaRange( -osg::PI_4/3.0, osg::PI_4/3.0 );
+    shooter->setPhiRange( -osg::PI_4/3.0, osg::PI_4/3.0 );
+    shooter->setInitialSpeedRange( 1.0f, 6.5f );
 
     osg::ref_ptr<osgParticle::ModularEmitter> emitter =
     new osgParticle::ModularEmitter;
@@ -222,7 +226,13 @@ osg::Geode* createMeshCube(float scale = 5.0f, float depth = 5.0f)
     geometry->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::LINES, 0, vertices->size()-1));
     geometry->getOrCreateStateSet()->setMode(GL_LIGHTING, false);
 
+    osg::LineWidth* linewidth = new osg::LineWidth();
+    linewidth->setWidth(2.0f);
+
     geode->addDrawable(geometry);
+
+    geode->getOrCreateStateSet()->setAttributeAndModes(linewidth, osg::StateAttribute::ON);
+
 
     return geode;
 }
@@ -392,6 +402,10 @@ int main()
     // root of scene graph
     osg::ref_ptr<osg::Group> root = new osg::Group();
 
+    osg::ref_ptr<osgFX::Cartoon> cartoon = new osgFX::Cartoon;
+    cartoon->setOutlineColor(osg::Vec4(0.0, 0.0, 0.0, 1.0f));
+    cartoon->setOutlineLineWidth(2.0);
+
     // load upper arm model
     osg::ref_ptr<osg::Node> upperArm = osgDB::readNodeFile("./upper_arm.3ds");
 
@@ -423,7 +437,8 @@ int main()
 
     osg::ref_ptr<TransparencyNode> fxNode = new TransparencyNode;
     fxNode->addChild(patUpperArm);
-    root->addChild(fxNode);
+    cartoon->addChild(fxNode);
+    //root->addChild(fxNode);
 
     //root->addChild(createAxis());
     root->addChild(createMeshCube());
@@ -437,7 +452,7 @@ int main()
     windows[0]->setWindowName("3D Env");
 
     visor.setCameraManipulator(new osgGA::TrackballManipulator);
-    visor.getCamera()->setClearColor(osg::Vec4(0.8f,0.8f,0.8f,1.0f));
+    visor.getCamera()->setClearColor(osg::Vec4(0.9f,0.9f,0.9f,1.0f));
 
     // set initial position of the camera
     osg::Matrixd m(1, 0, 0, 0,
@@ -503,7 +518,8 @@ int main()
     currentCubeDrawable->setUseDisplayList(false);
     osg::Geode* basicShapesGeode = new osg::Geode();
     basicShapesGeode->addDrawable(currentCubeDrawable);
-    root->addChild(basicShapesGeode);
+    //root->addChild(basicShapesGeode);
+    cartoon->addChild(basicShapesGeode);
 
     osg::Box* nextCube = new osg::Box(osg::Vec3(2.5,0.5,-2.0), 5, 0.5, 0.5);
     osg::ShapeDrawable* nextCubeDrawable = new osg::ShapeDrawable(nextCube);
@@ -511,16 +527,16 @@ int main()
     nextCubeDrawable->setUseDisplayList(false);
     osg::Geode* nextShapesGeode = new osg::Geode();
     nextShapesGeode->addDrawable(nextCubeDrawable);
-    root->addChild(nextShapesGeode);
+    //root->addChild(nextShapesGeode);
+    cartoon->addChild(nextShapesGeode);
+    root->addChild(cartoon);
 
     GuiKeyboardEventHandler* guiEventHandler = new GuiKeyboardEventHandler();
     visor.addEventHandler(guiEventHandler);
 
-    osg::ref_ptr<osg::MatrixTransform> parent =
-    new osg::MatrixTransform;
-    parent->setMatrix( osg::Matrix::rotate(
-    osg::PI_2, osg::Y_AXIS) * osg::Matrix::translate(
-    8.0f,-10.0f,-3.0f) );
+    osg::ref_ptr<osg::MatrixTransform> parent = new osg::MatrixTransform;
+    parent->setMatrix(osg::Matrix::rotate(osg::PI_2, osg::Y_AXIS)
+                      * osg::Matrix::translate(0.0f,0.0f,0.0f));
 
     osgParticle::ParticleSystem* fire = createFireParticles(parent.get() );
 
@@ -533,13 +549,27 @@ int main()
 
     osg::ref_ptr<osg::Switch> fireSwitch = new osg::Switch;
     fireSwitch->addChild(parent.get(), false);
-    fireSwitch->addChild( updater.get(), true );
-    fireSwitch->addChild( geode.get(), true );
+    fireSwitch->addChild(updater.get(), true);
+    fireSwitch->addChild(geode.get(), true);
 
     root->addChild(fireSwitch);
 
-    fireSwitch->
+    //fireSwitch->setAllChildrenOff();
 
+    osg::ref_ptr<osgText::Font> g_font = osgText::readFontFile("Ubuntu-B.ttf");
+
+    osg::ref_ptr<osg::Geode> textGeode = new osg::Geode;
+    osg::ref_ptr<osgText::Text> scoreText = createText(
+                                            osg::Vec3(10.0f, 10.0f, 0.0f),
+                                            "Score: 0", 80.0f, g_font);
+    textGeode->addDrawable(scoreText);
+    osg::Camera* camera = createHUDCamera(0, 1024, 0, 768);
+    camera->addChild( textGeode.get() );
+    camera->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF );
+    root->addChild( camera );
+
+    float score = 0;
+    float prevScore = 0;
     while ( !visor.done()){
 
         cout<<"send"<<endl;
@@ -563,6 +593,8 @@ int main()
         float nextBlockStart = 0.0;
         float nextBlockX, nextBlockY, nextBlockZ;
         float handPos[3];
+        float tmp;
+        float blockWidth;
 
         float timeScale = 0.4;
 
@@ -577,14 +609,30 @@ int main()
             ss>>nextBlockX;
             ss>>nextBlockY;
             ss>>nextBlockZ;
+            ss>>blockWidth;
             ss>>handPos[0];
             ss>>handPos[1];
             ss>>handPos[2];
+            ss>>tmp;
+            ss>>tmp;
+            ss>>tmp;
+            ss>>score;
+
+            scoreText->setText(string("Score: ") + to_string((int)score));
+
+            if (score > prevScore) {
+                fireSwitch->setChildValue(parent.get(), true);
+                prevScore = score;
+                parent->setMatrix(osg::Matrix::rotate(osg::PI_2, osg::Y_AXIS)
+                                  * osg::Matrix::translate(4.4, 2.5 + currentBlockX, -2.0));
+            } else {
+                fireSwitch->setChildValue(parent.get(), false);
+            }
 
             currentCube->setCenter(osg::Vec3(5.0 - (currentBlockLen)/2.0 * timeScale, 2.5 + currentBlockX, -2.0));
-            currentCube->setHalfLengths(osg::Vec3((currentBlockLen)/2.0 * timeScale,0.25,0.25));
+            currentCube->setHalfLengths(osg::Vec3((currentBlockLen)/2.0 * timeScale,blockWidth/2.0, blockWidth/2.0));
             nextCube->setCenter(osg::Vec3(5.0 - nextBlockStart * timeScale - (nextBlockLen)/2.0 * timeScale, 2.5 + nextBlockX, -2.0));
-            nextCube->setHalfLengths(osg::Vec3((nextBlockLen)/2.0 * timeScale,0.25,0.25));
+            nextCube->setHalfLengths(osg::Vec3((nextBlockLen)/2.0 * timeScale,blockWidth/2.0, blockWidth/2.0));
 
             target(0) = 5.0;
             target(1) = 2.5 + handPos[0];

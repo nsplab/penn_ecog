@@ -15,10 +15,13 @@
 
 using namespace std;
 
+
 NaiveFilter::NaiveFilter(float featureRate){
   featureRate_ = featureRate;
-  alpha_ = 0.9;
-  scale_ = 5.0;
+  gamma_ = 0.5;
+  scale_ = 0.001;
+  q5_ = 0.0;
+  q95_ = 0.0;
 }
 
 void NaiveFilter::Predict() {
@@ -51,9 +54,26 @@ void NaiveFilter::Update() {
     //double velx = double(features_[0] - means[0]) / (3.0 * sqrt(ewmaVariances[0]));
     float scaleX = scale_;
     float meanX = 39.7484;
-    double velx = double(features_[0] - meanX) * scaleX;
+
+    if (features_[0] < (3.0 * sqrt(ewmaVariances[0])) )  {
+        if (features_[0] > (-3.0 * sqrt(ewmaVariances[0])) ) {
+            features_[0] = 0.0;
+        }
+    }
+
+    ewmaValues[0] = (1.0 - gamma_) * ewmaValues[0] + gamma_ * double(features_[0] - means[0]);
+
+    double velx = scaleX * ewmaValues[0]; //double(features_[0] - means[0]) * scaleX;
     double vely = 0; //double(features_[1] - means[1]) / (3.0 * sqrt(ewmaVariances[1]));
     double velz = 0; //double(features_[2] - means[2]) / (3.0 * sqrt(ewmaVariances[2]));
+
+    // safty zone
+    if (ewmaValues[0] > q5_) {
+        if (ewmaValues[0] < q95_) {
+            velx = 0.0;
+        }
+    }
+
 
     //cout<<"features_[0] - means[0] "<<double(features_[0] - means[0])<<endl;
 
@@ -71,7 +91,6 @@ void NaiveFilter::Update() {
 
 void NaiveFilter::Run() {
     bool updated = false;
-    thread gui(&NaiveFilter::runGUI, this, ref(alpha_), ref(scale_), ref(updated));
 
     ifstream baseline("/home/user/code/penn2/penn/penn2/feature_extraction/feature_extract_cpp/build/baseline.txt");
     float mean, variance;
@@ -86,12 +105,18 @@ void NaiveFilter::Run() {
     ewmaVariances.resize(variances.size());
     updateEwmaVariances();
 
+    float q5=0;
+    float q95=0;
+    thread gui(&NaiveFilter::runGUI, this, ref(gamma_), ref(scale_), ref(updated), means[0]);
+
     ewmaValues.resize(3, 0);
 
   for (;;) {
       if (updated) {
           updated = false;
           updateEwmaVariances();
+          //q5_ = q5;
+          //q95_ = q95;
       }
 
       SendHandPosGetState(handPos_);
@@ -108,8 +133,8 @@ void NaiveFilter::Run() {
  *  \f]
  */
 void NaiveFilter::updateEwmaVariances() {
-    const float term1 = alpha_/(2.0-alpha_);
-    const float term2 = 1.0 - pow(1.0-alpha_, 1000000);
+    const float term1 = gamma_/(2.0-gamma_);
+    const float term2 = 1.0 - pow(1.0-gamma_, 1000000);
     for (unsigned i=0; i<ewmaVariances.size(); i++) {
         ewmaVariances[i] = variances[i] * term1 * term2 ;
     }
@@ -123,19 +148,37 @@ void NaiveFilter::updateEwmaVariances() {
  *   \param updated whether any of the values has been updated
  *
 */
-void NaiveFilter::runGUI(float& alpha, float& scale, bool& updated) {
+void NaiveFilter::runGUI(float& alpha, float& scale, bool& updated, float mean) {
+
+    using namespace boost;
+    using namespace boost::accumulators;
+
     char buffer[20];
     char bufferScale[20];
     snprintf(buffer, 20, "%f", alpha);
     snprintf(bufferScale, 20, "%f", scale);
     Fl_Window* w = new Fl_Window(0,0,330,190, "Static Filter");
     Fl_Button ok(110,130, 100, 35, "Update");
-    Fl_Input input(60, 40, 250, 25, "Alpha:");
-    Fl_Input inputScale(60, 80, 250, 25, "Scale:");
+    Fl_Input input(60, 40, 250, 25, "Kalman Gain:");
+    Fl_Input inputScale(60, 80, 250, 25, "Alpha:");
     input.value(buffer);
     inputScale.value(bufferScale);
     w->end();
     w->show();
+
+    // read the raw baseline data and run
+    // compute the 5% and 95% percentiles
+
+    vector<float> values;
+
+    // TODO: replace this with a parameter in the config file
+    ifstream baseline("/home/user/code/penn2/penn/penn2/feature_extraction/feature_extract_cpp/build/baselineData_Mon_20.01.2014_16:36:24");
+    float value = 0.0;
+    while (baseline) {
+        baseline>>value;
+        values.push_back(value);
+    }
+
 
     while (true) {
         Fl::wait();
@@ -146,6 +189,29 @@ void NaiveFilter::runGUI(float& alpha, float& scale, bool& updated) {
                 alpha = atof(buffer);
                 strcpy(bufferScale, inputScale.value());
                 scale = atof(bufferScale);
+
+                int c = values.size()-1;
+                accumulator_t_right accRight( boost::accumulators::tag::tail<boost::accumulators::right>::cache_size = c );
+                accumulator_t_left accLeft( boost::accumulators::tag::tail<boost::accumulators::left>::cache_size = c );
+
+                float svalue = values[0];
+                //vector<float> svalues;
+                for (unsigned i=1; i < values.size(); i++) {
+                    svalue = (1.0 - alpha) * svalue + alpha * double(values[i] - mean);
+                    //svalues.push_back(svalue);
+                    accRight(svalue);
+                    accLeft(svalue);
+                }
+
+                q95_ = quantile(accRight, quantile_probability = 0.95 );
+                q5_ = quantile(accLeft, quantile_probability = 0.05 );
+
+                //q95 = lq95;
+                //q5 = lq5;
+
+                cout<<"q95: "<<q95_<<endl;
+                cout<<"q5: "<<q5_<<endl;
+
                 updated = true;
             }
         }

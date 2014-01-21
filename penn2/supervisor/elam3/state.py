@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import time
+import math
 
 import config
 
@@ -38,19 +39,17 @@ class GameState(object):
         #add their thicknest to a list
         #add their position/altitude to a list
         startingTime = 10.0
-        blockLengthTime = 10.0  # seconds
-        restLengthTime = 10.0   # seconds
         # blockThickness = config.workspaceRadius / 8.0
         for x in range(0, 1000):
             self.startingTimes.append(startingTime)
             if (x % 2) == 0:
-                startingTime += restLengthTime
+                startingTime += config.restLengthTime
                 self.positions.append(-0.5 * config.workspaceRadius)
-                self.lengths.append(restLengthTime)
+                self.lengths.append(config.restLengthTime)
             else:
-                startingTime += blockLengthTime
-                self.positions.append(random.uniform(-0.5, 0.5) * config.workspaceRadius)
-                self.lengths.append(blockLengthTime)
+                startingTime += config.blockLengthTime
+                self.positions.append(random.uniform(-0.3, 0.3) * config.workspaceRadius)
+                self.lengths.append(config.blockLengthTime)
 
     def serializeBlocks(self):
         # based on current time advance among the blocks?
@@ -75,7 +74,8 @@ class GameState(object):
                        str(self.startingTimes[cBlock + 1] - self.accumTime) + " " +
                        str(self.lengths[cBlock + 1]) + " ")
             svalue += (str(self.positions[cBlock]) + " 0 0 " +
-                       str(self.positions[cBlock + 1]) + " 0 0")
+                       str(self.positions[cBlock + 1]) + " 0 0 ")
+            svalue += (str(config.blockWidth) + " ")
             self.box_pos = np.zeros(3)
             self.box_pos[0] = self.positions[cBlock]
         else:
@@ -83,11 +83,21 @@ class GameState(object):
                        str(self.startingTimes[cBlock + 1]) + " " +
                        str(self.lengths[cBlock + 1]))
             svalue += (" 0 0 0 " +
-                       str(self.positions[cBlock + 1]) + " 0 0")
+                       str(self.positions[cBlock + 1]) + " 0 0 ")
+            svalue += (str(config.blockWidth) + " ")
             self.box_pos = np.zeros(3)
 
         # update the score
-        #self.score +=
+        distanceHandToBlock = math.sqrt((self.box_pos[0] - self.hand_pos[0]) *
+                                        (self.box_pos[0] - self.hand_pos[0]) +
+                                        (self.box_pos[1] - self.hand_pos[1]) *
+                                        (self.box_pos[1] - self.hand_pos[1]) +
+                                        (self.box_pos[2] - self.hand_pos[2]) *
+                                        (self.box_pos[2] - self.hand_pos[2]))
+
+        if not self.pause:
+            if distanceHandToBlock < config.scoreDistanceThreshold:
+                self.score += config.scoreIncrement
 
         self.trial = cBlock
 
