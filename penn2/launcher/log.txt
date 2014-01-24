@@ -1,0 +1,14 @@
+Time: 2014/01/23 18:04:55
+Gender: Male
+Age: 21
+Dominant hand: Right-handed
+Grid Hemisphere: Left
+BCI channel: 5
+Inverted Power: No
+SamplingRate: 24414.0625
+Force Sensor Channel: 1
+Force Sensor in Hand: Right Hand
+SamplingRate: 24414.0625
+First ECoG Channel: 5
+Number of ECoG Channels: 32
+Action: Started BCI task

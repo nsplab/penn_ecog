@@ -32,6 +32,11 @@ class GameState(object):
         self.start_time = time.time()
         self.pause = True
         self.accumTime = 0.0
+        self.scoreRefTime = 0
+        self.scoreCurTime = 0
+        self.scorePlotRefTime = 0
+        self.scorePlot = -1
+        self.scorePrevPlot = 0
 
     def generateBlocks(self):
         #add their starting points in time to a list
@@ -80,12 +85,13 @@ class GameState(object):
             self.box_pos[0] = self.positions[cBlock]
         else:
             svalue += ("0 " +
-                       str(self.startingTimes[cBlock + 1]) + " " +
+                       str(self.startingTimes[cBlock + 1] - self.accumTime) + " " +
                        str(self.lengths[cBlock + 1]))
-            svalue += (" 0 0 0 " +
+            svalue += (" " + str(-config.workspaceRadius / 2.0) + " 0 5 " +
                        str(self.positions[cBlock + 1]) + " 0 0 ")
             svalue += (str(config.blockWidth) + " ")
             self.box_pos = np.zeros(3)
+            self.box_pos[2] = 15
 
         # update the score
         distanceHandToBlock = math.sqrt((self.box_pos[0] - self.hand_pos[0]) *
@@ -97,7 +103,24 @@ class GameState(object):
 
         if not self.pause:
             if distanceHandToBlock < config.scoreDistanceThreshold:
-                self.score += config.scoreIncrement
+                if cBlock > -1:
+                    if self.scoreRefTime > 0.0:
+                        self.score += config.scoreIncrement * (time.time() - self.scoreRefTime)
+                        print 'scoring'
+        if cBlock > -1:
+            self.scoreRefTime = time.time()
+            if self.scorePlotRefTime > 0.0:
+                if self.pause:
+                    self.scorePlotRefTime = time.time()
+                    self.scorePrevPlot = self.score
+                if (time.time() - self.scorePlotRefTime) > 60.0:
+                    self.scorePlot = (self.score - self.scorePrevPlot) / 60.0
+                    self.scorePrevPlot = self.score
+                    self.scorePlotRefTime = time.time()
+                else:
+                    self.scorePlot = -1
+            else:
+                self.scorePlotRefTime = time.time()
 
         self.trial = cBlock
 
@@ -113,7 +136,7 @@ class GameState(object):
                    str(self.box_pos[1]) + " " +
                    str(self.box_pos[2]) + " ")
         svalue += (str(self.score) + " " +
-                   str(self.level) + " " +
+                   str(self.scorePlot) + " " +
                    str(self.sublevel) + " " +
                    str(self.trial))
         return svalue
