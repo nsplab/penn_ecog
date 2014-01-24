@@ -128,13 +128,13 @@ int main(int argc, char** argv) {
     //Initializing ZMQ protocol that allows us to communicate between modules of the code
     context_t context(1);			//number of threads used by ZMQ
     socket_t publisher(context, ZMQ_PUB);	//socket used to broadcast data
-    uint64_t hwm = 1;				//hwm - high water mark - determines buffer size for
+    int hwm = 100;				//hwm - high water mark - determines buffer size for
     						//data passed through ZMQ. hwm = 1 makes the ZMQ buffer 
     						//size = 1. This means that if no module has accessed a
     						//value written through ZMQ, new values will be dropped
     						//until any module reads the value
-    publisher.setsockopt(ZMQ_HWM, &hwm, sizeof(hwm));
-    publisher.bind("ipc:///tmp/sig.pipe");	//gives address of data that other modules can reference
+    publisher.setsockopt(ZMQ_SNDHWM, &hwm, sizeof(hwm));
+    publisher.bind("ipc:///tmp/signal.pipe");	//gives address of data that other modules can reference
 						//ipc (interprocess communication) is a Linux standard
 						//for communication between programs, used by ZMQ
 						//Note that ZMQ also uses TCP or UDP, not preferred here
@@ -153,7 +153,7 @@ int main(int argc, char** argv) {
 
         numberOfSamples = card->samplesReady();  // how many samples are currently available for reading from the PO8e
 
-        if (numberOfSamples < 1)		//if no samples are ready, 
+        if (numberOfSamples < 1)		//if no samples are ready,
             continue;				//skip remaining code in the while loop and start a new cycle
 
             start = std::chrono::system_clock::now();
@@ -184,6 +184,7 @@ int main(int argc, char** argv) {
                 //if (timeStamp == 25000) {
                     //outb(0x0, lptDataBase);
                 //}
+                cout<<"number of channels: "<<card->numChannels()<<endl;
 	            cout<<"t: "<<timeStamp<<endl;	//every 50 timeStamps, print the timeStamp
 //            cout<<zmq_message.size()<<endl;			//
   	          cout<<numberOfSamples<<endl;			//and # of samples that were ready in the PO8e buffer

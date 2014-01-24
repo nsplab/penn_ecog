@@ -12,7 +12,7 @@ trackingMode = False
 workspaceRadius = 4.0
 
 # the width of the blocks
-blockWidth = workspaceRadius * 0.125
+blockWidth = workspaceRadius * 0.325
 
 # whether run the game in the continious mode: False
 # or at the rest blocks jump the hand to the origin, assuming we cannot have negative velocity: True
@@ -20,10 +20,10 @@ jumpetoStart = True
 
 
 # threshold on the distance between the hand and cube to increase score
-scoreDistanceThreshold = workspaceRadius * 0.125
+scoreDistanceThreshold = blockWidth
 
 # amount of score to be added per frame/iteration when the hand is close enough to the target block
-scoreIncrement = 0.04
+scoreIncrement = 1.0
 
 # length of the rest block in seconds
 blockLengthTime = 10.0

@@ -68,11 +68,11 @@ void NaiveFilter::Update() {
     double velz = 0; //double(features_[2] - means[2]) / (3.0 * sqrt(ewmaVariances[2]));
 
     // safty zone
-    if (ewmaValues[0] > q5_) {
+    /*if (ewmaValues[0] > q5_) {
         if (ewmaValues[0] < q95_) {
             velx = 0.0;
         }
-    }
+    }*/
 
 
     //cout<<"features_[0] - means[0] "<<double(features_[0] - means[0])<<endl;
@@ -171,13 +171,14 @@ void NaiveFilter::runGUI(float& alpha, float& scale, bool& updated, float mean) 
 
     vector<float> values;
 
+    // safty zone
     // TODO: replace this with a parameter in the config file
-    ifstream baseline("/home/user/code/penn2/penn/penn2/feature_extraction/feature_extract_cpp/build/baselineData_Mon_20.01.2014_16:36:24");
+    /*ifstream baseline("/home/user/code/penn2/penn/penn2/feature_extraction/feature_extract_cpp/build/");
     float value = 0.0;
     while (baseline) {
         baseline>>value;
         values.push_back(value);
-    }
+    }*/
 
 
     while (true) {
@@ -190,11 +191,12 @@ void NaiveFilter::runGUI(float& alpha, float& scale, bool& updated, float mean) 
                 strcpy(bufferScale, inputScale.value());
                 scale = atof(bufferScale);
 
-                int c = values.size()-1;
+                /*int c = values.size()-1;
                 accumulator_t_right accRight( boost::accumulators::tag::tail<boost::accumulators::right>::cache_size = c );
                 accumulator_t_left accLeft( boost::accumulators::tag::tail<boost::accumulators::left>::cache_size = c );
 
-                float svalue = values[0];
+                // safty zone
+                /*float svalue = values[0];
                 //vector<float> svalues;
                 for (unsigned i=1; i < values.size(); i++) {
                     svalue = (1.0 - alpha) * svalue + alpha * double(values[i] - mean);
@@ -206,11 +208,13 @@ void NaiveFilter::runGUI(float& alpha, float& scale, bool& updated, float mean) 
                 q95_ = quantile(accRight, quantile_probability = 0.95 );
                 q5_ = quantile(accLeft, quantile_probability = 0.05 );
 
+
                 //q95 = lq95;
                 //q5 = lq5;
 
                 cout<<"q95: "<<q95_<<endl;
                 cout<<"q5: "<<q5_<<endl;
+                */
 
                 updated = true;
             }

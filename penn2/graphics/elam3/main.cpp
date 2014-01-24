@@ -99,8 +99,97 @@ osgParticle::ParticleSystem* createFireParticles(
     return ps.get();
 }
 
-osg::Geode* createAxis(float scale = 10.0)
-{
+osg::Geode* createPlotDecoration(float scaleX, float scaleY) {
+    osg::Vec3Array* vertices = new osg::Vec3Array();
+
+    osg::Geode*     geode    = new osg::Geode();
+    osg::Geometry*  geometry = new osg::Geometry();
+    osg::Vec4Array* colors   = new osg::Vec4Array();
+
+    vertices->push_back(osg::Vec3(0, 700-scaleY, 0.0f));
+    vertices->push_back(osg::Vec3(scaleX, 700-scaleY, 0.0f));
+    colors->push_back(osg::Vec4(0.0f, 0.0f, 0.0f, 1.0f));
+    colors->push_back(osg::Vec4(0.0f, 0.0f, 0.0f, 1.0f));
+
+    vertices->push_back(osg::Vec3(0, 700, 0.0f));
+    vertices->push_back(osg::Vec3(scaleX, 700, 0.0f));
+    colors->push_back(osg::Vec4(0.0f, 0.0f, 0.0f, 1.0f));
+    colors->push_back(osg::Vec4(0.0f, 0.0f, 0.0f, 1.0f));
+
+    vertices->push_back(osg::Vec3(scaleX, 700, 0.0f));
+    vertices->push_back(osg::Vec3(scaleX, 700-scaleY, 0.0f));
+    colors->push_back(osg::Vec4(0.0f, 0.0f, 0.0f, 1.0f));
+    colors->push_back(osg::Vec4(0.0f, 0.0f, 0.0f, 1.0f));
+
+    vertices->push_back(osg::Vec3(0, 700, 0.0f));
+    vertices->push_back(osg::Vec3(0, 700-scaleY, 0.0f));
+    colors->push_back(osg::Vec4(0.0f, 0.0f, 0.0f, 1.0f));
+    colors->push_back(osg::Vec4(0.0f, 0.0f, 0.0f, 1.0f));
+
+    vertices->push_back(osg::Vec3(0, 700-scaleY/2.0, 0.0f));
+    vertices->push_back(osg::Vec3(scaleX, 700-scaleY/2.0, 0.0f));
+    colors->push_back(osg::Vec4(0.5f, 0.5f, 0.5f, 1.0f));
+    colors->push_back(osg::Vec4(0.5f, 0.5f, 0.5f, 1.0f));
+
+    geometry->setVertexArray(vertices);
+    geometry->setColorArray(colors);
+    geometry->setColorBinding(osg::Geometry::BIND_PER_VERTEX);
+    geometry->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::LINES, 0, vertices->size()));
+    geometry->getOrCreateStateSet()->setMode(GL_LIGHTING, false);
+
+    geometry->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
+    geometry->getOrCreateStateSet()->setRenderBinDetails(13, "RenderBin");
+
+    osg::LineWidth* linewidth = new osg::LineWidth();
+    linewidth->setWidth(2.0f);
+
+    geode->addDrawable(geometry);
+
+    osg::Box* backBox = new osg::Box(osg::Vec3(scaleX/2.0,700-scaleY/2.0,0), scaleX+20, scaleY+20, 0);
+    osg::ShapeDrawable* backBoxDrawable = new osg::ShapeDrawable(backBox);
+    backBoxDrawable->setColor(osg::Vec4(0.9,0.9,0.9,1.0));
+    backBoxDrawable->getOrCreateStateSet()->setRenderBinDetails(13, "RenderBin");
+
+    geode->addDrawable(backBoxDrawable);
+
+    geode->getOrCreateStateSet()->setAttributeAndModes(linewidth, osg::StateAttribute::ON);
+
+
+    return geode;
+}
+
+osg::Geode* createPlot(float scaleX, float scaleY, unsigned numberOfPoints, osg::Vec3Array** plotArray) {
+    (*plotArray) = new osg::Vec3Array();
+
+    osg::Geode*     geode    = new osg::Geode();
+    osg::Geometry*  geometry = new osg::Geometry();
+    osg::Vec4Array* colors   = new osg::Vec4Array();
+
+    for (unsigned i=0; i<=numberOfPoints; i++) {
+        (*plotArray)->push_back(osg::Vec3(float(i)/numberOfPoints * scaleX, 700-scaleY, 0.0f));
+        //(*plotArray)->push_back(osg::Vec3(float(i+1)/numberOfPoints * scaleX, 700-scaleY, 0.0f));
+        colors->push_back(osg::Vec4(0.2f, 0.2f, 0.7f, 1.0f));
+        //colors->push_back(osg::Vec4(0.3f, 0.0f, 0.0f, 1.0f));
+    }
+
+    geometry->setVertexArray((*plotArray));
+    geometry->setColorArray(colors);
+    geometry->setColorBinding(osg::Geometry::BIND_PER_VERTEX);
+    geometry->addPrimitiveSet(new osg::DrawArrays(GL_LINE_STRIP, 0, (*plotArray)->size()));
+    geometry->getOrCreateStateSet()->setMode(GL_LIGHTING, false);
+    geometry->setUseDisplayList(false);
+
+    osg::LineWidth* linewidth = new osg::LineWidth();
+    linewidth->setWidth(2.0f);
+
+    geode->addDrawable(geometry);
+
+    geode->getOrCreateStateSet()->setAttributeAndModes(linewidth, osg::StateAttribute::ON);
+
+    return geode;
+}
+
+osg::Geode* createAxis(float scale = 10.0) {
     osg::Geode*     geode    = new osg::Geode();
     osg::Geometry*  geometry = new osg::Geometry();
     osg::Vec3Array* vertices = new osg::Vec3Array();
@@ -514,17 +603,23 @@ int main()
 
     osg::Box* currentCube = new osg::Box(osg::Vec3(2.5,0.5,-2.0), 5, 0.5, 0.5);
     osg::ShapeDrawable* currentCubeDrawable = new osg::ShapeDrawable(currentCube);
-    currentCubeDrawable->setColor(osg::Vec4(0.2,0.6,1.0,1.0));
+    currentCubeDrawable->setColor(osg::Vec4(0.2,0.6,1.0,0.7));
+    currentCubeDrawable->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
+    currentCubeDrawable->getOrCreateStateSet()->setRenderBinDetails( 12, "RenderBin" );
+    currentCubeDrawable->getOrCreateStateSet()->setMode( GL_CULL_FACE, osg::StateAttribute::OVERRIDE | osg::StateAttribute::ON );
     currentCubeDrawable->setUseDisplayList(false);
     osg::Geode* basicShapesGeode = new osg::Geode();
     basicShapesGeode->addDrawable(currentCubeDrawable);
     //root->addChild(basicShapesGeode);
     cartoon->addChild(basicShapesGeode);
 
+
     osg::Box* nextCube = new osg::Box(osg::Vec3(2.5,0.5,-2.0), 5, 0.5, 0.5);
     osg::ShapeDrawable* nextCubeDrawable = new osg::ShapeDrawable(nextCube);
-    nextCubeDrawable->setColor(osg::Vec4(0.2,0.6,1.0,1.0));
-    nextCubeDrawable->setUseDisplayList(false);
+    nextCubeDrawable->setColor(osg::Vec4(0.2,0.6,1.0,0.7));
+    nextCubeDrawable->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
+    nextCubeDrawable->getOrCreateStateSet()->setRenderBinDetails( 12, "RenderBin" );
+    nextCubeDrawable->getOrCreateStateSet()->setMode( GL_CULL_FACE, osg::StateAttribute::OVERRIDE | osg::StateAttribute::ON );    nextCubeDrawable->setUseDisplayList(false);
     osg::Geode* nextShapesGeode = new osg::Geode();
     nextShapesGeode->addDrawable(nextCubeDrawable);
     //root->addChild(nextShapesGeode);
@@ -563,10 +658,71 @@ int main()
                                             osg::Vec3(10.0f, 10.0f, 0.0f),
                                             "Score: 0", 80.0f, g_font);
     textGeode->addDrawable(scoreText);
-    osg::Camera* camera = createHUDCamera(0, 1024, 0, 768);
+
+    osg::Camera* camera = createHUDCamera(0, 1024, 0, 700);
     camera->addChild( textGeode.get() );
+
+    osg::ref_ptr<osg::Geode> text2Geode = new osg::Geode;
+    osg::ref_ptr<osgText::Text> score2Text = createText2(
+                                            osg::Vec3(210.0f, 700-75, 0.0f),
+                                            "Score/Sec", 10.0f, g_font);
+    score2Text->setRotation(osg::Quat(osg::PI/2.0,osg::Vec3(0,0,1)));
+
+    text2Geode->addDrawable(score2Text);
+    camera->addChild( text2Geode.get() );
+
+    osg::ref_ptr<osg::Geode> text21Geode = new osg::Geode;
+    osg::ref_ptr<osgText::Text> score21Text = createText2(
+                                            osg::Vec3(210.0f, 700-99, 0.0f),
+                                            "0", 10.0f, g_font);
+    score21Text->setRotation(osg::Quat(osg::PI/2.0,osg::Vec3(0,0,1)));
+
+    text21Geode->addDrawable(score21Text);
+    camera->addChild( text21Geode.get() );
+
+    osg::ref_ptr<osg::Geode> text22Geode = new osg::Geode;
+    osg::ref_ptr<osgText::Text> score22Text = createText2(
+                                            osg::Vec3(210.0f, 700-6, 0.0f),
+                                            "1", 10.0f, g_font);
+    score22Text->setRotation(osg::Quat(osg::PI/2.0,osg::Vec3(0,0,1)));
+
+    text22Geode->addDrawable(score22Text);
+    camera->addChild( text22Geode.get() );
+
+    osg::ref_ptr<osg::Geode> text3Geode = new osg::Geode;
+    osg::ref_ptr<osgText::Text> score3Text = createText2(
+                                            osg::Vec3(75.0f, 700-110, 0.0f),
+                                            "time (min)", 10.0f, g_font);
+
+    text3Geode->addDrawable(score3Text);
+    camera->addChild( text3Geode.get() );
+
+    osg::ref_ptr<osg::Geode> text4Geode = new osg::Geode;
+    osg::ref_ptr<osgText::Text> score4Text = createText2(
+                                            osg::Vec3(1.0f, 700-110, 0.0f),
+                                            "20", 10.0f, g_font);
+
+    text4Geode->addDrawable(score4Text);
+    camera->addChild( text4Geode.get() );
+
+    osg::ref_ptr<osg::Geode> text5Geode = new osg::Geode;
+    osg::ref_ptr<osgText::Text> score5Text = createText2(
+                                            osg::Vec3(195.0f, 700-110, 0.0f),
+                                            "1", 10.0f, g_font);
+
+    text5Geode->addDrawable(score5Text);
+    camera->addChild( text5Geode.get() );
+
+    osg::Vec3Array* plotArray;
+    float scaleY = 100.0;
+    camera->addChild(createPlotDecoration(200.0, 100.0));
+    camera->addChild(createPlot(200.0, scaleY, 19, &plotArray));
+
     camera->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF );
     root->addChild( camera );
+
+
+
 
     float score = 0;
     float prevScore = 0;
@@ -595,6 +751,7 @@ int main()
         float handPos[3];
         float tmp;
         float blockWidth;
+        float scorePlot;
 
         float timeScale = 0.4;
 
@@ -617,6 +774,8 @@ int main()
             ss>>tmp;
             ss>>tmp;
             ss>>score;
+            ss>>scorePlot;
+
 
             scoreText->setText(string("Score: ") + to_string((int)score));
 
@@ -627,6 +786,16 @@ int main()
                                   * osg::Matrix::translate(4.4, 2.5 + currentBlockX, -2.0));
             } else {
                 fireSwitch->setChildValue(parent.get(), false);
+            }
+
+            cout<<"******************"<<endl;
+            cout<<"scorePlot: "<<scorePlot<<endl;
+
+            if (scorePlot > -0.5) {
+                for (unsigned i=0; i<(plotArray->size()-1); i++){
+                    (*plotArray)[i][1] = (*plotArray)[i+1][1];
+                }
+                (*plotArray)[plotArray->size()-1][1] = 700 + scaleY*(scorePlot-1.0);
             }
 
             currentCube->setCenter(osg::Vec3(5.0 - (currentBlockLen)/2.0 * timeScale, 2.5 + currentBlockX, -2.0));

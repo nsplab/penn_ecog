@@ -396,7 +396,8 @@ int parsConfig(string& signalConfig, string& matrixFile, size_t& fftWinSize,
         testFile.close();
     }
 
-    spatialFilterFile = ifile("spatialFilterFile", "");
+    //spatialFilterFile = ifile("spatialFilterFile", "");
+    spatialFilterFile = "featuremx.csv";
     /*// check if spatialFilterFile exists
     testFile.open(spatialFilterFile.c_str());
     if (! testFile.good()) {
