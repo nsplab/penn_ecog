@@ -27,8 +27,37 @@ def saveconfig(*args):
     except ValueError:
         pass
 
+pFeature = None
+pFilter = None
+pSupervisor = None
+pGraphics = None
+pSqueez = None
+
+
+def StopBCI(*args):
+    global pFeature
+    global pFilter
+    global pSupervisor
+    global pGraphics
+    global pSqueez
+
+    try:
+        pFeature.kill()
+        pFilter.kill()
+        pSupervisor.kill()
+        pGraphics.kill()
+        pSqueez.kill()
+    except ValueError:
+        pass
+
 
 def StartBCI(*args):
+    global pFeature
+    global pFilter
+    global pSupervisor
+    global pGraphics
+    global pSqueez
+
     try:
         missingInfo = False
         if not gender.get():
@@ -48,11 +77,6 @@ def StartBCI(*args):
         print 'Age', age.get()
         print 'Dominant hand', hand.get()
         print 'Grid Hemisphere', grid.get()
-        #subprocess.Popen(r'c:\mytool\tool.exe', cwd=r'd:\test\local')
-        Popen([r'../../feature_extract_cpp/spatial_matrix/build/spatial_matrix',
-                '3', str(int(firstEcogChV.get()) + int(numberOfEcogChsV.get()) - 2),
-                 str(int(chNum_entry.get()) - 1), '2', '3', 'featuremx.csv'],
-                cwd=r'../feature_extraction/feature_extract_cpp/build/')
         timestr = time.strftime("%Y_%m_%d-%H_%M_%S")
         ptimestr = time.strftime("%Y/%m/%d %H:%M:%S")
         logFile = open('log_' + timestr + ".txt", 'w')
@@ -72,6 +96,8 @@ def StartBCI(*args):
         logFile.write('First ECoG Channel: ' + firstEcogChV.get() + "\n")
         logFile.write('Number of ECoG Channels: ' + numberOfEcogChsV.get() + "\n")
         logFile.write('Action: ' + 'Started BCI task' + "\n")
+        logFile.write('Block Width in percent of workspace width: ' + blockWidth.get() + "\n")
+        logFile.write('Block Lendth in Seconds: ' + blockLength.get() + "\n")
 
         logFileBackup.write('Time: ' + ptimestr + "\n")
         logFileBackup.write('Gender: ' + gender.get() + "\n")
@@ -87,11 +113,45 @@ def StartBCI(*args):
         logFileBackup.write('First ECoG Channel: ' + firstEcogChV.get() + "\n")
         logFileBackup.write('Number of ECoG Channels: ' + numberOfEcogChsV.get() + "\n")
         logFileBackup.write('Action: ' + 'Started BCI task' + "\n")
+        logFileBackup.write('Block Width in percent of workspace width: ' + blockWidth.get() + "\n")
+        logFileBackup.write('Block Lendth in Seconds: ' + blockLength.get() + "\n")
         #logFile.write()
         logFile.close()
         logFileBackup.close()
 
+        # generate the spatial matrix
+        Popen([r'../../feature_extract_cpp/spatial_matrix/build/spatial_matrix',
+                '3', str(int(firstEcogChV.get()) + int(numberOfEcogChsV.get()) - 2),
+                 str(int(chNum_entry.get()) - 1), '2', '3', 'featuremx.csv'],
+                cwd=r'../feature_extraction/feature_extract_cpp/build/')
         time.sleep(1)
+
+        # start feature extractor
+        pFeature = Popen([r'../../feature_extract_cpp/build/feature_extract_cpp'],
+                cwd=r'../feature_extraction/feature_extract_cpp/build/')
+        time.sleep(0.1)
+
+        # start supervisor
+        pSupervisor = Popen([r'./upervisor.py',
+                '3', str(int(firstEcogChV.get()) + int(numberOfEcogChsV.get()) - 2),
+                 str(int(chNum_entry.get()) - 1), '2', '3', 'featuremx.csv'],
+                cwd=r'../supervisor/elam3/')
+        time.sleep(0.1)
+
+        # start graphics
+        pGraphics = Popen([r'../../graphics/elam3/build',
+                '3', str(int(firstEcogChV.get()) + int(numberOfEcogChsV.get()) - 2),
+                 str(int(chNum_entry.get()) - 1), '2', '3', 'featuremx.csv'],
+                cwd=r'../graphics/elam3/build')
+        time.sleep(0.1)
+
+        # start filter
+        pFilter = Popen([r'../../feature_extract_cpp/spatial_matrix/build/spatial_matrix',
+                '3', str(int(firstEcogChV.get()) + int(numberOfEcogChsV.get()) - 2),
+                 str(int(chNum_entry.get()) - 1), '2', '3', 'featuremx.csv'],
+                cwd=r'../feature_extraction/feature_extract_cpp/build/')
+        time.sleep(0.1)
+
     except ValueError:
         pass
 
@@ -202,6 +262,24 @@ rowNumber += 1
 ttk.Label(mainframe, text="Channel Number:").grid(column=1, row=rowNumber, sticky=E)
 chNum_entry = ttk.Entry(mainframe, width=7, textvariable=channelNumber)
 chNum_entry.grid(column=2, row=rowNumber, sticky=(W, E))
+rowNumber += 1
+
+# input box for block width
+blockWidth = StringVar()
+blockWidth.set(0.25)
+ttk.Label(mainframe, text="Block Width percent\n of Screen:").grid(column=1, row=rowNumber,
+          sticky=E)
+blockWidthE = ttk.Entry(mainframe, width=7, textvariable=blockWidth)
+blockWidthE.grid(column=2, row=rowNumber, sticky=(W, E))
+rowNumber += 1
+
+# input box for block width
+blockLength = StringVar()
+blockLength.set(10)
+ttk.Label(mainframe, text="Block Length in Seconds:").grid(column=1, row=rowNumber,
+          sticky=E)
+blockLengthE = ttk.Entry(mainframe, width=7, textvariable=blockLength)
+blockLengthE.grid(column=2, row=rowNumber, sticky=(W, E))
 rowNumber += 1
 
 ## buttons

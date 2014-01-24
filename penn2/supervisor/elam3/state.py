@@ -53,8 +53,9 @@ class GameState(object):
                 self.lengths.append(config.restLengthTime)
             else:
                 startingTime += config.blockLengthTime
-                self.positions.append(random.uniform(-config.workspaceRadius / 2.0,
-                                                  config.workspaceRadius / 2.0 - config.blockWidth))
+                self.positions.append(random.uniform(
+                                      -config.workspaceRadius / 2.0 + config.blockWidth,
+                                      config.workspaceRadius / 2.0))
                 self.lengths.append(config.blockLengthTime)
 
     def serializeBlocks(self):

@@ -1,8 +1,8 @@
-Time: 2014/01/23 18:04:55
+Time: 2014/01/23 18:55:56
 Gender: Male
 Age: 21
 Dominant hand: Right-handed
-Grid Hemisphere: Left
+Grid Hemisphere: Right
 BCI channel: 5
 Inverted Power: No
 SamplingRate: 24414.0625
@@ -12,3 +12,5 @@ SamplingRate: 24414.0625
 First ECoG Channel: 5
 Number of ECoG Channels: 32
 Action: Started BCI task
+Block Width in percent of workspace width: 0.25
+Block Lendth in Seconds: 10
