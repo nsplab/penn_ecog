@@ -6,6 +6,7 @@ import tkMessageBox
 import subprocess
 import time
 from subprocess import Popen
+from signal import SIGINT
 
 config = ConfigParser.RawConfigParser()
 config.read('tdt.cfg')
@@ -42,23 +43,26 @@ def StopBCI(*args):
     global pSqueez
 
     try:
-        pFeature.kill()
-        pFilter.kill()
-        pSupervisor.kill()
-        pGraphics.kill()
-        pSqueez.kill()
+        pFeature.send_signal(SIGINT)
+        pSupervisor.send_signal(SIGINT)
+        pGraphics.send_signal(SIGINT)
+        pFilter.send_signal(SIGINT)
     except ValueError:
         pass
 
 
-def StartBCI(*args):
+def StopSqueeze(*args):
+    global pSqueeze
     global pFeature
-    global pFilter
-    global pSupervisor
-    global pGraphics
-    global pSqueez
 
     try:
+        pSqueeze.send_signal(SIGINT)
+        pFeature.send_signal(SIGINT)
+    except ValueError:
+        pass
+
+
+def WriteData(*args):
         missingInfo = False
         if not gender.get():
             missingInfo = True
@@ -72,7 +76,7 @@ def StartBCI(*args):
             missingInfo = True
         if missingInfo:
             tkMessageBox.showinfo("Cannot continue!", message='Some fields are left blank!')
-            return
+            return False
         print 'Gender', gender.get()
         print 'Age', age.get()
         print 'Dominant hand', hand.get()
@@ -119,6 +123,42 @@ def StartBCI(*args):
         logFile.close()
         logFileBackup.close()
 
+        return True
+
+
+def StartSqueeze(*args):
+    global pSqueeze
+    global pFeature
+
+    try:
+        if not WriteData():
+            return
+
+        # generate the spatial matrix
+        pSqueeze = Popen([r'../../squeeze/build/squeeze'],
+                cwd=r'../graphics/squeeze/build/')
+        time.sleep(0.1)
+
+        # start feature extractor
+        pFeature = Popen([r'../../feature_extract_cpp/build/feature_extract_cpp', '1'],
+                cwd=r'../feature_extraction/feature_extract_cpp/build/')
+        time.sleep(0.1)
+
+    except ValueError:
+        pass
+
+
+def StartBCI(*args):
+    global pFeature
+    global pFilter
+    global pSupervisor
+    global pGraphics
+    global pSqueez
+
+    try:
+        if not WriteData():
+            return
+
         # generate the spatial matrix
         Popen([r'../../feature_extract_cpp/spatial_matrix/build/spatial_matrix',
                 '3', str(int(firstEcogChV.get()) + int(numberOfEcogChsV.get()) - 2),
@@ -132,24 +172,20 @@ def StartBCI(*args):
         time.sleep(0.1)
 
         # start supervisor
-        pSupervisor = Popen([r'./upervisor.py',
-                '3', str(int(firstEcogChV.get()) + int(numberOfEcogChsV.get()) - 2),
-                 str(int(chNum_entry.get()) - 1), '2', '3', 'featuremx.csv'],
+        pSupervisor = Popen([r'./supervisor.py'],
                 cwd=r'../supervisor/elam3/')
         time.sleep(0.1)
 
         # start graphics
-        pGraphics = Popen([r'../../graphics/elam3/build',
+        pGraphics = Popen([r'../../elam3/build/elam3',
                 '3', str(int(firstEcogChV.get()) + int(numberOfEcogChsV.get()) - 2),
                  str(int(chNum_entry.get()) - 1), '2', '3', 'featuremx.csv'],
-                cwd=r'../graphics/elam3/build')
+                cwd=r'../graphics/elam3/build/')
         time.sleep(0.1)
 
         # start filter
-        pFilter = Popen([r'../../feature_extract_cpp/spatial_matrix/build/spatial_matrix',
-                '3', str(int(firstEcogChV.get()) + int(numberOfEcogChsV.get()) - 2),
-                 str(int(chNum_entry.get()) - 1), '2', '3', 'featuremx.csv'],
-                cwd=r'../feature_extraction/feature_extract_cpp/build/')
+        pFilter = Popen([r'../../cpp/build/filter'],
+                cwd=r'../filter/cpp/build')
         time.sleep(0.1)
 
     except ValueError:
@@ -233,9 +269,9 @@ forceSensorHandLE.grid(column=2, row=rowNumber, sticky=(W, E))
 rowNumber += 1
 
 ## buttons
-ttk.Button(mainframe, text="Start Squeeze Task", command=saveconfig).grid(column=1, row=rowNumber,
+ttk.Button(mainframe, text="Start Squeeze Task", command=StartSqueeze).grid(column=1, row=rowNumber,
                                                                           sticky='we')
-ttk.Button(mainframe, text="Stop Squeeze Task", command=saveconfig).grid(column=2, row=rowNumber,
+ttk.Button(mainframe, text="Stop Squeeze Task", command=StopSqueeze).grid(column=2, row=rowNumber,
                                                                          sticky='we')
 rowNumber += 1
 
@@ -285,7 +321,7 @@ rowNumber += 1
 ## buttons
 ttk.Button(mainframe, text="Start BCI Task", command=StartBCI).grid(column=1, row=rowNumber,
                                                                     sticky='we')
-ttk.Button(mainframe, text="Stop BCI Task", command=saveconfig).grid(column=2, row=rowNumber,
+ttk.Button(mainframe, text="Stop BCI Task", command=StopBCI).grid(column=2, row=rowNumber,
                                                                      sticky='we')
 rowNumber += 1
 

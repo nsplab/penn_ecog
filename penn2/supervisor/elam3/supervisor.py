@@ -19,6 +19,8 @@ import threading
 
 import datetime
 
+import sys
+
 # the state machines to present the state of the graphics and filter modules
 from state import GameState
 from state import FilterState
@@ -45,6 +47,9 @@ goal_is_ball = True  # ball or box is goal
 gameState = GameState()
 gameState.generateBlocks()
 filterState = FilterState()
+
+if (len(sys.argv) > 1):
+    config.blockWidth = float(sys.argv[1]) * config.workspaceRadius
 
 
 # capture the kill signal and terminate the process

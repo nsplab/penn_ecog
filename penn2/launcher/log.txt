@@ -1,6 +1,6 @@
-Time: 2014/01/23 18:55:56
+Time: 2014/01/24 10:21:22
 Gender: Male
-Age: 21
+Age: 32
 Dominant hand: Right-handed
 Grid Hemisphere: Right
 BCI channel: 5

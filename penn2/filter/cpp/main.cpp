@@ -5,6 +5,8 @@
 #include <eigen3/Eigen/Dense>
 #include <zmq.hpp>
 
+#include <signal.h>
+
 #include "GetPot.h"
 
 #include "naive_filter.h"
@@ -13,6 +15,12 @@
 #include "tests.h"
 
 using namespace std;
+
+void signal_callback_handler(int signum) {
+    cout<<"int signal"<<endl;
+    signal(signum, SIG_IGN);
+    quit = true;
+}
 
 int main(int argc, char** argv) {
 

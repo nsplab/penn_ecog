@@ -14,6 +14,9 @@
 #include <boost/circular_buffer.hpp> // to hold recent samples
 #include <thread>
 #include <stdint.h>
+#include <fstream>
+
+#include <signal.h>
 
 #include <unistd.h>
 #include <sys/io.h>
@@ -22,14 +25,14 @@
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
 
-#include "GetPot.h"
+//#include "GetPot.h"
 
 using namespace std;
 using namespace chrono;
 using namespace zmq;
 using namespace boost::accumulators;
 
-string cfgFile("../squeeze.cfg");
+//string cfgFile("../squeeze.cfg");
 
 int loop = 0;
 
@@ -50,6 +53,8 @@ int leftRight = 1;
 
 bool quit = false;
 
+bool start = false;
+
 size_t timeStamp = 0;
 
 void powerTh()
@@ -60,12 +65,17 @@ void powerTh()
     char nameBuffer[24];
     tm * ptm = localtime(&rawtime);
     strftime(nameBuffer, 24, "%a_%d.%m.%Y_%H:%M:%S", ptm);
-    string dataFilename = string("data_click_")+string(nameBuffer);
-
+    string dataFilename = string("click_data_")+string(nameBuffer);
+    string dataTdtFilename = string("data_")+string(nameBuffer);
 
     FILE* pFile;
     pFile = fopen(dataFilename.c_str(), "wb");
     //setvbuf (pFile, NULL, _IOFBF, dataSize);
+
+
+    FILE* pTdtFile;
+    pTdtFile = fopen(dataTdtFilename.c_str(), "wb");
+    setvbuf (pTdtFile, NULL, _IOFBF, 10*32*sizeof(float));
 
 
     cout<<"thread started"<<endl;
@@ -77,7 +87,7 @@ void powerTh()
     socket_t subscriber(context, ZMQ_SUB);
     uint64_t hwm = 1;
     //subscriber.setsockopt(ZMQ_HWM, &hwm, sizeof(hwm));
-    subscriber.connect("ipc:///tmp/sig.pipe");
+    subscriber.connect("ipc:///tmp/signal.pipe");
     subscriber.setsockopt(ZMQ_SUBSCRIBE, "", 0);
 
     size_t baselineSamples = 0;
@@ -90,6 +100,10 @@ void powerTh()
         livePwrSamples.push_back(0);
     double liveAvgPow = 0.0;
 
+    unsigned const numberOfChannels = 36;
+
+    bool prevBaseline = true;
+
     float buffer[64];
     for (;!quit;) {
 
@@ -97,21 +111,25 @@ void powerTh()
         subscriber.recv(&sig_msg);
         memcpy(&timeStamp, sig_msg.data(), sizeof(size_t));
 
-
         memcpy(buffer, (size_t*)sig_msg.data()+1, sig_msg.size()-sizeof(size_t));
         point[0] = buffer[0];
 
+        if (!start) {
+            continue;
+        }
+
+        fwrite(&(buffer[0]), sizeof(float), numberOfChannels, pTdtFile);
 
         loop += 1;
         if (loop > 5) {
-            livePwrSamples.push_back(point[0]);
+            //livePwrSamples.push_back(point[0]);
 
             if (baseline) {
                 baselineSamples+=1;
                 acc(point[0]);
-
-                if (baselineSamples > 1000){
-                    baseline = false;
+            } else {
+                if (prevBaseline) {
+                    prevBaseline = false;
                     cout<<" *********************** "<<endl;
                     cout<<" *********************** "<<endl;
                     cout<<"mean "<<mean(acc)<<endl;
@@ -129,20 +147,24 @@ void powerTh()
                     sensorFile<<"'baseline mean' + 'baseline standard deviation' * 8 = "<<(baselinePowerMean + baselinePowerSD*8.0)<<endl;
                     sensorFile.close();
                 }
-            } else {
+
                 baselinePowerMean = 0.03;
                 cout<<"point[0] "<<point[0]<<endl;
                 cout<<"threshold: "<<(baselinePowerMean + baselinePowerSD*8.0)<<endl;
-                cout<<"emgState: "<<emgState<<endl;
+                //cout<<"emgState: "<<emgState<<endl;
                 cout<<"emgClick: "<<int(emgClick)<<endl;
                 cout<<"timsestamp: "<<timeStamp<<endl;
-                cout<<"prvEmgState "<<prvEmgState<<endl;
+                //cout<<"prvEmgState "<<prvEmgState<<endl;
 
                 if (point[0] > (baselinePowerMean + baselinePowerSD*8.0)) {
-                    emgState = 1;
+                    emgClick = true;
+                } else {
+                    emgClick = false;
+                }
+                /*    emgState = 1;
 
                     if ((prvEmgState == 0)&&(!emgClick)){
-                        emgClick = true;
+
 
                         fwrite(&timeStamp, sizeof(size_t),1 , pFile);
                         fwrite(&leftRight, sizeof(int),1 , pFile);
@@ -159,7 +181,7 @@ void powerTh()
                     }
                     emgState = 0;
                     prvEmgState = 0;
-                }
+                }*/
             }
 
             loop = 0;
@@ -167,7 +189,10 @@ void powerTh()
 
     } // for
 
+    cout<<"quit thread"<<endl;
+
   fclose(pFile);
+  fclose(pTdtFile);
 }
 
 void apply_surface( int x, int y, SDL_Surface* source, SDL_Surface* destination, SDL_Rect* clip = NULL )
@@ -183,6 +208,12 @@ void apply_surface( int x, int y, SDL_Surface* source, SDL_Surface* destination,
     SDL_BlitSurface( source, clip, destination, &offset );
 }
 
+void signal_callback_handler(int signum) {
+    cout<<"int signal"<<endl;
+    signal(signum, SIG_IGN);
+    quit = true;
+}
+
 int main(int argc, char** argv)
 {
     time_t rawtime;
@@ -190,8 +221,8 @@ int main(int argc, char** argv)
     char nameBuffer[24];
     tm * ptm = localtime(&rawtime);
     strftime(nameBuffer, 24, "%a_%d.%m.%Y_%H:%M:%S", ptm);
-    string imageFilename = string("data_image_")+string(nameBuffer);
-    string pauseFilename = string("data_pause_")+string(nameBuffer);
+    string imageFilename = string("image_data_")+string(nameBuffer);
+    string pauseFilename = string("pause_data_")+string(nameBuffer);
 
     FILE* pFileImage;
     pFileImage = fopen(imageFilename.c_str(), "wb");
@@ -199,21 +230,23 @@ int main(int argc, char** argv)
     FILE* pFilePause;
     pFilePause = fopen(pauseFilename.c_str(), "wb");
 
-    GetPot cl(argc, argv);
+    signal(SIGINT, signal_callback_handler);
+
+    //GetPot cl(argc, argv);
 
     // check if config exists
-    ifstream testCfgFile(cfgFile.c_str());
+    /*ifstream testCfgFile(cfgFile.c_str());
     if (! testCfgFile.good()) {
         cout<<"Could not open the config file: "<<cfgFile<<endl;
         return 1;
     } else {
         testCfgFile.close();
-    }
+    }*/
 
     cout<<"test"<<endl;
 
     // parse config file
-    GetPot ifile(cfgFile.c_str(), "#", "\n");
+    /*GetPot ifile(cfgFile.c_str(), "#", "\n");
     ifile.print();
 
     size_t numImages = ifile("numberOfCards", 10);
@@ -232,7 +265,7 @@ int main(int argc, char** argv)
     cout<<"dCorrectSwitch: "<<dCorrectSwitch<<endl;
 
     size_t dScoreSwitch = ifile("displayScore", 1);
-    cout<<"dScoreSwitch: "<<dScoreSwitch<<endl;
+    cout<<"dScoreSwitch: "<<dScoreSwitch<<endl;*/
 
     boost::circular_buffer<double> pwrCBuff1;
     pwrCBuff1.set_capacity(50);
@@ -251,10 +284,11 @@ int main(int argc, char** argv)
     size_t sw = 1000;
     size_t sh = 700;
 
+    const unsigned numImages = 3;
     SDL_Surface *screen;	//This pointer will reference the backbuffer
     vector<SDL_Surface *> image(numImages);	//This pointer will reference our bitmap sprite
     vector<SDL_Surface *> temp(numImages);	//This pointer will temporarily reference our bitmap sprite
-    SDL_Rect src, dest;	//These rectangles will describe the source and destination regions of our blit
+    SDL_Rect src, dest, wholeScreen;	//These rectangles will describe the source and destination regions of our blit
     SDL_Surface *background;
     SDL_Surface *tmpBackground;
 
@@ -268,16 +302,14 @@ int main(int argc, char** argv)
 
     cout<<"test"<<endl;
 
-    font = TTF_OpenFont("Arial.ttf", 28);
-    fontMed = TTF_OpenFont("Arial_Bold.ttf", 38);
-    fontBig = TTF_OpenFont("Arial_Bold.ttf", 92);
-    fontBigBack = TTF_OpenFont("Arial_Bold.ttf", 95);
+    font = TTF_OpenFont("../Arial.ttf", 28);
+    fontMed = TTF_OpenFont("../Arial_Bold.ttf", 38);
+    fontBig = TTF_OpenFont("../Arial_Bold.ttf", 92);
+    fontBigBack = TTF_OpenFont("../Arial_Bold.ttf", 95);
     SDL_Color textColor = { 255, 255, 255 };
     SDL_Color textColorBlue = { 0, 0, 110 };
 
-    cout<<"test"<<endl;
-
-    int flags=MIX_INIT_MP3;
+    /*int flags=MIX_INIT_MP3;
     int initted=Mix_Init(flags);
     if(initted&flags != flags) {
       printf("Mix_Init: Failed to init required ogg and mod support!\n");
@@ -286,9 +318,9 @@ int main(int argc, char** argv)
     if(Mix_OpenAudio(MIX_DEFAULT_FREQUENCY, MIX_DEFAULT_FORMAT, 1, 1024)==-1) {
       printf("Mix_OpenAudio: %s\n", Mix_GetError());
       exit(2);
-    }
+    }*/
 
-    SDL_ShowCursor(0);
+    //SDL_ShowCursor(0);
 
     //When this program exits, SDL_Quit must be called
     atexit(SDL_Quit);
@@ -301,7 +333,7 @@ int main(int argc, char** argv)
     }
 
     //Load the bitmap into a temporary surface, and check for success
-    for (size_t i=0; i<numImages; i++) {
+    /*for (size_t i=0; i<numImages; i++) {
         ostringstream ss;
         if (useSmallCards)
             ss<<"./small/";
@@ -314,14 +346,24 @@ int main(int argc, char** argv)
         }
     }
     tmpBackground = SDL_LoadBMP("b2.bmp");
+    */
+    temp[0] = SDL_LoadBMP("../circle.bmp");
+    temp[1] = SDL_LoadBMP("../square.bmp");
+    temp[2] = SDL_LoadBMP("../triangle.bmp");
 
     //Release the temporary surface
-    for (size_t i=0; i<numImages; i++) {
+    /*for (size_t i=0; i<numImages; i++) {
         image[i] = SDL_DisplayFormat(temp[i]);
         SDL_FreeSurface(temp[i]);
     }
     background = SDL_DisplayFormat(tmpBackground);
-    SDL_FreeSurface(tmpBackground);
+    SDL_FreeSurface(tmpBackground);*/
+    image[0] = SDL_DisplayFormat(temp[0]);
+    image[1] = SDL_DisplayFormat(temp[1]);
+    image[2] = SDL_DisplayFormat(temp[2]);
+    SDL_FreeSurface(temp[0]);
+    SDL_FreeSurface(temp[1]);
+    SDL_FreeSurface(temp[2]);
 
     //Construct the source rectangle for our blit
     src.x = 0;
@@ -335,12 +377,16 @@ int main(int argc, char** argv)
     dest.w = image[0]->w;	//Ensure the destination is large enough for the image's entire width/height
     dest.h = image[0]->h;
 
+    wholeScreen.x = 0;
+    wholeScreen.y = 0;
+    wholeScreen.w = sw;
+    wholeScreen.h = sh;
 
     std::thread helper1(powerTh);
     // countdown for baseline emg
     size_t countdown = 10;
     for (size_t t=0; t<countdown; t++) {
-        apply_surface(0, 0, background, screen);
+        SDL_FillRect(screen, &wholeScreen, SDL_MapRGB(screen->format, 255, 255, 255));
 
         ostringstream scoreSS;
         scoreSS<<countdown-t;
@@ -351,32 +397,39 @@ int main(int argc, char** argv)
         SDL_Flip(screen);
 
         usleep(1500000);
+
+        if (t > 2) {
+            start = true;
+        } if (t > 7) {
+            baseline = false;
+        }
     }
 
     usleep(1500000);
 
     // background image
-    apply_surface(0, 0, background, screen);
+    //apply_surface(0, 0, background, screen);
 
     size_t firstImage = 0;
     fwrite(&timeStamp, sizeof(size_t),1 , pFileImage);
     fwrite(&firstImage, sizeof(size_t),1 , pFileImage);
     //Blit the first image to the backbuffer
+    SDL_FillRect(screen, &wholeScreen, SDL_MapRGB(screen->format, 255, 255, 255));
     SDL_BlitSurface(image[0], &src, screen, &dest);
 
     // show score
-    size_t score = 100;
+    /*size_t score = 100;
     ostringstream scoreSS;
     scoreSS<<"Score: "<<score;
     SDL_Surface *message = TTF_RenderText_Blended(fontMed, scoreSS.str().c_str(), textColorBlue);
     apply_surface(sw/2-image[0]->w/2 - 50, 150, message, screen);
-    SDL_FreeSurface(message);
+    SDL_FreeSurface(message);*/
 
-    ostringstream handSS;
+    /*ostringstream handSS;
     handSS<<"Left Hand";
     message = TTF_RenderText_Blended(font, handSS.str().c_str(), textColorBlue);
     apply_surface(sw/2-image[0]->w/2 - 50, 550, message, screen);
-    SDL_FreeSurface(message);
+    SDL_FreeSurface(message);*/
 
     //Flip the backbuffer to the primary
     SDL_Flip(screen);
@@ -386,32 +439,35 @@ int main(int argc, char** argv)
     auto end = high_resolution_clock::now();
 
     SDL_Event event;
-    bool clicked = false;
+    //bool clicked = false;
 
-    size_t prevImg = 0;
-    size_t prevImg2 = -1; // No image to compare against
+    //size_t prevImg = 0;
+    //size_t prevImg2 = -1; // No image to compare against
 
-    int state = 0; // 0: showing image
+    //int state = 0; // 0: showing image
                  // 1: black screen between images
 
-    boost::random::mt19937 gen;
-    boost::random::uniform_int_distribution<> dist(0, numImages-1);
-    boost::random::uniform_int_distribution<> tdist(0, 1);
+    //boost::random::mt19937 gen;
+    //boost::random::uniform_int_distribution<> dist(0, numImages-1);
+    //boost::random::uniform_int_distribution<> tdist(0, 1);
 
-    bool powerReady = false;
+    //bool powerReady = false;
 
-    bool pause = false;
-    bool correct = false;
+    //bool pause = false;
+    //bool correct = false;
 
-    bool midSession = false;
+    //bool midSession = false;
+
+    int sState = 0;
+    size_t imgNum = 0;
 
     while( quit == false ) {
       // background image
-      apply_surface(0, 0, background, screen);
-      SDL_FillRect(screen, &dest, SDL_MapRGB(screen->format, 97, 97, 97));
+      //apply_surface(0, 0, background, screen);
+      SDL_FillRect(screen, &wholeScreen, SDL_MapRGB(screen->format, 255, 255, 255));
 
       // show score
-      ostringstream scoreSS;
+      /*ostringstream scoreSS;
       scoreSS<<"Score: "<<score;
       if (dScoreSwitch) {
         SDL_Surface *message = TTF_RenderText_Blended(fontMed, scoreSS.str().c_str(), textColorBlue);
@@ -428,17 +484,17 @@ int main(int argc, char** argv)
       message = TTF_RenderText_Blended(font, handSS.str().c_str(), textColorBlue);
       apply_surface(sw/2-image[0]->w/2 - 50, 550, message, screen);
       SDL_FreeSurface(message);
-
+      */
 
       if( SDL_PollEvent( &event ) )
       {
 
-          if( event.type == SDL_MOUSEBUTTONDOWN ) {
+          /*if( event.type == SDL_MOUSEBUTTONDOWN ) {
             clicked = true;
             printf("Mouse Button 1(left) is pressed.\n");
-          }
+          }*/
 
-          if( event.type == SDL_KEYDOWN ) {
+          /*if( event.type == SDL_KEYDOWN ) {
               switch( event.key.keysym.sym ){
                 case SDLK_SPACE:
                   pause = !pause;
@@ -460,142 +516,62 @@ int main(int argc, char** argv)
                 default:
                   break;
                 }
-          }
+          }*/
 
           //If the user has Xed out the window
           if( event.type == SDL_QUIT )
           {
+              cout<<"quit recv"<<endl;
               //Quit the program
               quit = true;
+              break;
           }
       }
 
-      clicked |= emgClick;
+      //clicked |= emgClick;
 
       end = high_resolution_clock::now();
       milliseconds ms = duration_cast<milliseconds>(end - start);
       milliseconds msTrial = duration_cast<milliseconds>(end - startTrial);
-      if (msTrial.count() > 100000) {
-        pause = true;
-        midSession = true;
-        fwrite(&timeStamp, sizeof(size_t),1 , pFilePause);
 
-        apply_surface(0, 0, background, screen);
+      // 1 sec squeeze
+      // 2 secs rest
+      // start with rest
 
-        ostringstream scoreSS;
-        scoreSS<<"Your current score: "<<score;
-        SDL_Surface *message = TTF_RenderText_Blended(fontBig, scoreSS.str().c_str(), textColorBlue);
-        apply_surface(sw/2-message->w/2, 350, message, screen);
-        SDL_FreeSurface(message);
+      if (sState == 0) {
+          if (ms.count() > 3000) {
+              start = high_resolution_clock::now();
+              sState = 1;
+          } else if (emgClick) {
+              start = high_resolution_clock::now();
+          }
+      }
+      else if (sState == 1) {
+          if (ms.count() > 2000) {
+              start = high_resolution_clock::now();
+              sState = 0;
+          }
       }
 
-      if (!pause) {
-        if (state == 0) {
-            if (ms.count() >= 3000) {
-                cout<<"Elapsed nanosecs: "<<ms.count()<<endl;
-
-                if (prevImg2 != -1) { // Score not changed for first image
-                    if ((prevImg == prevImg2) && clicked) {
-                      cout << "Match Identified Correctly\n";
-                      correct = true;
-                      score += 1;
-                      if (playSoundEffect) {
-                        Mix_PlayChannel(-1, correctChunk, 0);
-            cout<<"play effect sound"<<endl;
-            }
-                }
-                    else if ((prevImg != prevImg2) && !clicked) {
-                      cout << "Non-match Identified Correctly\n";
-                      correct = true;
-                      score += 1;
-                    }
-                    else {
-                        correct = false;
-                      cout << "Incorrect\n";
-                      score -= 1;
-                      if (playSoundEffect)
-                      if ((prevImg != prevImg2) && clicked) {
-              cout<<"play effect sound"<<endl;
-                          Mix_PlayChannel(-1, incorrectChunk, 0);
-            }
-                    }
-                    cout << prevImg << "\n" << prevImg2 << "\n" << clicked << "\n\n";
-                }
-
-                state = 1;
-                start = high_resolution_clock::now();
-            }
-        }
-        else if (state == 1) {
-            if (ms.count() < 2000) {
-                // show a black screen between two images
-                //SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0));
-
-                if (dCorrectSwitch) {
-                if (correct) {
-                    SDL_Surface *message = TTF_RenderText_Blended(font, "Correct!", textColorBlue);
-                    apply_surface(sw/2+image[0]->w/2, 150, message, screen);
-                    SDL_FreeSurface(message);
-                  } else if (prevImg2!=-1) {
-                    SDL_Surface *message = TTF_RenderText_Blended(font, "Incorrect!", textColorBlue);
-                    apply_surface(sw/2+image[0]->w/2, 150, message, screen);
-                    SDL_FreeSurface(message);
-
-                  }
-                  }
-
-                SDL_Flip(screen);
-            }
-            else {
-                // keep same image or change it to a new one
-                cout<<"rnd"<<endl;
-                size_t imgNum = 0;
-                if (tdist(gen) == 1)
-                  imgNum = prevImg;
-                else
-                  imgNum = dist(gen);
-                cout<<"done"<<endl;
-
-                cout<<imgNum<<endl;
-                // first black to refresh the page
-                //SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format, 0, 0, 0));
-                SDL_BlitSurface(image[imgNum], &src, screen, &dest);
-                fwrite(&timeStamp, sizeof(size_t),1 , pFileImage);
-                fwrite(&imgNum, sizeof(size_t),1 , pFileImage);
-
-                SDL_Flip(screen);
-
-                prevImg2 = prevImg;
-                prevImg = imgNum;
-                start = high_resolution_clock::now();
-                clicked = false;
-                emgClick = false;
-
-
-                state = 0;
-            }
-        }
-      } else {
-
-          SDL_Surface *message = TTF_RenderText_Blended(fontBigBack, "PAUSED", textColorBlue);
-          apply_surface(sw/2-message->w/2, 100, message, screen);
-          SDL_FreeSurface(message);
-          message = TTF_RenderText_Blended(fontBig, "PAUSED", textColor);
-          apply_surface(sw/2-message->w/2, 100, message, screen);
-          SDL_Flip(screen);
-          SDL_FreeSurface(message);
-
-          prevImg2 = -1;
-        }
-
-      if (powerReady) {
-        powerReady = false;
-
-        size_t fbufferSize = 26;
-        float fbuffer[fbufferSize];
+      if (sState == 0) {
+          SDL_BlitSurface(image[0], &src, screen, &dest);
+          imgNum = 0;
+      } else if (sState == 1) {
+          if (emgClick) {
+              SDL_BlitSurface(image[2], &src, screen, &dest);
+              imgNum = 2;
+          } else {
+              SDL_BlitSurface(image[1], &src, screen, &dest);
+              imgNum = 1;
+          }
       }
 
+      SDL_Flip(screen);
+
+      fwrite(&timeStamp, sizeof(size_t),1 , pFileImage);
+      fwrite(&imgNum, sizeof(size_t),1 , pFileImage);
     }
+    cout<<"quit main"<<endl;
 
     helper1.join();
 
@@ -607,16 +583,13 @@ int main(int argc, char** argv)
     for (size_t i=0; i<numImages; i++)
         SDL_FreeSurface(image[i]);
 
-    SDL_FreeSurface(background);
+    //SDL_FreeSurface(background);
 
     TTF_CloseFont(font);
     TTF_CloseFont(fontMed);
     TTF_CloseFont(fontBig);
     TTF_CloseFont(fontBigBack);
     TTF_Quit();
-
-    Mix_CloseAudio();
-    Mix_Quit();
 
   return 0;
 }

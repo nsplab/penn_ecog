@@ -57,10 +57,10 @@ int main(int argc, char** argv)
     strftime(nameBuffer, 24, "%a_%d.%m.%Y_%H:%M:%S.txt", ptm);
     string dataFilename = string("baselineData_")+string(nameBuffer);
     ofstream baselineDataFile(dataFilename);
-    ofstream baselineDataFileCopy("baselineData.txt");
+    ofstream baselineDataFileCopy;
+
 
     baselineDataFile.precision(10);
-    baselineDataFileCopy.precision(10);
 
 
     signal(SIGINT, signal_callback_handler);
@@ -84,6 +84,27 @@ int main(int argc, char** argv)
                         numFeatureChannels)) {
         return 1;
     }
+
+    if (argc > 1) {
+        int a1 = atoi(argv[1]);
+        if (a1 == 1) {
+            baseline = true;
+        } else {
+            baseline = false;
+        }
+    }
+
+    int bciChann = 0;
+
+    if (argc > 2) {
+        bciChann = atoi(argv[2]);
+    }
+
+    if (baseline) {
+        baselineDataFileCopy.open("baselineData.txt");
+        baselineDataFileCopy.precision(10);
+    }
+
 
     size_t numChannels;// = rows.size();//spatialFilterMx.rows();
     // compute fft window size in number of samples
