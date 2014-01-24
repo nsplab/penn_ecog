@@ -1,7 +1,8 @@
 %This generate significant plots for the data recorded.
 %This script needs for analyse_datya.m to be run before so it can pull the
 %environment variables and generate the plots
-fig1 = figure('visible','off');
+%fig1 = figure('visible','off');
+figure
 subplot(3,1,1)
 spectogram_single_channel(1, large_power_matrix, T_axis, F)%Plot the spectrogram of the first channel
 title('Spectrogram for Channel 1')
@@ -29,7 +30,7 @@ set(gcf, 'color', [1,1,1])
 set(gcf,'units','normalized','outerposition',[0 0 0.4 0.7])
 set(gcf,'renderer', 'zbuffer');
 myaa([4 2],'raw_data_spectrogram.png');
-
+break
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%Plot the aligned rising edges
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

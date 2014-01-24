@@ -18,7 +18,7 @@ channel_frequency = extract_frequency(chan_power_mat, F, frequency_range, 'singl
 [aligned_force aligned_time] = align_data(labels', force, rise_or_fall,fourier_sampling);%align to every rise in the labels for the force
 [time_freq, channel_f, num_trials] = size(aligned_channel);%get the features toi create the window
 if log_flag == 0
-    surf(aligned_time, frequency_range, (mean(aligned_channel,3))','edgecolor', 'none')
+    surf(aligned_time, frequency_range, ((mean(aligned_channel,3)))','edgecolor', 'none')
     title(['Channel ' num2str(channel_id+64)])
 else
     surf(aligned_time, frequency_range, log(mean(aligned_channel,3))','edgecolor', 'none')

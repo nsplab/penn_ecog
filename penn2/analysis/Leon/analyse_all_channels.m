@@ -11,6 +11,10 @@ for chan_idx = 1:num_chan
     num_trials = single_trial_plot( large_power_matrix, large_labels, large_force, chan_idx, F, frequency_range, rise_or_fall, fourier_sampling_rate, log_flag);
     %colorbar('location','SouthOutside')
     x_limit = get(gca, 'xlim');
+    y_limit = get(gca, 'ylim');
+    z_limit = get(gca, 'zlim');
+    hold on
+    plot3([0 0],[y_limit(1) y_limit(2)], [z_limit(1) z_limit(1)], 'k','LineWidth', 6);
     set(gca,'FontSize',8)
     if mod(plot_idx, 6) == 0
         plot_idx=plot_idx+13;

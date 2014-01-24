@@ -33,8 +33,12 @@ else
     title(['Channel ' num2str(channel_id+64)])
 
 end
+
 view(0,90)
 axis tight
+size_right = get_variables('right_limit'); %length of the signal ahead of the offset (seconds)
+size_left = get_variables('left_limit');%length of the signal after the offset (seconds)
+xlim([-size_left, size_right])
 xlabel('Time(s)')
 ylabel('Trials')
 set(gca,'FontSize',14)

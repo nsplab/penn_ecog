@@ -30,6 +30,7 @@ function [freq_array] = extract_frequency(spectrogram_data, frequency_array, des
             freq_array = spectrogram_data(:,near_index);%we extract only the elements of interest
             freq_array = mean(freq_array, 2);
         case 'single'
+            
     end
 
 end

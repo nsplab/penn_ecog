@@ -1,0 +1,33 @@
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+\usepackage{grffile}
+\usepackage{fullpage}
+\usepackage{forloop}
+
+
+\begin{document}
+\newcounter{bandnumber}
+\newcounter{channelnumber}
+\topskip0pt
+\vspace*{\fill}
+\begin{center}
+Comparison plots of every channel, calculated using the python script \texttt{cycle\_kalman\_imm\_em.py} and the matlab script \texttt{analyse\_data.m} and \texttt{feature\_channel\_creator.m}.
+
+Band 1: Beta Band
+
+Band 2: Gamma Band
+\end{center}
+\vspace*{\fill}
+\newpage
+\forloop{channelnumber}{65}{\value{channelnumber} < 80}{
+    % \hline <-- Error here
+    \begin{center}Channel \arabic{channelnumber}\end{center}
+    
+    \forloop{bandnumber}{1}{\value{bandnumber} < 3}{
+             %\includegraphics{figures/band1channel7.png}
+              \includegraphics[scale=0.39]{figures/band\arabic{bandnumber}channel\arabic{channelnumber}.png}  
+    }
+    %\\
+    %\hline
+}
+\end{document}

@@ -7,7 +7,7 @@ function [batch_data] = return_batch( data_file, size_of_batch, samplingRate, ba
 %size_of_batch =  size of the desired batch in seconds
 %samplingRate = sampling rate of the original non decimated signal
 %batch number = decide which batch of data do you wish to extract
-%data_id: defines which data you want to extract, (force or eeg).
+%data_id: defines which data you want to extract, (force, eeg, or kinect).
 %fr
 %if the batch number is inconsistent with the size of the batch, and error
 %will be created.
@@ -17,12 +17,12 @@ function [batch_data] = return_batch( data_file, size_of_batch, samplingRate, ba
 %Before using the function we recomend to calculate the number of batches
 %first, although if there is a mismatch, the function will indicate which is
 %this.
-time_stamp_bytes = get_variables('Time_stamp_bytes');;
+time_stamp_bytes = get_variables('Time_stamp_bytes');     
 num_chan = get_variables('number_of_channels');
 num_record_chan =  get_variables('number_recorded_channels');
 num_4_byte_column = 4+num_record_chan; %number of columns that have 4 bytes 
 dinfo = dir(data_file); %get the information of the data file
-num_rows = dinfo.bytes/(8+num_4_byte_column*4);% we need to divide the total amount of bytes by the amount of bytes per row.
+num_rows = dinfo.bytes/(time_stamp_bytes+num_4_byte_column*4);% we need to divide the total amount of bytes by the amount of bytes per row.
 %The amount of bytes per row depends on the data format
 total_time = num_rows/samplingRate;%calculate the total time of captured data
 batch_size_samples = floor((size_of_batch/total_time)*num_rows);%calculate the number of samples that correspond to the desired size

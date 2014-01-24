@@ -1,0 +1,17 @@
+#!/bin/bash
+# bash script to generate significant plots
+
+#datafile=$1
+#windowsize=$12
+STARTTIME=$(date +%s)
+#matlab -nodesktop -nosplash -r "iterator_script;feature_channel_creator;exit"
+#cp -a EEGDatasets/ python_analysis/
+#pdflatex -synctex=1 -interaction=nonstopmode all_channels_figures.tex
+#python send_python_mail.py all_channels_figures.pdf 
+cd python_analysis
+python cycle_kalman_imm_em.py
+#pdflatex -synctex=1 -interaction=nonstopmode create_latex.tex
+#python send_python_mail.py create_latex.pdf 
+ENDTIME=$(date +%s)
+echo "It takes $[$ENDTIME - $STARTTIME] seconds to complete this task..."
+

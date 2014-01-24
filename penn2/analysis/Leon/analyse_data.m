@@ -13,12 +13,13 @@ desired_reg_frequencies = get_variables('beta'); %Get the desired frequencies to
 ref_channel = get_variables('Reference_Channel');
 decimate_factor = floor(originalSamplingRate/desired_samplingRate);%set the decimation factor
 samplingRate = originalSamplingRate/decimate_factor; %The 25000 is hardcoded to the sampling rate we used to do the data capture.
-%window_size = get_variables('Window_Size'); %size of the window in seconds
+window_size = get_variables('Window_Size'); %size of the window in seconds
 window_size = floor(window_size * samplingRate); %transform the window size to samples
 overlap_perc = get_variables('overlap_percentage');
 win_overlap = floor(window_size * overlap_perc);
 size_of_batch = 30; %size of the batch in seconds
-first_batch = 1;
+first_batch = 5;
+%first_batch = 1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -42,11 +43,9 @@ num_rows = dinfo.bytes/(time_stamp_bytes+num_4_byte_column*4);% we need to divid
 total_time = num_rows/originalSamplingRate;%calculate the total time of captured data
 batch_size_samples = floor((size_of_batch/total_time)*num_rows);%calculate the number of samples that correspond to the desired size
 %calculate the maximum number of batches
-max_num_batches = ceil(total_time/size_of_batch)-1;
-%max_num_batches = 10;
+%max_num_batches = ceil(total_time/size_of_batch)-1;
+max_num_batches = 13;
 %finsih reading data files
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 
 
@@ -56,18 +55,17 @@ max_num_batches = ceil(total_time/size_of_batch)-1;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 tic
-
 large_power_matrix = [];
 large_labels = [];
 T_axis=[];
 large_force =[];
 %Start the batched analysis
+batch_counter = 0;
 for batch_idx = first_batch:max_num_batches
     batch_idx
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     channels_data = return_batch(data_file, size_of_batch, originalSamplingRate, batch_idx, 'eeg');
     force = return_batch(data_file, size_of_batch, originalSamplingRate, batch_idx, 'force');
-    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     %The following code denoises the singla using Andrew's technique.
     %for ch_idx = 1:num_chan
@@ -99,6 +97,7 @@ for batch_idx = first_batch:max_num_batches
     %channels_data = reference_strip(channels_data, 'baseline');
     %reference_data = repmat(mean(channels_data,2),1,num_chan);%obtain the mean and repeat it over the number of channels for the later operation.
     %reference_data = repmat(channels_data(:,ref_channel),1,num_chan);
+    %%choose a reference channel
     %channels_data=channels_data-reference_data; %rest the mean to normalize
 
         
@@ -140,23 +139,18 @@ for batch_idx = first_batch:max_num_batches
     time_axis = (1:size(force,1))/samplingRate;%generate the time series of the force
     [TF, match_idx] = findNearest(T,time_axis); %is member looks up which indexes match the output from the 
     force = force(match_idx,1);%recapture the force using the matched indexes
-    force_threshold =  0.0170559; %This is hardocded from the baseline of the data
+    %force_threshold =  0.0170559; %This is hardocded from the baseline of the data
+    force_threshold =  0.2; %This is hardocded from the baseline of the data
     labels = labelize(force, force_threshold);
     %the next part of code is to generate placeholders to prevent overflows
     %in windows computers
     
 %     if batch_idx == 1 %if we have the first batch, we generate the placeholder matrices.
-%         rowpow, colpow = size(power_matrix);
-%         large_power_matrix = zeros(rowpow*max_num_batches, colpow);
-%         rowlab, collab = size(labels);
-%         large_labels = zeros(rowlab*max_num_batches, collab);
-%         rowforce, colforce = size(force);
-%         large_force = zeros(rowforce*max_num_batches, colforce);
-%         large_power_matrix(1:rowpow,:) = power_matrix;
-%         large_labels(1:rowlab,:) = labels;
-%         large_force(1:rowforce,:) = force;
+%          rowpow, colpow = size(power_matrix); %we check the size of the working matrix
+%          large_power_matrix = zeros(rowpow*(max_num_batches-first_batch), colpow);
+%          large_power_matrix(1:rowpow,:) = power_matrix;
 %     else
-%         large_power_matrix(ro)
+%          large_power_matrix(row_pow*batch_counter+1:2*row_pow)
 %         
     
     large_power_matrix = [large_power_matrix; power_matrix];
@@ -167,7 +161,9 @@ for batch_idx = first_batch:max_num_batches
     else %if not, add the current time stamp plus the last element of the previous
         T_axis = [T_axis T_axis(end)+T];%<<<<<<CHECK THIS
     end
+    batch_counter = batch_counter + 1;
 end
+
 
 %align the new label using the EMG
 % onset = large_force; %get the EMG data
@@ -203,7 +199,7 @@ offset_time = 0.50; %offset in seconds
 %Here we create some analysis plots that might be useful if the regression
 %is working fine
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-plot_flag =1; %This flag controls the plots
+plot_flag =0; %This flag controls the plots
 if plot_flag ==1
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

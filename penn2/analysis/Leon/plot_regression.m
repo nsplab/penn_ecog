@@ -2,14 +2,14 @@
 %The script analyse_data.m needs to be run at least once before this script
 %so it generates significant vaiables like the feature vector and the
 %labels.
-desired_reg_frequencies = [15:40];
+%desired_frequencies = [72:82];
 %desired_reg_frequencies = get_variables('beta'); %Get the desired frequencies to analyze in the regression
 %desired_reg_frequencies = get_variables('High Gamma'); %Get the desired frequencies to analyze in the regression
 reg_labels = large_force;
 frequency_matrix = zeros(num_chan, length(T_axis)); %matrix that has channels in the rows and time in the X, to plot averaged frequencies
     for chan_idx = 1:num_chan
         chan_power_mat = large_power_matrix(:,(chan_idx-1)*length(F)+1:chan_idx*length(F)); %extract the info for the current channel
-        channel_frequency = extract_frequency(chan_power_mat, F, desired_reg_frequencies, 'average'); %extract the frequencies that we want
+        channel_frequency = extract_frequency(chan_power_mat, F, desired_frequencies, 'average'); %extract the frequencies that we want
         frequency_matrix(chan_idx,:) = channel_frequency;%assigns those frequencies to the channel and generate a new features vector
     end
 
@@ -24,7 +24,7 @@ pca_data = frequency_matrix'*princ_comp_coeff(:,1:5);
 
 fig1 = figure('visible','off');
 subplot(2,1,1);
-channel_id = [0:size(b,1)-1];
+channel_id = [64 [1:size(b,1)-1]+64];
 stem(channel_id, b,'r')
 xlabel('Coefficient for the regression')
 ylabel('Magnitude of the coefficient')
@@ -39,12 +39,12 @@ ylabel('P-values')
 title('P-Values for the regression');
 set(gcf, 'color', [1,1,1])
 set(gcf,'renderer', 'zbuffer');
-myaa([4 2],'regression_weights_p_value.png')
+myaa([4 2],[num2str(desired_frequencies(1)) '_to_' num2str(desired_frequencies(end)) 'regression_weights_p_value.png'])
 
 
 fig2 = figure('visible','off');
 subplot(2,1,1)
-channel_id = [0:size(BETA,1)-1];
+channel_id = [64 [1:size(BETA,1)-1]+64];
 stem(channel_id, BETA,'r')
 xlabel('Coefficient for the PLS regression')
 ylabel('Magnitude of the coefficient')
@@ -55,11 +55,11 @@ xlabel('Number of PLS components');
 ylabel('Percent Variance Explained in y');
 set(gcf, 'color', [1,1,1])
 set(gcf,'renderer', 'zbuffer');
-myaa([4 2],'pls_regression_weights_pctvar.png')
+myaa([4 2],[num2str(desired_frequencies(1)) '_to_' num2str(desired_frequencies(end)) 'pls_regression_weights_pctvar.png'])
 
 fig2_5 = figure('visible','off');
 subplot(2,1,1);
-channel_id = [0:size(b,1)-1];
+channel_id = [64 [1:size(b,1)-1]+64];
 stem(channel_id, bpls,'r')
 xlabel('Coefficient for the regression')
 ylabel('Magnitude of the coefficient')
@@ -74,12 +74,12 @@ ylabel('P-values')
 title('P-Values for the PLS regression');
 set(gcf, 'color', [1,1,1])
 set(gcf,'renderer', 'zbuffer');
-myaa([4 2],'glmfit_regression_pls.png')
+myaa([4 2],[num2str(desired_frequencies(1)) '_to_' num2str(desired_frequencies(end)) 'glmfit_regression_pls.png'])
 
 fig3 = figure('visible','off');
 %figure
 subplot(2,1,1);
-channel_id = [0:size(bpca,1)-1];
+channel_id = [64 [1:size(bpca,1)-1]+64];
 stem(channel_id, bpca,'r')
 xlabel('Coefficient for the regression using PCA')
 ylabel('Magnitude of the coefficient')
@@ -94,7 +94,7 @@ ylabel('P-values')
 title('P-Values for the regression');
 set(gcf, 'color', [1,1,1])
 set(gcf,'renderer', 'zbuffer');
-myaa([4 2],'PCA_regression_weights_p_value.png')
+myaa([4 2],[num2str(desired_frequencies(1)) '_to_' num2str(desired_frequencies(end)) 'PCA_regression_weights_p_value.png'])
 
 fig4 = figure('visible','off');
 imagesc(princ_comp_coeff)
@@ -104,7 +104,7 @@ title('PCA Heatmap')
 colorbar
 set(gcf, 'color', [1,1,1])
 set(gcf,'renderer', 'zbuffer');
-myaa([4 2],'PCA_heatmap.png')
+myaa([4 2],[num2str(desired_frequencies(1)) '_to_' num2str(desired_frequencies(end)) 'PCA_heatmap.png'])
 
 fig4 = figure('visible','off');
 imagesc(XL)
@@ -114,4 +114,4 @@ title('PLS Heatmap')
 colorbar
 set(gcf, 'color', [1,1,1])
 set(gcf,'renderer', 'zbuffer');
-myaa([4 2],'PLS_heatmap.png')
+myaa([4 2],[num2str(desired_frequencies(1)) '_to_' num2str(desired_frequencies(end)) 'PLS_heatmap.png'])

@@ -4,9 +4,10 @@
 %fig1 = figure('visible','off');
 figure
 chan_idx = 3;
-base_value = 300;
-end_value = 5000;
-desired_frequencies = [12:42];
+base_value = 1;
+end_value = length(T_axis);
+%end_value = 5000;
+%desired_frequencies = [72:82];
 channels_to_plot = [3:9];
 average_chan = 0;
 for channel_id = channels_to_plot
@@ -27,6 +28,8 @@ figureHandle = gcf;
 set(findall(figureHandle,'type','text'),'fontSize',14,'fontWeight','bold')
 grid on
 set(gcf, 'color', [1,1,1])
-set(gcf,'units','normalized','outerposition',[0 0 0.4 0.7])
+set(gcf,'units','normalized','outerposition',[0 0 1 0.4])
 set(gcf,'renderer', 'zbuffer');
-myaa([4 2],['grid_plot_aligned_single_band_' num2str(desired_frequencies(1)) '_to_' num2str(desired_frequencies(end)) '.png']);
+plot_save_name = ['grid_plot_aligned_single_band_' num2str(desired_frequencies(1)) '_to_' num2str(desired_frequencies(end)) '.png'];
+%myaa([4 2],plot_save_name);
+export_fig(plot_save_name, '-m2.5')

@@ -1,4 +1,4 @@
-function [ offset_labels, offset_data ] = offset_label(data, labels, offset_time, direction)
+function [ offset_labels, offset_data ] = offset_label(data, labels, offset_time, direction, sampling_rate)
 %OFFSET LABEL adds an offset to the signel with value equal to offset_time
 %   input:
 %   labels: value of the labes for 0 or 1
@@ -10,7 +10,7 @@ function [ offset_labels, offset_data ] = offset_label(data, labels, offset_time
 %   offset_labels: labels after the offset
 %The signal is decreased to avoid padding with zeros at the beginning or
 %end of the array
-    desired_samplingRate = get_variables('Desired_Sampling_Rate'); %use the new sampling rate
+    desired_samplingRate = sampling_rate; %use the new sampling rate
     offset_samples = floor(desired_samplingRate*offset_time); %obtain offset in samples;
     offset_labels=labels;
     offset_data = data;

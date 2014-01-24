@@ -21,18 +21,19 @@ subplot(4,1,1:3)
 if log_flag == 0
     surf(aligned_time, [1:num_trials], (trial_matrix),'edgecolor', 'none')
     plot_title = [num2str(frequency_range(1)) '_to_' num2str(frequency_range(end)) '_averaged_grid_channel_' num2str(channel_id) '.png'];
-    title([num2str(frequency_range(1)) ' to ' num2str(frequency_range(end)) ' Hz Trials aligned for Grid without log scale, ' num2str(num_trials) ' trials' ])
+    title([num2str(frequency_range(1)) ' to ' num2str(frequency_range(end)) ' Hz Trials aligned for full micro grid without log scale, ' num2str(num_trials) ' trials' ])
 else
     surf(aligned_time, [1:num_trials], log(trial_matrix),'edgecolor', 'none')
     plot_title = ['log_' num2str(frequency_range(1)) '_to_' num2str(frequency_range(end)) '_averaged_grid_channel_' num2str(channel_id) '.png'];
-    title([num2str(frequency_range(1)) ' to ' num2str(frequency_range(end)) ' Hz Trials aligned for Grid  with log scale,' num2str(num_trials) ' trials' ])
+    title([num2str(frequency_range(1)) ' to ' num2str(frequency_range(end)) ' Hz Trials aligned for full micro grid without log scale, ' num2str(num_trials) ' trials' ])
 end
 view(0,90)
+colorbar('location','SouthOutside')
 axis tight
 x_limit = get(gca, 'xlim');
 %xlabel('Time(s)')
 ylabel('Trials')
-set(gca,'FontSize',14)
+set(gca,'FontSize',20)
 subplot(4,1,4)
 hold on
 for ind = 1:num_trials
@@ -41,12 +42,12 @@ end
 plot(aligned_time, mean(aligned_force,3), 'k' ,'LineWidth', 3)
 xlim(x_limit)
 xlabel('Time[s]')
-ylabel('Force [Force Units]')
+ylabel('Force')
 grid on
 set(gcf, 'color', [1,1,1])
-set(gca,'FontSize',14)
+set(gca,'FontSize',20)
 figureHandle = gcf;
-set(findall(figureHandle,'type','text'),'fontSize',14,'fontWeight','bold')
+set(findall(figureHandle,'type','text'),'fontSize',24,'fontWeight','bold')
 set(gcf,'outerposition',[1 1 1192 804])
 set(gcf,'renderer', 'zbuffer');
 myaa([4 2],plot_title)
