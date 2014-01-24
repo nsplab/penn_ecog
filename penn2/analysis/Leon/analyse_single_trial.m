@@ -1,9 +1,10 @@
-%channels_to_plot = [3:14];
-%frequency_range = [12:40];
+channels_to_plot = [3:14];
+%frequency_range = [12:42];
 rise_or_fall = 'rise';
 plot_idx = 1;
 log_flag = 0;
-figure('visible','off');
+%figure('visible','off');
+figure
 for chan_idx = channels_to_plot
     subplot(10,4,[plot_idx, plot_idx+4, plot_idx+8])
     num_trials = single_trial_plot( large_power_matrix, large_labels, large_force, chan_idx, F, frequency_range, rise_or_fall, fourier_sampling_rate, log_flag);

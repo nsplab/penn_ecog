@@ -1,11 +1,13 @@
 channels_to_plot = [3:3+11];
-frequency_range = [70:100];
+%frequency_range = [72:82];
 rise_or_fall = 'rise';
 plot_idx = 1;
-log_flag = 1;
+log_flag = 0;
+figure
 for chan_idx = channels_to_plot
     subplot(10,4,[plot_idx, plot_idx+4, plot_idx+8])
     num_trials = plot_averaged_spectrogram_sub( large_power_matrix, large_labels, large_force, chan_idx, F, frequency_range, rise_or_fall, fourier_sampling_rate, log_flag)
+    colorbar('location','SouthOutside')
     x_limit = get(gca, 'xlim');
     if mod(plot_idx, 4) == 0
         plot_idx=plot_idx+9;
