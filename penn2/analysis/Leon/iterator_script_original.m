@@ -1,12 +1,11 @@
 %This script iterates over different window_sizes and overlap percentages
-data_cell = {'/home/leon/Data/Penn/Nov_18/data_Mon_18.11.2013_12:00:33', '/home/leon/Data/Penn/Nov_21/data_Thu_21.11.2013_12:32:02', '/home/leon/Data/Penn/Nov_26/data_Tue_26.11.2013_13:36:24'};
-data_directory = '../../graphics/squeeze';
-data_file = get_data_file(data_directory);
+data_cell = {'/home/leon/Data/Penn/Nov_18/data_Mon_18.11.2013_12:00:33', '/home/leon/Data/Penn/Nov_21/data_Thu_21.11.2013_12:32:02', '/home/leon/Data/Penn/Nov_26/data_Tue_26.11.2013_13:36:24'}
 for overlap_idx = 0.5
     for window_idx = 0.5
         
-        keep overlap_idx window_idx data_file
-        metadata = '../../launcher/log.txt'%Mosalam's config file location
+        keep overlap_idx window_idx data_cell
+        metadata = '/home/leon/Data/Penn/Nov_21/metadata.csv';
+        data_file = data_cell{2}
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         %%%%%%%%%%%%%%Get the metadata of the file%%%%%%%%%%%%%%%%%%%%%%%%%%
         %the metadata is usually specified ahead of the call of analyse_data
@@ -14,8 +13,11 @@ for overlap_idx = 0.5
         %space
         %The element that contains the date is the second element in the second
         %cell
-        [date_str, first_channel_number, number_of_channels] = extract_info(metadata);
-        save_variables(600, window_idx, overlap_idx, date_str, first_channel_number, number_of_channels)
+        [date_str, first_channel_number, number_of_channels] = extract_info(metadata)
+        fileID=fopen(metadata);
+        c = textscan(fileID,'%s %s');
+        date_str = c{2}(2);
+        save_variables(600, window_idx, overlap_idx, date_str)
         analyse_data
         %analyze_p_value_consistency(large_power_matrix, large_labels, F, 3, 0.01,fourier_sampling_rate, 300, 1, 0)
         %tempo_iter_p_values

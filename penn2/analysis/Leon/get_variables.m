@@ -37,7 +37,8 @@ parse(p,varargin{:})
 switch variable_name
     case 'number_of_channels'
         %desired number of channels to work with
-        variable = 60;
+        variable = 10;
+        %variable = number_of_channels_prime;
     case 'Original_Sampling_Rate'
         variable = 24414;
     case 'Desired_Sampling_Rate'
@@ -46,7 +47,8 @@ switch variable_name
         variable = p.Results.Window_Size;
     case 'number_recorded_channels'
         %number of channels recorded
-        variable = 60;
+        %variable = 60;
+        variable = number_of_channels_prime;
     case 'overlap_percentage'
         variable = p.Results.overlap_percentage;
     case 'Reference_Channel'
@@ -66,6 +68,8 @@ switch variable_name
         variable = 28;
     case 'date_str'
         variable = date_str;
+    case 'first_channel_number'
+        variable = first_channel_prime;
     otherwise
         error('There is no such variable to query')
    

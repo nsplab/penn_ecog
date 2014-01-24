@@ -43,11 +43,11 @@ else
     title = ['\bf Single trial analysis for' num2str(frequency_range(1)) ' to ' num2str(frequency_range(end)) ' Hz'];
     plot_title = ['log_' num2str(frequency_range(1)) '_to_' num2str(frequency_range(end)) '_all_single_trial_channel.png'];
 end
-text(0.5, 1,title,'HorizontalAlignment' ,'center','VerticalAlignment', 'top')
+text(0.5, 1,title,'HorizontalAlignment' ,'center','VerticalAlignment', 'top',  'FontSize', 20)
 data_title = ['Trials:' num2str(num_trials) ', Window Size:' num2str(get_variables('Window_Size')) '[sec], ' (num2str(floor(size(T,2)/T(end)))) '[FFT/sec]'];
-text(0.5, 0.98 ,data_title,'HorizontalAlignment' ,'center','VerticalAlignment', 'top')
+text(0.5, 0.98 ,data_title,'HorizontalAlignment' ,'center','VerticalAlignment', 'top',  'FontSize', 20)
 figureHandle = gcf;
-set(findall(figureHandle,'type','text'),'fontSize',8,'fontWeight','bold')
+%set(findall(figureHandle,'type','text'),'fontSize',8,'fontWeight','bold')
 set(gcf,'outerposition',[1 1 1920 1200])
 set(gcf,'renderer', 'zbuffer');
 myaa([4 2],plot_title)
@@ -92,11 +92,11 @@ else
     plot_title = [num2str(frequency_range(1)) '_to_' num2str(frequency_range(end)) '_all_average_channel.png'];
 
 end
-text(0.5, 1,title,'HorizontalAlignment' ,'center','VerticalAlignment', 'top')
+text(0.5, 1,title,'HorizontalAlignment' ,'center','VerticalAlignment', 'top', 'FontSize', 20)
 data_title = ['Trials:' num2str(num_trials) ', Window Size:' num2str(get_variables('Window_Size')) '[sec], ' (num2str(floor(size(T,2)/T(end)))) '[FFT/sec]'];
-text(0.5, 0.98 ,data_title,'HorizontalAlignment' ,'center','VerticalAlignment', 'top')
+text(0.5, 0.98 ,data_title,'HorizontalAlignment' ,'center','VerticalAlignment', 'top', 'FontSize', 20)
 figureHandle = gcf;
-set(findall(figureHandle,'type','text'),'fontSize',8,'fontWeight','bold')
+%set(findall(figureHandle,'type','text'),'fontSize',10,'fontWeight','bold')
 set(gcf,'outerposition',[1 1 1920 1200])
 set(gcf,'renderer', 'zbuffer');
 myaa([4 2],plot_title)

@@ -16,7 +16,7 @@ import numpy as np #Python module for math functions
 import sys #Basic System functions for Python
 import var_file as vf #Define variables in the program
 import KalmanModule as kl #Module that implements the kalman filter
-data_file = '/home/leon/Dropbox/Code/Python/UCLACode/CodeJan2014/smoother _script/baselineData.txt'
+data_file = '../../../../feature_extraction/feature_extract_cpp/build/datalog.txt' #<--- add the name of the files
 dataset = np.loadtxt(data_file,delimiter=',',dtype=float)
 dataset = dataset[:, None]
 #dataset = ((dataset-dataset.mean(0))/dataset.std(0))+5.0
