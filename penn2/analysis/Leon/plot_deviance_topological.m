@@ -23,7 +23,7 @@ function plot_deviance_topological(power_matrix, large_labels, F, frequency_rang
 
 rise_or_fall = 'rise';%variable that controls whether t align data tgo rising edges or falling edges
 deviance_channel = [];
-channels_to_use = [1:60];
+channels_to_use = [1:get_variables('number_of_channels')];
 x_size = ceil(length(channels_to_use)/5);
 y_size = length(channels_to_use)/x_size;
 for channel_id = channels_to_use;
@@ -64,16 +64,16 @@ colormap(copper)
 set(gca,'xtick',[])
 set(gca,'ytick',[])
 chann_count = 1;
-main_title = ['Heat Map of the electrodes, ' num2str(frequency_range(1)) ' to ' num2str(frequency_range(end)) '[Hz], Trials: ' num2str(trials) ', Window Size = 0.5 [s], Overlap:' num2str(get_variables('overlap_percentage'))];
+main_title = ['Heat Map of the electrodes, ' num2str(frequency_range(1)) ' to ' num2str(frequency_range(end)) '[Hz], Trials: ' num2str(trials) ', Window Size = 0.5 [s], Overlap:' num2str(100*get_variables('overlap_percentage')) '%'];
 if norm_flag == 1
-    main_title = ['Heat Map of the electrodes, '  num2str(frequency_range(1)) ' to ' num2str(frequency_range(end))  '[Hz], Trials: ' num2str(trials) ', Window Size = 0.5 [s], Normalized, Overlap:' num2str(get_variables('overlap_percentage'))];
+    main_title = ['Heat Map of the electrodes, '  num2str(frequency_range(1)) ' to ' num2str(frequency_range(end))  '[Hz], Trials: ' num2str(trials) ', Window Size = 0.5 [s], Normalized, Overlap:' num2str(100*get_variables('overlap_percentage')) '%'];
 end
 if log_flag == 1
-    main_title = ['Heat Map of the electrodes, '  num2str(frequency_range(1)) ' to ' num2str(frequency_range(end)) '[Hz], Trials: ' num2str(trials) ', Window Size = 0.5 [s], Log(power) features, Overlap:' num2str(get_variables('overlap_percentage'))];
+    main_title = ['Heat Map of the electrodes, '  num2str(frequency_range(1)) ' to ' num2str(frequency_range(end)) '[Hz], Trials: ' num2str(trials) ', Window Size = 0.5 [s], Log(power) features, Overlap:' num2str(100*get_variables('overlap_percentage')) '%'];
 end
 for y_text = 1:x_size
     for x_text = 1:y_size
-        text(x_text, y_text, num2str(chann_count+64))
+        text(x_text, y_text, num2str(chann_count+get_variables('first_channel_number')-1))
         chann_count = chann_count + 1;
     end
 end

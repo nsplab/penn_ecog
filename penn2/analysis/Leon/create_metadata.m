@@ -21,13 +21,14 @@ filename = [directory '/metadata.nspd']
 fileID = fopen(filename, 'w');
 fprintf(fileID,'Meta information about the files contained in the folders\n');
 fprintf(fileID,'%2.0f recorded channels\n',recorded_channels);
-fprintf(fileID,'%2.0f working channels\n', recorded_channels);
+fprintf(fileID,'%2.0f working channels\n', working_channels);
 fprintf(fileID,'Date of the experiment: %10s\n', date_str{1});
 fprintf(fileID,'Original Sampling Rate: %6.2f\n', original_sampling_rate);
 fprintf(fileID,'Sub Sampling Rate: %5.2f\n', sampling_rate);
 fprintf(fileID,'Fourier Sampling Rate: %5.2f\n', fourier_sampling_rate);
+fprintf(fileID,'First Channel: %.0f\n', get_variables('first_channel_number'));
 for band_idx = 1:length(bands)
-    fprintf(fileID,'Band %2.0f: %5.2f to %5.2f\n', band_idx, bands{band_idx}(1),bands{band_idx}(end));
+    fprintf(fileID,'Band %.0f: %5.2f to %5.2f\n', band_idx, bands{band_idx}(1),bands{band_idx}(end));
 end
 
 fprintf(fileID,'This data is property of the NSPLAB, for its use and distribution, contact leonpalafox@ucla.edu');

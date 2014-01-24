@@ -2,6 +2,7 @@
 import numpy as np #Python module for math functions
 import pylab as plt #Python module for plotting
 import sys #Basic System functions for Python
+import utils_extract as ue #Utils to extract data from files
 import os
 import GlobalEM as gem
 import var_file as vf
@@ -9,6 +10,7 @@ from sklearn.preprocessing import MinMaxScaler
 import KalmanModule as kl
 fourier_sampling_rate = 3.3352;
 folder_name = 'EEGDatasets'
+date_str, band_dict, starting_channel = ue.extract_data(os.path.join(folder_name, 'metadata.nspd'))
 band_number = len([name for name in os.listdir('./'+folder_name) if os.path.isdir('./'+folder_name+'/'+name)])
 for band_idx in range(1,band_number+1):
     folder = os.path.join(folder_name, 'band_' + str(band_idx))
@@ -86,11 +88,11 @@ for band_idx in range(1,band_number+1):
         p3, = plt.plot(time_axis, upper_CI, 'r--', linewidth=1.0)
         plt.xlabel('Time[s]')
         plt.ylabel('Power Means')
-        plot_title = 'State Space model using EM, Band: '+str(band_idx)
+        plot_title = 'State Space model using EM, Band: '+ band_dict[band_idx] + ' Date: '+date_str
         plt.title(plot_title)
         plt.legend([p1, p2, p3], ["Power Estimate Mean", "Upper 95% CI", "Lower 95% CI"])
         plt.grid()
-        plt.savefig('./figures'+'/band'+str(band_idx)+'channel'+str(chan_idx+64)+'.png')
+        plt.savefig('./figures'+'/band'+str(band_idx)+'channel'+str(chan_idx+starting_channel-1)+'.png')
         
         
         
