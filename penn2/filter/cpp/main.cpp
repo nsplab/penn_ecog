@@ -26,7 +26,8 @@ void signal_callback_handler(int signum) {
 
 int main(int argc, char** argv) {
 
-    string cfgFile("../filter.cfg");
+    string cfgFile("../filter.cfg"); //filter.cfg, in /penn_ecog_penn2/filter/cpp/, contains all relevant filter parameters for all filter types.
+                                     //eg.) for adaptive filtering, it contains increment covariances, choice of state equation, etc.
 
     // check if the config file exists
     ifstream testFile(cfgFile.c_str());
@@ -79,12 +80,12 @@ int main(int argc, char** argv) {
         filter.Run();
     } else {
         jointRSE_filter filter(dimensions,     // dimension
-                           velocityParams, // include velocity parameters
-                           positionParams, // include position parameters
-                           affineParam,    // include affine parameter
-                           useRSE,         // use RSE
-                           timeInvariant,  // time invariant switch
-                           log,            // log the variables
+                           velocityParams, // boolean which determines whether to include velocity parameters in the observation model
+                           positionParams, // boolean which determines whether to include position parameters in the observation model
+                           affineParam,    // boolean which determines whether to include affine parameters in the observation model
+                           useRSE,         // boolean which indicates whether to use RSE as the state equation
+                           timeInvariant,  // boolean which indicates whether to use a time invariant model as the state equation
+                           log,            // records various values to file: innovations, prediction and update values at every timestep; used for debugging jointRSE_filter
                            trialTime,      // trial time
                            maxTrialTime,   // maximum trial time
                            diagQ,          // initial RSE cov diagonal value
