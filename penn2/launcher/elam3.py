@@ -209,13 +209,22 @@ blockWidth = StringVar()
 ### Subject's info
 ##################
 
+s = ttk.Style()
+s.configure('s1.TLabelframe.Label', background="#D8A499")
+s.configure('s2.TLabelframe.Label', background='#C6CDF7')
+s.configure('s3.TLabelframe.Label', background='#7294D4')
+s.configure('s4.TLabelframe.Label', background='#E680A5')
+
+lfSubject = ttk.Labelframe(mainframe, text='Subject: ', style='s1.TLabelframe')
+lfSubject.grid(column=1, row=1, sticky=(W, E))
+
 rowNumber = 1
 
 ## gender
-ttk.Label(mainframe, text="Gender:").grid(column=1, row=rowNumber, sticky=E)
+ttk.Label(lfSubject, text="Gender:").grid(column=1, row=rowNumber, sticky=E)
 gender = StringVar()
-maleE = ttk.Radiobutton(mainframe, text='Male', variable=gender, value='Male')
-femaleE = ttk.Radiobutton(mainframe, text='Female', variable=gender, value='Female')
+maleE = ttk.Radiobutton(lfSubject, text='Male', variable=gender, value='Male')
+femaleE = ttk.Radiobutton(lfSubject, text='Female', variable=gender, value='Female')
 maleE.grid(column=2, row=rowNumber, sticky=(W, E))
 rowNumber += 1
 femaleE.grid(column=2, row=rowNumber, sticky=(W, E))
@@ -223,45 +232,51 @@ rowNumber += 1
 
 ## age
 age = StringVar()
-ttk.Label(mainframe, text="Age:").grid(column=1, row=rowNumber, sticky=E)
-ageE = ttk.Entry(mainframe, width=7, textvariable=age)
+ttk.Label(lfSubject, text="Age:").grid(column=1, row=rowNumber, sticky=E)
+ageE = ttk.Entry(lfSubject, width=7, textvariable=age)
 ageE.grid(column=2, row=rowNumber, sticky=(W, E))
 rowNumber += 1
 
 ## dominant hand
-ttk.Label(mainframe, text="Dominant Hand:").grid(column=1, row=rowNumber, sticky=E)
+ttk.Label(lfSubject, text="Dominant Hand:").grid(column=1, row=rowNumber, sticky=E)
 hand = StringVar()
-rightHandE = ttk.Radiobutton(mainframe, text='Right-handed', variable=hand, value='Right-handed')
-leftHandE = ttk.Radiobutton(mainframe, text='Left-handed', variable=hand, value='Left-handed')
+rightHandE = ttk.Radiobutton(lfSubject, text='Right-handed', variable=hand, value='Right-handed')
+leftHandE = ttk.Radiobutton(lfSubject, text='Left-handed', variable=hand, value='Left-handed')
 rightHandE.grid(column=2, row=rowNumber, sticky=(W, E))
 rowNumber += 1
 leftHandE.grid(column=2, row=rowNumber, sticky=(W, E))
 rowNumber += 1
 
 ## grid hemisphere
-ttk.Label(mainframe, text="Grid Hemisphere:").grid(column=1, row=rowNumber, sticky=E)
+ttk.Label(lfSubject, text="Grid Hemisphere:").grid(column=1, row=rowNumber, sticky=E)
 grid = StringVar()
-rightGridE = ttk.Radiobutton(mainframe, text='Right', variable=grid, value='Right')
-leftGridE = ttk.Radiobutton(mainframe, text='Left', variable=grid, value='Left')
+rightGridE = ttk.Radiobutton(lfSubject, text='Right', variable=grid, value='Right')
+leftGridE = ttk.Radiobutton(lfSubject, text='Left', variable=grid, value='Left')
 rightGridE.grid(column=2, row=rowNumber, sticky=(W, E))
 rowNumber += 1
 leftGridE.grid(column=2, row=rowNumber, sticky=(W, E))
 rowNumber += 1
 
 ## separator
-ttk.Separator(mainframe, orient=HORIZONTAL).grid(row=rowNumber, columnspan=5, sticky='WE')
-rowNumber += 1
+#ttk.Separator(mainframe, orient=HORIZONTAL).grid(row=rowNumber, columnspan=5, sticky='WE')
+rowNumber = 1
 
 ##################
 ### Baseline/Squeeze
 ##################
 
+lfSqueeze = ttk.LabelFrame(mainframe, text='Squeeze Task: ', style='s2.TLabelframe')
+lfSqueeze.grid(column=1, row=2, sticky=(W, E))
+
 ## sensor
-ttk.Label(mainframe, text="Force Sensor in:").grid(column=1, row=rowNumber, sticky=E)
+tlabel = ttk.Label(lfSqueeze, text="Force Sensor in:")
+tlabel.grid(column=1, row=rowNumber, sticky=E)
+#tlabel.config(background='green')
 forceSensorHand = StringVar()
-forceSensorHandRE = ttk.Radiobutton(mainframe, text='Right Hand', variable=forceSensorHand,
+forceSensorHandRE = ttk.Radiobutton(lfSqueeze, text='Right Hand', variable=forceSensorHand,
                                     value='Right Hand')
-forceSensorHandLE = ttk.Radiobutton(mainframe, text='Left Hand', variable=forceSensorHand,
+
+forceSensorHandLE = ttk.Radiobutton(lfSqueeze, text='Left Hand', variable=forceSensorHand,
                                     value='Left Hand')
 forceSensorHandRE.grid(column=2, row=rowNumber, sticky=(W, E))
 rowNumber += 1
@@ -269,25 +284,28 @@ forceSensorHandLE.grid(column=2, row=rowNumber, sticky=(W, E))
 rowNumber += 1
 
 ## buttons
-ttk.Button(mainframe, text="Start Squeeze Task", command=StartSqueeze).grid(column=1, row=rowNumber,
+ttk.Button(lfSqueeze, text="Start Squeeze Task", command=StartSqueeze).grid(column=1, row=rowNumber,
                                                                           sticky='we')
-ttk.Button(mainframe, text="Stop Squeeze Task", command=StopSqueeze).grid(column=2, row=rowNumber,
+ttk.Button(lfSqueeze, text="Stop Squeeze Task", command=StopSqueeze).grid(column=2, row=rowNumber,
                                                                          sticky='we')
 rowNumber += 1
 
 ## separator
-ttk.Separator(mainframe, orient=HORIZONTAL).grid(row=rowNumber, columnspan=5, sticky='WE')
-rowNumber += 1
+#ttk.Separator(lfSqueeze, orient=HORIZONTAL).grid(row=rowNumber, columnspan=5, sticky='WE')
+rowNumber = 1
 
 ##################
 ### BCI Task
 ##################
 
+lfBCI = ttk.Labelframe(mainframe, text='BCI Task: ', style='s3.TLabelframe')
+lfBCI.grid(column=1, row=3, sticky=(W, E))
+
 # invert the power
-ttk.Label(mainframe, text="Invert the power:").grid(column=1, row=rowNumber, sticky=E)
+ttk.Label(lfBCI, text="Invert the power:").grid(column=1, row=rowNumber, sticky=E)
 invertPower = StringVar()
-invertPowerYE = ttk.Radiobutton(mainframe, text='Yes', variable=invertPower, value='Yes')
-invertPowerNE = ttk.Radiobutton(mainframe, text='No', variable=invertPower, value='No')
+invertPowerYE = ttk.Radiobutton(lfBCI, text='Yes', variable=invertPower, value='Yes')
+invertPowerNE = ttk.Radiobutton(lfBCI, text='No', variable=invertPower, value='No')
 invertPowerNE.grid(column=2, row=rowNumber, sticky=(W, E))
 rowNumber += 1
 invertPowerYE.grid(column=2, row=rowNumber, sticky=(W, E))
@@ -295,70 +313,72 @@ rowNumber += 1
 
 
 # input box for channel number
-ttk.Label(mainframe, text="Channel Number:").grid(column=1, row=rowNumber, sticky=E)
-chNum_entry = ttk.Entry(mainframe, width=7, textvariable=channelNumber)
+ttk.Label(lfBCI, text="Channel Number:").grid(column=1, row=rowNumber, sticky=E)
+chNum_entry = ttk.Entry(lfBCI, width=7, textvariable=channelNumber)
 chNum_entry.grid(column=2, row=rowNumber, sticky=(W, E))
 rowNumber += 1
 
 # input box for block width
 blockWidth = StringVar()
 blockWidth.set(0.25)
-ttk.Label(mainframe, text="Block Width percent\n of Screen:").grid(column=1, row=rowNumber,
+ttk.Label(lfBCI, text="Block Width percent\n of Screen:").grid(column=1, row=rowNumber,
           sticky=E)
-blockWidthE = ttk.Entry(mainframe, width=7, textvariable=blockWidth)
-blockWidthE.grid(column=2, row=rowNumber, sticky=(W, E))
+blockWidthE = ttk.Entry(lfBCI, width=7, textvariable=blockWidth)
+blockWidthE.grid(column=2, row=rowNumber, sticky='e')
 rowNumber += 1
 
 # input box for block width
 blockLength = StringVar()
 blockLength.set(10)
-ttk.Label(mainframe, text="Block Length in Seconds:").grid(column=1, row=rowNumber,
+ttk.Label(lfBCI, text="Block Length in Seconds:").grid(column=1, row=rowNumber,
           sticky=E)
-blockLengthE = ttk.Entry(mainframe, width=7, textvariable=blockLength)
+blockLengthE = ttk.Entry(lfBCI, width=7, textvariable=blockLength)
 blockLengthE.grid(column=2, row=rowNumber, sticky=(W, E))
 rowNumber += 1
 
 ## buttons
-ttk.Button(mainframe, text="Start BCI Task", command=StartBCI).grid(column=1, row=rowNumber,
-                                                                    sticky='we')
-ttk.Button(mainframe, text="Stop BCI Task", command=StopBCI).grid(column=2, row=rowNumber,
-                                                                     sticky='we')
+ttk.Button(lfBCI, text="Start BCI Task", command=StartBCI).grid(column=1, row=rowNumber,
+                                                                    sticky='e')
+ttk.Button(lfBCI, text="Stop BCI Task", command=StopBCI).grid(column=2, row=rowNumber,
+                                                                     sticky='e')
 rowNumber += 1
 
 ## separator
-ttk.Separator(mainframe, orient=HORIZONTAL).grid(row=rowNumber, columnspan=5, sticky='WE')
+#ttk.Separator(mainframe, orient=HORIZONTAL).grid(row=rowNumber, columnspan=5, sticky='WE')
 rowNumber += 1
 
 ##################
 ### TDT config
 ##################
 
+lfTDT = ttk.Labelframe(mainframe, text='TDT: ', style='s4.TLabelframe')
+lfTDT.grid(column=1, row=4, sticky=(W, E))
 
-ttk.Label(mainframe, text="Sampling Rate:").grid(column=1, row=rowNumber, sticky=E)
+ttk.Label(lfTDT, text="Sampling Rate:").grid(column=1, row=rowNumber, sticky=E)
 sampleRateV = StringVar()
 sampleRateV.set(sampleRate)
-sampleRateE = ttk.Entry(mainframe, textvariable=sampleRateV)
+sampleRateE = ttk.Entry(lfTDT, textvariable=sampleRateV)
 sampleRateE.grid(column=2, row=rowNumber, sticky='e')
 rowNumber += 1
 
-ttk.Label(mainframe, text="Force sensor Ch Number:").grid(column=1, row=rowNumber, sticky=E)
+ttk.Label(lfTDT, text="Force sensor Ch Number:").grid(column=1, row=rowNumber, sticky=E)
 forceCh = StringVar()
 forceCh.set(forceSensorCh)
-forceChE = ttk.Entry(mainframe, textvariable=forceCh)
+forceChE = ttk.Entry(lfTDT, textvariable=forceCh)
 forceChE.grid(column=2, row=rowNumber, sticky='e')
 rowNumber += 1
 
-ttk.Label(mainframe, text="First ECoG Ch Number:").grid(column=1, row=rowNumber, sticky=E)
+ttk.Label(lfTDT, text="First ECoG Ch Number:").grid(column=1, row=rowNumber, sticky=E)
 firstEcogChV = StringVar()
 firstEcogChV.set(firstEcogCh)
-firstEcogChE = ttk.Entry(mainframe, textvariable=firstEcogChV)
+firstEcogChE = ttk.Entry(lfTDT, textvariable=firstEcogChV)
 firstEcogChE.grid(column=2, row=rowNumber, sticky='e')
 rowNumber += 1
 
-ttk.Label(mainframe, text="Number of ECoG Channels:").grid(column=1, row=rowNumber, sticky=E)
+ttk.Label(lfTDT, text="Number of ECoG Channels:").grid(column=1, row=rowNumber, sticky=E)
 numberOfEcogChsV = StringVar()
 numberOfEcogChsV.set(numberOfEcogChs)
-numberOfEcogChsE = ttk.Entry(mainframe, textvariable=numberOfEcogChsV)
+numberOfEcogChsE = ttk.Entry(lfTDT, textvariable=numberOfEcogChsV)
 numberOfEcogChsE.grid(column=2, row=rowNumber, sticky='e')
 
 #ttk.Label(mainframe, textvariable=channelNumber).grid(column=2, row=2, sticky=(W, E))
@@ -366,7 +386,8 @@ numberOfEcogChsE.grid(column=2, row=rowNumber, sticky='e')
 #ttk.Label(mainframe, text="").grid(column=3, row=2, sticky=W)
 
 for child in mainframe.winfo_children():
-    child.grid_configure(padx=5, pady=5)
+    print 'i'
+    child.grid_configure(padx=15, pady=15)
 
 ageE.focus()
 #root.bind('<Return>', saveconfig)
