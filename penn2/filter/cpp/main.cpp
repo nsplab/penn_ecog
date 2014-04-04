@@ -7,7 +7,7 @@
 
 #include <signal.h>
 
-#include "GetPot.h"
+#include "../../libs/GetPot.h"
 
 #include "naive_filter.h"
 #include "jointrse_filter.h"

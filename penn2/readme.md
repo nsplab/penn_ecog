@@ -56,7 +56,7 @@ The required external libraries:
 4. openkinect and its python wrapper
 5. opencv 2 or 3 and its python wrapper
 6. IT++
-
+7. Boost:  in Synaptic Package Manager, the exact name is libboost-math-dev (we have been using the most stable version, whatever version that is).
 To compile C++ modules use cmake, create a build subdirectory and in that directory run:
 cmake ../
 make
