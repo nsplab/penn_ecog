@@ -16,6 +16,8 @@
 
 using namespace std;
 
+bool quit = false;
+
 void signal_callback_handler(int signum) {
     cout<<"int signal"<<endl;
     signal(signum, SIG_IGN);

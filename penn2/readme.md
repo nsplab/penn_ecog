@@ -58,6 +58,7 @@ The required external libraries:
 6. IT++
 7. Boost:  in Synaptic Package Manager, the exact name is libboost-math-dev (we have been using the most stable version, whatever version that is).
 8. Armadillo - for linear algebra in matlab-like syntax
+9. FLTK - used for making the popup window that lets you update the filter parameters while the game is running (FLTK is for creating GUIs)
 
 To compile C++ modules use cmake, create a build subdirectory and in that directory run:
 cmake ../
