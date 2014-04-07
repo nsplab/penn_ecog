@@ -7,6 +7,15 @@ import subprocess
 import time
 from subprocess import Popen
 from signal import SIGINT
+import os
+import sys
+import zmq
+
+
+context = zmq.Context()
+socket = context.socket(zmq.REQ)
+socket.connect("ipc:///tmp/record.pipe")
+
 
 config = ConfigParser.RawConfigParser()
 config.read('tdt.cfg')
@@ -190,6 +199,8 @@ def StartBCI(*args):
 
     except ValueError:
         pass
+
+
 
 root = Tk()
 root.title("Elam3 Launcher")
@@ -386,10 +397,27 @@ numberOfEcogChsE.grid(column=2, row=rowNumber, sticky='e')
 #ttk.Label(mainframe, text="").grid(column=3, row=2, sticky=W)
 
 for child in mainframe.winfo_children():
-    print 'i'
     child.grid_configure(padx=15, pady=15)
 
 ageE.focus()
 #root.bind('<Return>', saveconfig)
+
+# 0. load kernel module
+cwd = os.getcwd()
+os.chdir("/home/user/")
+lproc = Popen([r'sudo', './loaddriver.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+(outmsg, errmsg) = lproc.communicate()
+print 'errmsg :', errmsg
+print 'outmsg :', outmsg
+
+if errmsg:
+    tkMessageBox.showinfo(message='Could not load the kernel module! Make sure the TDT kernel module is compiled for the current kernel version.')
+    sys.exit("Couldn't load TDT kernel module")
+
+# 1. set TDT mode
+
+# 2. check signal acquisi
+
+# 3.
 
 root.mainloop()
