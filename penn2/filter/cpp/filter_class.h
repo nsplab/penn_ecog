@@ -35,9 +35,9 @@ protected:
   size_t featureTimestamp_;                                         //timestamping for each feature is based on a counter rather than system time. the size_t data type is an unsigned integer value.
   size_t dim_;
 private:
-  static zmq::context_t context_;
-  static zmq::socket_t supervisor_;
-  static zmq::socket_t features_subscriber_;
+  static zmq::context_t context_;                                   //
+  static zmq::socket_t supervisor_;                                 // zmq ipc channel for messages broadcast by the supervisor module
+  static zmq::socket_t features_subscriber_;                        // zmq ipc channel for messages broadcast by the feature_extraction module
 };
 
 #endif // FILTER_CLASS_H

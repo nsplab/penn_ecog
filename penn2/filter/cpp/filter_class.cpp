@@ -3,12 +3,12 @@
 #include <iostream>
 
 using namespace std;
-using namespace zmq;
+using namespace zmq;                                                                        // this library is used for asynchronous communication (ipc) between supervisor, feature_extraction, and filter modules
 
-// ZMQ thread pool of 3                                                                     // ??
-context_t FilterClass::context_(2);                                                         // ??
-socket_t FilterClass::supervisor_(context_, ZMQ_REQ);                                       // ??
-socket_t FilterClass::features_subscriber_(context_, ZMQ_SUB);                              // ??
+                                                                                            // setting up ZMQ with a "thread pool" of 2 communication channels
+context_t FilterClass::context_(2);                                                         // needed to establish the zmq channels. argument of 2 says there will be 2 communication channels
+socket_t FilterClass::supervisor_(context_, ZMQ_REQ);                                       // ZMQ_REQ is the request side of a request-and-reply communication channel (two-way communication)
+socket_t FilterClass::features_subscriber_(context_, ZMQ_SUB);                              // ZMQ_SUB is the subscribe side of a publish-subscribe communication channel (one-way communication
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FilterClass::FilterClass() {                                                                // purpose: constructor for FilterClass, establishes zmq ipc connections to features and supervisor

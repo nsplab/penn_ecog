@@ -15,21 +15,24 @@
 
 using namespace std;                                                                                //allows you to write cout << instead of std:cout <<
 
-
-NaiveFilter::NaiveFilter(float featureRate){                                                        // define the constructor for NaiveFilter; needs the featureRate, the rate (in Hz)
-  featureRate_ = featureRate;                                                                       // at which new features (eg. power in different frequencies/channels) are calculated
-  gamma_ = 0.5;                                                                                     //
-  scale_ = 0.001;
-  q5_ = 0.0;
-  q95_ = 0.0;
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%      //
+NaiveFilter::NaiveFilter(float featureRate){                                                        // purpose: Constructor for NaiveFilter.
+                                                                                                    // inputs:  featureRate is rate (in Hz) at which features (eg. power in various frequency bands/channels)
+                                                                                                    //          is expected to be updated.
+                                                                                                    //
+  featureRate_ = featureRate;                                                                       // rate (in Hz) at which new features (eg. power in different frequencies/channels) are calculated
+  gamma_ = 0.5;                                                                                     // gamma is the
+  scale_ = 0.001;                                                                                   //
+  q5_ = 0.0;                                                                                        //
+  q95_ = 0.0;                                                                                       //
 }
 
 void NaiveFilter::Predict() {
-  // get features in features_
-  GrabFeatures();
+  GrabFeatures();                                                                                   // get new features: implemented by FilterClass; refreshes features_ with latest values
+                                                                                                    //                   from feature_extraction module
   // process features
   //for (size_t i=0; i<features_.size(); i++) {
-  //    features_[i] *= 0.5;
+  //    features_[i] *= 0.5;                                                                        // (inactive debug code) scale each feature value by 50%
   //}
 }
 

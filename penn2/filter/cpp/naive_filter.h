@@ -9,7 +9,10 @@
 
 #include <vector>
 
-class NaiveFilter : public FilterClass {
+class NaiveFilter : public FilterClass {                        //this is the prototype for the NaiveFilter class; details are found in naive_filter.cpp
+                                                                //NaiveFilter is the derived class, which inherits members from the base class called FilterClass
+                                                                //members that you see below are in addition to the members present in FilterClass
+                                                                //note that Update() and Predict() were described but not implemented in FilterClass; they are implemented in NaiveFilter
 public:
   typedef boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::tail_quantile<boost::accumulators::right> > > accumulator_t_right;
   typedef boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::tail_quantile<boost::accumulators::left> > > accumulator_t_left;
