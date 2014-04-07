@@ -13,12 +13,12 @@
 #include <Fl/Fl_Input.H>
 #include <FL/Fl_Output.H>
 
-using namespace std;
+using namespace std;                                                                                //allows you to write cout << instead of std:cout <<
 
 
-NaiveFilter::NaiveFilter(float featureRate){
-  featureRate_ = featureRate;
-  gamma_ = 0.5;
+NaiveFilter::NaiveFilter(float featureRate){                                                        // define the constructor for NaiveFilter; needs the featureRate, the rate (in Hz)
+  featureRate_ = featureRate;                                                                       // at which new features (eg. power in different frequencies/channels) are calculated
+  gamma_ = 0.5;                                                                                     //
   scale_ = 0.001;
   q5_ = 0.0;
   q95_ = 0.0;

@@ -352,7 +352,7 @@ void jointRSE_filter::Update() {
 
     // extract position from updated state vector
     pos_ = new_x.submat(dim_ * numSetsOfParams_ * numLags_ * numChannels + affineParam_ * numChannels, 0,
-                        dim_ * numSetsOfParams_ * numLags_ * numChannels + affineParam_ * numChannels + dim_ - 1, 0);
+                        dim_ * numSetsOfParams_ * numLags_ * numChannels + affineParam_ * numChannels + dim_ - 1, 0);  //extract the position in dim_ # of dimensions
     prev_u_ = new_x.submat(dim_ * numSetsOfParams_ * numLags_ * numChannels + affineParam_ * numChannels + dim_, 0,
                            dim_ * numSetsOfParams_ * numLags_ * numChannels + affineParam_ * numChannels + dim_ + dim_ - 1, 0);
 
@@ -372,7 +372,7 @@ void jointRSE_filter::Update() {
 
     // to test
     vec handState = new_x.submat(dim_ * numSetsOfParams_ * numLags_ * numChannels + affineParam_ * numChannels, 0,
-                                 dim_ * numSetsOfParams_ * numLags_ * numChannels + affineParam_ * numChannels + 2 * dim_ - 1, 0);
+                                 dim_ * numSetsOfParams_ * numLags_ * numChannels + affineParam_ * numChannels + 2 * dim_ - 1, 0);  //extract the position and velocity for all dimensions
 
     handState_ = conv_to< std::vector<float> >::from(handState);
 
@@ -457,7 +457,7 @@ void jointRSE_filter::Run() {
     for (;;) {
         GrabFeatures();
 
-        SendHandPosGetState(handPos_);
+        SendHandPosGetState(handPos_);                              //send the filter's update-step-estimated hand position to the supervisor module
 
         obs_.resize(features_.size());
         for (size_t i=0; i<features_.size(); i++) {

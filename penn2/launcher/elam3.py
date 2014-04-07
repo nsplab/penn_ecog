@@ -438,7 +438,7 @@ os.chdir(cwd)
 
 if errmsg:
     tkMessageBox.showinfo(message='Could not load the kernel module! Make sure the TDT kernel module is compiled for the current kernel version.')
-    #sys.exit("Couldn't load TDT kernel module")
+    sys.exit("Couldn't load TDT kernel module. This may be because the TDT kernel module is missing or not compiled for the current kernel version.")
 
 # 1. set TDT mode
 
