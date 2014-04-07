@@ -428,8 +428,6 @@ ageE.focus()
 #root.bind('<Return>', saveconfig)
 
 # 0. load kernel module
-cwd = os.getcwd()
-os.chdir("/home/user/")
 lproc = Popen([r'sudo', './loaddriver.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 (outmsg, errmsg) = lproc.communicate()
 print 'errmsg :', errmsg
