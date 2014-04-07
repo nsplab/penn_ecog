@@ -144,9 +144,16 @@ int main(int argc, char** argv)
     context_t context(3);
     socket_t publisher(context, ZMQ_PUB);
     socket_t subscriber(context, ZMQ_SUB);
+    int hwm = 1;				//hwm - high water mark - determines buffer size for
+    //data passed through ZMQ. hwm = 1 makes the ZMQ buffer
+    //size = 1. This means that if no module has accessed a
+    //value written through ZMQ, new values will be dropped
+    //until any module reads the value
+    publisher.setsockopt(ZMQ_SNDHWM, &hwm, sizeof(hwm));
     publisher.bind("ipc:///tmp/features.pipe");
     subscriber.connect("ipc:///tmp/signal.pipe");
     subscriber.setsockopt(ZMQ_SUBSCRIBE, "", 0);
+
 
     float buffer[64];
     vector<float> points(numChannels);
