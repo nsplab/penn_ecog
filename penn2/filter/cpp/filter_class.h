@@ -22,7 +22,7 @@ public:
   void Simulate(std::vector<float> features, size_t trial, std::vector<float> target, std::vector<float> initHandPosition);
   std::vector<float> GetHandState() {return handState_;}            // returns the handState_
 protected:
-  std::vector<float> features_;                                     // feature vector at the current point in time
+  std::vector<float> features_;                                     // feature vector at the current point in time, typically power at various frequencies/channels
   std::vector<float> handPos_;                                      // update-step-based hand position intended to be sent to the virtual environment at the current point in time
   std::vector<float> handState_;                                    // hand state variable - could be used to record position and velocity
 
