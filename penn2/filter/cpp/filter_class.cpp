@@ -78,13 +78,19 @@ void FilterClass::SendHandPosGetState(const vector<float>& hand_movement) {     
     supervisor_msg_str.assign((char *)supervisor_msg.data(),supervisor_msg.size());         // convert the received supervisor message into c++ string/sstream
     cout<<"feat_str "<<supervisor_msg_str<<endl;                                            // (debug code) print to the console what the supervisor string was
     //replace(feat_str.begin(), feat_str.end(), ',', ' ');
-    stringstream supervisor_msg_ss(supervisor_msg_str);                                     //convert the supervisor_msg_str into a stringstream for convenient parsing
+    stringstream supervisor_msg_ss(supervisor_msg_str);                                     // convert the supervisor_msg_str into a stringstream for convenient parsing
 
-    // extract target position, hand position, trial ID, mode (training/testing)
-    // and attending value from supervisor's message
-    supervisor_msg_ss >> target_[0];supervisor_msg_ss >> target_[1];supervisor_msg_ss >> target_[2];             //without loss of generality, store the target position in 3-dim space (even for 2D or 1D mode)
+                                                                                            // extract target position, hand position, trial ID, mode (training/testing)
+                                                                                            // and subject attending state from supervisor's message
 
-    supervisor_msg_ss >> handPos_[0];supervisor_msg_ss >> handPos_[1];supervisor_msg_ss >> handPos_[2];          //without loss of generality, store the hand position in 3-dim space (even for 2D or 1D mode)
+                                                                                            // without loss of generality, store the target position in 3-dim space (even for 2D or 1D mode)
+    supervisor_msg_ss >> target_[0];                                                        // target x position
+    supervisor_msg_ss >> target_[1];                                                        // target y position
+    supervisor_msg_ss >> target_[2];                                                        // target z position
+                                                                                            // without loss of generality, store the hand position in 3-dim space (even for 2D or 1D mode)
+    supervisor_msg_ss >> handPos_[0];                                                       // hand x position in virtual environment, following command from filter to supervisor based on update filter estimate
+    supervisor_msg_ss >> handPos_[1];                                                       // hand y position in virtual environment, following command from filter to supervisor based on update filter estimate
+    supervisor_msg_ss >> handPos_[2];                                                       // hand z position in virtual environment, following command from filter to supervisor based on update filter estimate
 
     supervisor_msg_ss >> trial_id;
 
