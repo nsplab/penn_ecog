@@ -428,10 +428,13 @@ ageE.focus()
 #root.bind('<Return>', saveconfig)
 
 # 0. load kernel module
+cwd = os.getcwd()
+os.chdir("../signal_acquisition/tdt/")
 lproc = Popen([r'sudo', './loaddriver.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 (outmsg, errmsg) = lproc.communicate()
 print 'errmsg :', errmsg
 print 'outmsg :', outmsg
+os.chdir(cwd)
 
 if errmsg:
     tkMessageBox.showinfo(message='Could not load the kernel module! Make sure the TDT kernel module is compiled for the current kernel version.')
