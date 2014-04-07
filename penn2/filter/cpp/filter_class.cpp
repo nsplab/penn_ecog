@@ -11,12 +11,19 @@ socket_t FilterClass::supervisor_(context_, ZMQ_REQ);
 socket_t FilterClass::features_subscriber_(context_, ZMQ_SUB);
 
 FilterClass::FilterClass() {
-  features_subscriber_.connect("ipc:///tmp/features.pipe");
-  features_subscriber_.setsockopt(ZMQ_SUBSCRIBE, NULL, 0);
-  supervisor_.connect("ipc:///tmp/supervisor.pipe");
-  // assume target is in 3d
-  target_.resize(3);
-  handPos_.resize(3, 0.0);
+    int hwm = 1;				//hwm - high water mark - determines buffer size for
+    //data passed through ZMQ. hwm = 1 makes the ZMQ buffer
+    //size = 1. This means that if no module has accessed a
+    //value written through ZMQ, new values will be dropped
+    //until any module reads the value
+    features_subscriber_.setsockopt(ZMQ_RCVHWM, &hwm, sizeof(hwm));
+
+    features_subscriber_.connect("ipc:///tmp/features.pipe");
+    features_subscriber_.setsockopt(ZMQ_SUBSCRIBE, NULL, 0);
+    supervisor_.connect("ipc:///tmp/supervisor.pipe");
+    // assume target is in 3d
+    target_.resize(3);
+    handPos_.resize(3, 0.0);
 }
 
 void FilterClass::GrabFeatures() {                                                          // receives new features via zmq from the feature_extraction module

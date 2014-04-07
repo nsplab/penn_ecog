@@ -1,0 +1,8 @@
+Each subdirectory contains a module for interfacing a signal acquisition hardware or a virtual/simulated signal generator.
+
+file_feeder: reads the binary files recorded from the experiements and uzing ZMQ broadcasts one sample at a time
+gtec: interfaces with gtec ghiamp
+tdt: interfaces with TDT PO8e
+imitator: uses reach state equation to generate simulated bio-signal
+kinect: uses kinect to track the nearest object to the camera generate simulated bio-signal
+stereo_vision: uses two cameras to track a colored object and generate simulated bio-signal

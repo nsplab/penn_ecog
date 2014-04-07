@@ -1,0 +1,17 @@
+The c++ code to interface with the TDT hardware.
+
+
+main.cpp contians the main funciton which has the main loop.
+
+makepo.sh generates the binary file
+
+PO8e.h has the function declerations of the PO8e library
+
+GetPot.h the command line / config file parser
+
+libPO8eStreaming.so the PO8e library
+
+penn.cfg config file for the TDT module/code (number of channels, sampling rate, etc.)
+
+loaddriver.sh loads the TDT-PO8e kernel module
+

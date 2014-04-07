@@ -7,6 +7,18 @@ import subprocess
 import time
 from subprocess import Popen
 from signal import SIGINT
+import os
+import sys
+import zmq
+
+
+context = zmq.Context()
+socket = context.socket(zmq.REQ)
+socket.connect("ipc:///tmp/record.pipe")
+
+statusSocket = context.socket(zmq.SUB)
+statusSocket.connect("ipc:///tmp/signalstream.pipe")
+
 
 config = ConfigParser.RawConfigParser()
 config.read('tdt.cfg')
@@ -43,6 +55,10 @@ def StopBCI(*args):
     global pSqueez
 
     try:
+        # stop tdt recording
+        socket.send("stop")
+        socket.recv()
+        # terminate all modules
         pFeature.send_signal(SIGINT)
         pSupervisor.send_signal(SIGINT)
         pGraphics.send_signal(SIGINT)
@@ -56,6 +72,10 @@ def StopSqueeze(*args):
     global pFeature
 
     try:
+        # stop tdt recording
+        socket.send("stop")
+        socket.recv()
+        # terminate squeeze and feature_extraxtor modules
         pSqueeze.send_signal(SIGINT)
         pFeature.send_signal(SIGINT)
     except ValueError:
@@ -131,6 +151,8 @@ def StartSqueeze(*args):
     global pFeature
 
     try:
+        socket.send("squeeze_task")
+
         if not WriteData():
             return
 
@@ -156,6 +178,8 @@ def StartBCI(*args):
     global pSqueez
 
     try:
+        socket.send("bci_task")
+
         if not WriteData():
             return
 
@@ -191,6 +215,8 @@ def StartBCI(*args):
     except ValueError:
         pass
 
+
+
 root = Tk()
 root.title("Elam3 Launcher")
 root.geometry("-1+1")
@@ -214,6 +240,8 @@ s.configure('s1.TLabelframe.Label', background="#D8A499")
 s.configure('s2.TLabelframe.Label', background='#C6CDF7')
 s.configure('s3.TLabelframe.Label', background='#7294D4')
 s.configure('s4.TLabelframe.Label', background='#E680A5')
+s.configure('s5.Label', background='#75EB8B')
+s.configure('s6.Label', background='#FA7373')
 
 lfSubject = ttk.Labelframe(mainframe, text='Subject: ', style='s1.TLabelframe')
 lfSubject.grid(column=1, row=1, sticky=(W, E))
@@ -354,6 +382,14 @@ rowNumber += 1
 lfTDT = ttk.Labelframe(mainframe, text='TDT: ', style='s4.TLabelframe')
 lfTDT.grid(column=1, row=4, sticky=(W, E))
 
+streamingLabel = ttk.Label(lfTDT, text="Streaming", style='s5.Label')
+streamingLabel.grid(column=1, row=rowNumber, sticky=E)
+#streamingLabel.state(['disabled'])
+notStreamingLabel = ttk.Label(lfTDT, text="Not streaming", style='s6.Label')
+notStreamingLabel.grid(column=2, row=rowNumber, sticky=E)
+#notStreamingLabel.state(['disabled'])
+rowNumber += 1
+
 ttk.Label(lfTDT, text="Sampling Rate:").grid(column=1, row=rowNumber, sticky=E)
 sampleRateV = StringVar()
 sampleRateV.set(sampleRate)
@@ -386,10 +422,51 @@ numberOfEcogChsE.grid(column=2, row=rowNumber, sticky='e')
 #ttk.Label(mainframe, text="").grid(column=3, row=2, sticky=W)
 
 for child in mainframe.winfo_children():
-    print 'i'
     child.grid_configure(padx=15, pady=15)
 
 ageE.focus()
 #root.bind('<Return>', saveconfig)
 
+# 0. load kernel module
+cwd = os.getcwd()
+os.chdir("/home/user/")
+lproc = Popen([r'sudo', './loaddriver.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+(outmsg, errmsg) = lproc.communicate()
+print 'errmsg :', errmsg
+print 'outmsg :', outmsg
+
+if errmsg:
+    tkMessageBox.showinfo(message='Could not load the kernel module! Make sure the TDT kernel module is compiled for the current kernel version.')
+    #sys.exit("Couldn't load TDT kernel module")
+
+# 1. set TDT mode
+
+# 2. check signal acquisi
+
+# 3.
+
+
+def checkStatus():
+    msg = ""
+    try:
+        msg = socket.recv(zmq.DONTWAIT)
+    except:
+        pass
+
+    status = 0
+    if msg == "1":
+        status = 1
+
+    if status == 0:
+        streamingLabel.state(['disabled'])
+        notStreamingLabel.state(['!disabled'])
+    else:
+        streamingLabel.state(['!disabled'])
+        notStreamingLabel.state(['disabled'])
+
+    root.update()
+
+    root.after(0, checkStatus)
+
+root.after(0, checkStatus)
 root.mainloop()
