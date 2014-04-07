@@ -63,7 +63,7 @@ def StopBCI(*args):
         pSupervisor.send_signal(SIGINT)
         pGraphics.send_signal(SIGINT)
         pFilter.send_signal(SIGINT)
-    except ValueError:
+    except:
         pass
 
 
@@ -78,7 +78,7 @@ def StopSqueeze(*args):
         # terminate squeeze and feature_extraxtor modules
         pSqueeze.send_signal(SIGINT)
         pFeature.send_signal(SIGINT)
-    except ValueError:
+    except:
         pass
 
 
@@ -151,10 +151,10 @@ def StartSqueeze(*args):
     global pFeature
 
     try:
-        socket.send("squeeze_task")
-
         if not WriteData():
             return
+
+        socket.send("squeeze_task")
 
         # generate the spatial matrix
         pSqueeze = Popen([r'../../squeeze/build/squeeze'],
@@ -166,7 +166,7 @@ def StartSqueeze(*args):
                 cwd=r'../feature_extraction/feature_extract_cpp/build/')
         time.sleep(0.1)
 
-    except ValueError:
+    except:
         pass
 
 
@@ -178,10 +178,10 @@ def StartBCI(*args):
     global pSqueez
 
     try:
-        socket.send("bci_task")
-
         if not WriteData():
             return
+
+        socket.send("bci_task")
 
         # generate the spatial matrix
         Popen([r'../../feature_extract_cpp/spatial_matrix/build/spatial_matrix',
@@ -212,7 +212,7 @@ def StartBCI(*args):
                 cwd=r'../filter/cpp/build')
         time.sleep(0.1)
 
-    except ValueError:
+    except:
         pass
 
 
