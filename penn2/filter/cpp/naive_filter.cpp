@@ -92,7 +92,11 @@ void NaiveFilter::Update() {
 void NaiveFilter::Run() {
     bool updated = false;
 
-    ifstream baseline("/home/user/code/penn2/penn/penn2/feature_extraction/feature_extract_cpp/build/baseline.txt");
+    ifstream baseline("../../../feature_extraction/feature_extract_cpp/build/baseline.txt");
+    if (! baseline.is_open()) {
+        cout<<"You need to first run a baseline recording for this static filter in order to generate /penn2/feature_extraction/feature_extract_cpp/build/baseline.txt"<<endl;
+        return;
+    }
     float mean, variance;
     while (baseline) {
         baseline>>mean;
