@@ -6,9 +6,57 @@
 
 using namespace std;
 
-int main()
+int main(int argc, char** argv)
 {
-    class Row {
+    /* 1. open image data file
+     * 2. read timestamps where image changes from 0 to 1
+     * 3. in the ecog file for 0.5 sec befor to 0.5 after time stamp compute fft
+     * 4. add ffts to vectors
+     * 5. write vectors in binary files
+     */
+
+    // 1.
+    ifstream dataFile(argv[1], ios::in | ios::binary);
+
+    vector<size_t> timeImgChanges;
+    float prevForceVal = 0.0;
+    size_t timeStamp = 0;
+    while(dataFile) {
+        float columns[64];
+        dataFile.read((char *) &(columns[0]), sizeof(float)*64);
+        // 2.
+        if (columns[0] > 0.6) {
+            if (prevForceVal < columns[0]) {
+                if (timeImgChanges[timeImgChanges.size()-1] + 24414 > timeStamp) {
+                    timeImgChanges.push_back(timeStamp);
+                }
+            }
+        }
+        prevForceVal = columns[0];
+        timeStamp++;
+    }
+
+    dataFile.close();
+    cout<<"number of squeezes: "<<timeImgChanges.size()<<endl;
+
+    // 24414 / 60 = 406.9
+    // 406.9 * 20 = 8138
+    size_t winSize = 8138;
+
+    /*ifstream dataFile(argv[1], ios::in | ios::binary);
+
+    unsigned currentSqueeze = timeImgChanges[0];
+
+    size_t timeStamp; = 0
+    while(dataFile) {
+
+        float columns[64];
+                imgDataFile.read((char *) &(colums[0]), sizeof(float)*64);
+
+        if ()
+    }
+
+    /*class Row {
     public:
         size_t timeStamp;
         vector<float> cols;
@@ -86,6 +134,7 @@ int main()
     fclose(pFile);
     fclose(pFilePower);
     fclose(pFileForce);
+    */
     return 0;
 }
 

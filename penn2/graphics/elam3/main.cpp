@@ -777,7 +777,9 @@ int main()
             ss>>scorePlot;
 
 
-            scoreText->setText(string("Score: ") + to_string((int)score));
+            if (scorePlot > -0.5) {
+                scoreText->setText(string("Score: ") + to_string((float)scorePlot).substr(0, 4));
+            }
 
             if (score > prevScore) {
                 fireSwitch->setChildValue(parent.get(), true);

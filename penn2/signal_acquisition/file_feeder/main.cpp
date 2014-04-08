@@ -29,7 +29,7 @@ int main() {
     row.cols.resize(numberOfChannels);
 
     string signalFilename;
-    unsigned samplingRate = 25000;
+    unsigned samplingRate = 24414;
     string cfgFile("../config.cfg");
 
     // check if the config file exists
@@ -46,7 +46,7 @@ int main() {
     ifile.print();
 
     signalFilename = ifile("signalFile", "");
-    samplingRate = ifile("samplingRate", 25000);
+    samplingRate = ifile("samplingRate", 24414);
     unsigned formatVersion = ifile("formatVersion", 1);
 
     ifstream signalFile(signalFilename.c_str(), ios::in | ios::binary);

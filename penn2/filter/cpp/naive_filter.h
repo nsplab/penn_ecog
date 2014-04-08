@@ -9,6 +9,8 @@
 
 #include <vector>
 
+#include <fstream>
+
 class NaiveFilter : public FilterClass {
 public:
   typedef boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::tail_quantile<boost::accumulators::right> > > accumulator_t_right;
@@ -18,9 +20,11 @@ public:
   void Update();
   void Predict();
   void Run();
-  void runGUI(float& alpha, float& scale, bool& updated, float mean);
+  void runGUI(float& alpha, float& scale, bool& updated);
   void updateEwmaVariances();
+  void kill();
 private:
+  FILE* eFile;
   float featureRate_;
   std::vector<float> means;
   std::vector<float> variances;
@@ -30,6 +34,8 @@ private:
   float scale_;
   float q5_;
   float q95_;
+  bool quit;
+  bool updated_;
 };
 
 #endif // NAIVE_FILTER_H

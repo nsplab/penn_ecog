@@ -90,9 +90,9 @@ Fft<T>::Fft(size_t winSize, windowFunc winf_, size_t frq_, size_t numChannels,
       std::cout<<"error in thread initilization"<<std::endl;
   }
   omp_set_dynamic(false);
-  omp_set_num_threads(6);
+  //omp_set_num_threads(6);
   //fftw_plan_with_nthreads(omp_get_max_threads());
-  fftwf_plan_with_nthreads(4);
+  fftwf_plan_with_nthreads(1);
   out = (fftwf_complex *)fftwf_malloc(sizeof(fftwf_complex) * ((winSize/2)+1) );
   in = (T*)fftwf_malloc(sizeof(T) * winSize);
   inTmp = (T*)fftwf_malloc(sizeof(T) * winSize);

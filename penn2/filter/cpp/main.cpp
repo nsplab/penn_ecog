@@ -38,6 +38,9 @@ int main(int argc, char** argv) {
         testFile.close();                                       // close the file
     }
 
+    // parse config file
+    GetPot ifile(cfgFile.c_str(), "#", "\n");
+    ifile.print();
 
     GetPot ifile(cfgFile.c_str(), "#", "\n");                   // define the GetPot class ifile: initiates parsing for the config file; GetPot is an open-source utility for parsing a configuration file
     ifile.print();                                              // ifile("string_to_look_for", default value) is syntax

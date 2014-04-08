@@ -13,14 +13,16 @@ EegReceiver::EegReceiver(size_t numChannels_, size_t numScans_):
     eeg_subscriber.connect("tcp://192.168.56.110:5556");
     eeg_subscriber.setsockopt(ZMQ_SUBSCRIBE, "", 0);
 
+
+
 }
 
 void EegReceiver::receive(double& time, float* channels) {
     zmq::message_t update;
     //eeg_subscriber.recv(&update, ZMQ_NOBLOCK);
-    cout<<"recv"<<endl;
+    //cout<<"recv"<<endl;
     eeg_subscriber.recv(&update);
-    cout<<"recvd"<<endl;
+    //cout<<"recvd"<<endl;
 
     //cout<<update.size()<<endl;
     memcpy(&time, update.data(), sizeof(double));

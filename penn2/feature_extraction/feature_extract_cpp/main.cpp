@@ -94,11 +94,6 @@ int main(int argc, char** argv)
         }
     }
 
-    int bciChann = 0;
-
-    if (argc > 2) {
-        bciChann = atoi(argv[2]);
-    }
 
     if (baseline) {
         baselineDataFileCopy.open("baselineData.txt");
@@ -115,6 +110,15 @@ int main(int argc, char** argv)
                                fftWinSize, numChannels, samplingRate,
                                neuralIndex)) {
         return 1;
+    }
+
+
+    if (argc > 2) {
+        samplingRate = atof(argv[2]);
+    }
+
+    if (argc > 3) {
+        numChannels = atoi(argv[3]);
     }
 
     SparseMatrix<float> spatialFilterMx(numFeatureChannels, numChannels);
@@ -223,9 +227,11 @@ int main(int argc, char** argv)
             // spatial filter the raw data
             MatrixXf decVec(numChannels,1);
             decVec = Map<MatrixXf>(decimatedPoints.data(), numChannels, 1);
+
             spatialFilteredChannels = spatialFilterMx * decVec;
 
-            memcpy(spatiallyFilteredPoints.data(), spatialFilteredChannels.data(), sizeof(float) * numChannels);
+
+            memcpy(spatiallyFilteredPoints.data(), spatialFilteredChannels.data(), sizeof(float) * numFeatureChannels);
             //for (unsigned i=0; i<numFeatureChannels; i++) {
             //    spatiallyFilteredPoints[i] = spatialFilteredChannels(i);
             //}
@@ -273,8 +279,8 @@ int main(int argc, char** argv)
                 end = std::chrono::system_clock::now();
                 std::chrono::duration<double> elapsed_seconds = end-start;
 
-                cout<<"t "<<timestamp<<endl;
-                cout<<"c "<<counter<<endl;
+                //cout<<"t "<<timestamp<<endl;
+                //cout<<"c "<<counter<<endl;
                 cout<< "elapsed time: " << elapsed_seconds.count() << "s\n";
             }
         }
@@ -431,8 +437,8 @@ int parsConfig(string& signalConfig, string& matrixFile, size_t& fftWinSize,
         testFile.close();
     }
 
-    //spatialFilterFile = ifile("spatialFilterFile", "");
-    spatialFilterFile = "featuremx.csv";
+    spatialFilterFile = ifile("spatialFilterFile", "");
+    //spatialFilterFile = "featuremx.csv";
     /*// check if spatialFilterFile exists
     testFile.open(spatialFilterFile.c_str());
     if (! testFile.good()) {

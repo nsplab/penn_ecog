@@ -16,7 +16,7 @@ blockWidth = workspaceRadius * 0.325
 
 # whether run the game in the continious mode: False
 # or at the rest blocks jump the hand to the origin, assuming we cannot have negative velocity: True
-jumpetoStart = True
+jumpetoStart = False
 
 
 # threshold on the distance between the hand and cube to increase score

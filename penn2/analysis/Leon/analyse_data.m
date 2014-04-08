@@ -18,8 +18,8 @@ window_size = floor(window_size * samplingRate); %transform the window size to s
 overlap_perc = get_variables('overlap_percentage');
 win_overlap = floor(window_size * overlap_perc);
 size_of_batch = 30; %size of the batch in seconds
-first_batch = 5;
-%first_batch = 1;
+%first_batch = 5;
+first_batch = 1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
@@ -43,8 +43,8 @@ num_rows = dinfo.bytes/(time_stamp_bytes+num_4_byte_column*4);% we need to divid
 total_time = num_rows/originalSamplingRate;%calculate the total time of captured data
 batch_size_samples = floor((size_of_batch/total_time)*num_rows);%calculate the number of samples that correspond to the desired size
 %calculate the maximum number of batches
-%max_num_batches = ceil(total_time/size_of_batch)-1;
-max_num_batches = 13;
+max_num_batches = ceil(total_time/size_of_batch)-1;
+%max_num_batches = 13;
 %finsih reading data files
 
 

@@ -135,7 +135,7 @@ class audioInput {
     pause = false;
     channels = 1;             // mono
     bytes_per_frame = 2 * channels;      // 16-bit
-    req_rate = 256;         // audio sampling rate in Hz
+    req_rate = 24414;         // audio sampling rate in Hz
     frames_per_period = (int)(req_rate/60.0);   // 735 = 44100Hz/60fps assumed
     nperiods = 2;             // >=2, see ALSA manual
     t_memory = 20.0;            // memory of our circular buffer in secs
@@ -144,8 +144,8 @@ class audioInput {
     chunk = new char[period_size];   // raw data buffer for PCM read: 1 period
     req_size = frames_per_period * nperiods; // ALSA device buffer size (frames)
     b_ind = 0;                // integer index where to write to in buffer
-    if( initDevice() < 0 ) // set up sound card for recording (sets rate, size)
-      exit(1);
+    //if( initDevice() < 0 ) // set up sound card for recording (sets rate, size)
+    //  exit(1);
     dt = 1.0 / (float)rate;   // sampling period
     b_size = (int)(t_memory * rate);   // buffer size
     if (verb) printf("memory buffer size %d samples\n", b_size);
@@ -157,7 +157,7 @@ class audioInput {
     setupWindowFunc(winf, win_size);    // windowing function
      // set up fast in-place single-precision real-to-half-complex DFT:
     fftw_p = fftwf_plan_r2r_1d(win_size, bwin, bwin, FFTW_R2HC, FFTW_MEASURE);
-    n_f = 120;  // # freqs   ...spectrogram stuff
+    n_f = 500;  // # freqs   ...spectrogram stuff
     specslice = new float[n_f];
     n_tw = 940; // # time windows: should be multiple of 4 for glDrawPixels
     sg_size = n_f * n_tw;
@@ -284,7 +284,7 @@ class audioInput {
   static void* audioCapture(void* a) { //-------- capture: thread runs indep --
     // still mostly Luke's code, some names changed. Aims to read 1 "period"
     // (ALSA device setting) into the current write index of our ai->b buffer.
-    fprintf(stderr, "audioCapture thread started...\n");
+    fprintf(stderr, "capture thread started...\n");
     audioInput* ai = (audioInput*) a;  // shares data with main thread = cool!
 
     float inv256 = 1.0 / 256.0;
@@ -311,7 +311,7 @@ class audioInput {
     subscriber.recv(&signal);
     //cout<<"recvd"<<endl;
 
-    memcpy(buffer, (size_t*)signal.data()+1, signal.size()-sizeof(size_t));
+    memcpy(buffer, (size_t*)(signal.data())+1, signal.size()-sizeof(size_t));
 
 
     byte by;
@@ -332,7 +332,7 @@ class audioInput {
     usleep(10000);  // wait 0.01 sec if paused (keeps thread CPU usage low)
       }
     }
-    fprintf(stderr, "audioCapture thread exiting.\n");
+    fprintf(stderr, "capture thread exiting.\n");
   }                          // ----------------------- end capture thread ----
 };
 
@@ -761,7 +761,7 @@ int main(int argc, char** argv)
   verb = 0;          // 0 silent, 1 debug, etc
   scn.scroll_fac = 2;    // how many vSyncs to wait before scrolling sg
   param.windowtype = 2;  // Gaussian
-  param.twowinsize = 7; // 8192 samples (around 0.19 sec). Remains fixed
+  param.twowinsize = 13; // 8192 samples (around 0.19 sec). Remains fixed
 
   for (int i=1; i<argc; ++i) {  // .....Parse cmd line options....
     if (!strcmp(argv[i], "-f"))  // option -f makes full screen
