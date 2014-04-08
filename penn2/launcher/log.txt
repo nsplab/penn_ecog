@@ -1,6 +1,6 @@
-Time: 2014/01/24 10:21:22
+Time: 2014/01/24 12:25:18
 Gender: Male
-Age: 32
+Age: 44
 Dominant hand: Right-handed
 Grid Hemisphere: Right
 BCI channel: 5
@@ -9,8 +9,8 @@ SamplingRate: 24414.0625
 Force Sensor Channel: 1
 Force Sensor in Hand: Right Hand
 SamplingRate: 24414.0625
-First ECoG Channel: 65
-Number of ECoG Channels: 60
+First ECoG Channel: 5
+Number of ECoG Channels: 32
 Action: Started BCI task
 Block Width in percent of workspace width: 0.25
 Block Lendth in Seconds: 10

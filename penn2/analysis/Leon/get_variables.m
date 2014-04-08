@@ -37,8 +37,8 @@ parse(p,varargin{:})
 switch variable_name
     case 'number_of_channels'
         %desired number of channels to work with
-        variable = 10;
-        %variable = number_of_channels_prime;
+        %variable = 10;
+        variable = number_of_channels_prime;
     case 'Original_Sampling_Rate'
         variable = 24414;
     case 'Desired_Sampling_Rate'
@@ -62,8 +62,8 @@ switch variable_name
     case 'High Gamma'
         variable = [65:115];
     case 'Time_stamp_bytes'
-        variable = 8;
-        %variable = 0;
+        %variable = 8;
+        variable = 0;
     case 'Kinect_Sampling_Rate'
         variable = 28;
     case 'date_str'

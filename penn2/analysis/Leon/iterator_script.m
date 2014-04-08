@@ -1,6 +1,6 @@
 %This script iterates over different window_sizes and overlap percentages
 data_cell = {'/home/leon/Data/Penn/Nov_18/data_Mon_18.11.2013_12:00:33', '/home/leon/Data/Penn/Nov_21/data_Thu_21.11.2013_12:32:02', '/home/leon/Data/Penn/Nov_26/data_Tue_26.11.2013_13:36:24'};
-data_directory = '../../graphics/squeeze';
+data_directory = '../../graphics/squeeze/build';
 data_file = get_data_file(data_directory);
 for overlap_idx = 0.5
     for window_idx = 0.5

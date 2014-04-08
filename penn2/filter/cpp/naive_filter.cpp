@@ -18,10 +18,23 @@ using namespace std;
 
 NaiveFilter::NaiveFilter(float featureRate){
   featureRate_ = featureRate;
-  gamma_ = 0.5;
-  scale_ = 0.001;
+  gamma_ = 1.0;
+  scale_ = 1000.0;
   q5_ = 0.0;
   q95_ = 0.0;
+  quit = false;
+  updated_ = false;
+  time_t rawtime;
+  time(&rawtime);
+  char nameBuffer[24];
+  tm * ptm = localtime(&rawtime);
+  strftime(nameBuffer, 24, "%a_%d.%m.%Y_%H:%M:%S", ptm);
+  string imageFilename = string("filter_data_")+string(nameBuffer);
+  eFile = fopen(imageFilename.c_str(), "wb");
+}
+
+void NaiveFilter::kill() {
+
 }
 
 void NaiveFilter::Predict() {
@@ -90,9 +103,8 @@ void NaiveFilter::Update() {
 }
 
 void NaiveFilter::Run() {
-    bool updated = false;
 
-    ifstream baseline("/home/user/code/penn2/penn/penn2/feature_extraction/feature_extract_cpp/build/baseline.txt");
+    ifstream baseline("../../../feature_extraction/feature_extract_cpp/build/baseline.txt");
     float mean, variance;
     while (baseline) {
         baseline>>mean;
@@ -107,14 +119,19 @@ void NaiveFilter::Run() {
 
     float q5=0;
     float q95=0;
-    thread gui(&NaiveFilter::runGUI, this, ref(gamma_), ref(scale_), ref(updated), means[0]);
+    thread gui(&NaiveFilter::runGUI, this, ref(gamma_), ref(scale_), ref(updated_));
 
     ewmaValues.resize(3, 0);
 
   for (;;) {
-      if (updated) {
-          updated = false;
+      if (updated_) {
+          updated_ = false;
           updateEwmaVariances();
+          fwrite(&featureTimestamp_, sizeof(size_t),1 , eFile);
+          fwrite(&gamma_, sizeof(float),1 , eFile);
+          fwrite(&scale_, sizeof(float),1 , eFile);
+
+          fflush(eFile);
           //q5_ = q5;
           //q95_ = q95;
       }
@@ -148,7 +165,7 @@ void NaiveFilter::updateEwmaVariances() {
  *   \param updated whether any of the values has been updated
  *
 */
-void NaiveFilter::runGUI(float& alpha, float& scale, bool& updated, float mean) {
+void NaiveFilter::runGUI(float& alpha, float& scale, bool& updated) {
 
     using namespace boost;
     using namespace boost::accumulators;

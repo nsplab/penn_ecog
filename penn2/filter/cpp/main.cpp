@@ -19,7 +19,7 @@ using namespace std;
 void signal_callback_handler(int signum) {
     cout<<"int signal"<<endl;
     signal(signum, SIG_IGN);
-    quit = true;
+    //quit = true;
 }
 
 int main(int argc, char** argv) {
@@ -57,19 +57,19 @@ int main(int argc, char** argv) {
     unsigned numLags = ifile("numLags", 1);
     unsigned filterType = ifile("filterType", 0);
 
-    string featureConfig = ifile("featureConfig", "feature.cfg");
-    GetPot ifileFeature(featureConfig.c_str(), "#", "\n");
-    unsigned featureRate = ifileFeature("outputRate", 10);
-    cout<<"featureRate: "<<featureRate<<endl;
+    //string featureConfig = ifile("featureConfig", "feature.cfg");
+    //GetPot ifileFeature(featureConfig.c_str(), "#", "\n");
+    unsigned featureRate = 10;//ifileFeature("outputRate", 10);
+    //cout<<"featureRate: "<<featureRate<<endl;
 
     // check if featureConfig exists
-    testFile.open(featureConfig.c_str());
+    /*testFile.open(featureConfig.c_str());
     if (! testFile.good()) {
         cout<<"Could not open featureConfig: "<<featureConfig<<endl;
         return 1;
     } else {
         testFile.close();
-    }
+    }*/
 
 
     if (filterType == 0) {
