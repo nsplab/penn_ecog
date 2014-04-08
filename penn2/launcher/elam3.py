@@ -355,7 +355,7 @@ lfSqueeze = ttk.LabelFrame(mainframe, text='Squeeze Task: ', style='s2.TLabelfra
 lfSqueeze.grid(column=1, row=2, sticky=(W, E))                                                       #positions the squeeze task frame relative to the whole window
 
 ## GUI field to specify force sensor channel
-tlabel = ttk.Label(lfSqueeze, text="Force Sensor Channel #:")
+tlabel = ttk.Label(lfSqueeze, text="Force Sensor in:")
 tlabel.grid(column=1, row=rowNumber, sticky=E)                                                        #positions the force sensor field relative to the squeeze task frame
 #tlabel.config(background='green')
 forceSensorHand = StringVar()
@@ -380,15 +380,10 @@ ttk.Button(lfSqueeze, text="Stop Squeeze Task", command=StopSqueeze).grid(column
 ##################
 
 # button
-ttk.Button(bciTab, text="Calibrate", command=StartCalibrate).grid(column=1, row=rowNumber,
-                                                                          sticky='we')
-ttk.Button(bciTab, text="Stop", command=StopCalibrate).grid(column=2, row=rowNumber,
-                                                                          sticky='we')
-rowNumber += 1
-
-## separator
-#ttk.Separator(lfSqueeze, orient=HORIZONTAL).grid(row=rowNumber, columnspan=5, sticky='WE')
-rowNumber = 1
+#ttk.Button(bciTab, text="Calibrate", command=StartCalibrate).grid(column=1, row=rowNumber,
+#                                                                          sticky='we')
+#ttk.Button(bciTab, text="Stop", command=StopCalibrate).grid(column=2, row=rowNumber,
+#                                                                          sticky='we')
 
 ####################################
 ### GUI Frame for BCI Task
@@ -420,7 +415,7 @@ rowNumber += 1
 #
 
 # GUI input box for one single channel used in the Moving Average Filter
-ttk.Label(lfBCI, text="Channel Number for Moving Average Filter:").grid(column=1, row=rowNumber, sticky=E)
+ttk.Label(lfBCI, text="Channel Number for\n Moving Average Filter:").grid(column=1, row=rowNumber, sticky=E)
 chNum_entry = ttk.Entry(lfBCI, width=7, textvariable=channelNumber)
 chNum_entry.grid(column=2, row=rowNumber, sticky=(W, E))
 rowNumber += 1
@@ -501,7 +496,19 @@ numberOfEcogChsE.grid(column=2, row=rowNumber, sticky='e')
 #ttk.Label(mainframe, text="").grid(column=3, row=2, sticky=W)
 
 for child in mainframe.winfo_children():
-    child.grid_configure(padx=15, pady=15)
+    child.grid_configure(padx=5, pady=3)
+
+for child in lfTDT.winfo_children():
+    child.grid_configure(padx=5, pady=3)
+
+for child in lfSqueeze.winfo_children():
+    child.grid_configure(padx=5, pady=3)
+
+for child in lfBCI.winfo_children():
+    child.grid_configure(padx=5, pady=3)
+
+for child in lfSubject.winfo_children():
+    child.grid_configure(padx=5, pady=3)
 
 ageE.focus()
 #root.bind('<Return>', saveconfig)
