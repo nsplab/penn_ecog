@@ -16,12 +16,8 @@
 
 #include <zmq.hpp>  //provides protocol for communicating between different modules in the ECoG system
 
-//#include "zhelpers.hpp"  //helper functions used by the program in conjunction with zmq
 #include "PO8e.h"   //code provided by TDT to stream/read signal amplitudes
 #include "GetPot.h" //code for reading config files (eg. signal.cfg) that contain parameters for the experiment
-
-//#define lptDataBase 0xd010           /* printer port data base address */
-//#define lptControlBase 0xd012           /* printer port control base address */
 
 using namespace std;
 using namespace zmq;
@@ -29,7 +25,6 @@ using namespace zmq;
 string cfgFile("penn.cfg");
 
 int kbhit() {	//detects if keyboard is hit or not. this is used to press any key to close files and exit the code
-
     struct timeval tv = { 0L, 0L };
     fd_set fds;
     FD_ZERO(&fds);
@@ -66,18 +61,17 @@ void BroadcastStatus() {
 
 }
 
-
 int main(int argc, char** argv) {
-    // if (ioperm(lptDataBase,1,1))
-    //      fprintf(stderr, "Couldn't get the port at %x\n", lptDataBase), exit(1);
+//    if (ioperm(lptDataBase,1,1))
+//        fprintf(stderr, "Couldn't get the port at %x\n", lptDataBase), exit(1);
 
     signal(SIGINT, signal_callback_handler);
 
 
-    // if (ioperm(lptDataBase,1,1))
-    //     fprintf(stderr, "Couldn't get the port at %x\n", lptDataBase), exit(1);
+//    if (ioperm(lptDataBase,1,1))
+//        fprintf(stderr, "Couldn't get the port at %x\n", lptDataBase), exit(1);
 
-    // outb(0x10, lptDataBase);
+//    outb(0x10, lptDataBase);
 
     // parse command line arguments
     GetPot cl(argc, argv);
@@ -98,6 +92,10 @@ int main(int argc, char** argv) {
     const size_t numberOfChannels = ifile("numberOfChannels", 0);	//load total number of channels (ECoG plus any other channels)
     cout<<"numberOfChannels: "<<numberOfChannels<<endl;			//print number of channels to the screen
 
+    if (argc > 1) {
+        numberOfChannels = atoi(argv[1]);
+    }
+
     // define the data file that will contain all data received by the TDT,
     //timestamped using a counter running on the PC (Puget)
     //form the file name in the format "data_wed_16.10.2013_14:41:59"
@@ -106,12 +104,11 @@ int main(int argc, char** argv) {
     time(&rawtime);
     char nameBuffer[24];
     tm * ptm = localtime(&rawtime);
-    //strftime(nameBuffer, 24, "%a_%d.%m.%Y_%H:%M:%S", ptm);
-    string filename("/media/ssd/system_specification/data_");
-    //string dataFilename = string("data_")+string(nameBuffer);
-    FILE* pFile = NULL;
-    //pFile = fopen(dataFilename.c_str(), "wb");
-    //setvbuf (pFile, NULL, _IOFBF, 10*numberOfChannels*sizeof(float));
+    strftime(nameBuffer, 24, "%a_%d.%m.%Y_%H:%M:%S", ptm);
+    string dataFilename = string("data_")+string(nameBuffer);
+    FILE* pFile;
+    pFile = fopen(dataFilename.c_str(), "wb");
+    setvbuf (pFile, NULL, _IOFBF, 10*numberOfChannels*sizeof(float));
 
 
     // check the PO8e card to:
@@ -148,6 +145,7 @@ int main(int argc, char** argv) {
     // temporary buffer to copy data from PO8e's buffer.
     // this buffer only contains one float per channel
     float dBuff[numberOfChannels * 10000];
+    float dBuffSeq[numberOfChannels * 10000];
     float* tempBuff;
 
 
@@ -155,24 +153,21 @@ int main(int argc, char** argv) {
     context_t context(1);			//number of threads used by ZMQ
     socket_t publisher(context, ZMQ_PUB);	//socket used to broadcast data
     int hwm = 100;				//hwm - high water mark - determines buffer size for
-    //data passed through ZMQ. hwm = 1 makes the ZMQ buffer
-    //size = 1. This means that if no module has accessed a
-    //value written through ZMQ, new values will be dropped
-    //until any module reads the value
+    						//data passed through ZMQ. hwm = 1 makes the ZMQ buffer 
+    						//size = 1. This means that if no module has accessed a
+    						//value written through ZMQ, new values will be dropped
+    						//until any module reads the value
     publisher.setsockopt(ZMQ_SNDHWM, &hwm, sizeof(hwm));
     publisher.bind("ipc:///tmp/signal.pipe");	//gives address of data that other modules can reference
-    //ipc (interprocess communication) is a Linux standard
-    //for communication between programs, used by ZMQ
-    //Note that ZMQ also uses TCP or UDP, not preferred here
-    //because ipc is robust to changes in ports and local IP addresses
-    //unlike TCP
-
-    socket_t recordSocket(context, ZMQ_REP);
-    recordSocket.bind("ipc:///tmp/record.pipe");
+						//ipc (interprocess communication) is a Linux standard
+						//for communication between programs, used by ZMQ
+						//Note that ZMQ also uses TCP or UDP, not preferred here
+						//because ipc is robust to changes in ports and local IP addresses
+						//unlike TCP
 
     size_t timeStamp = 0;			//timeStamp is our counter on the PC that is used as the system clock
-    //for aligning ECoG and other TDT data with task events on the PC
-    //such as the value of an on-screen stimulus
+    						//for aligning ECoG and other TDT data with task events on the PC
+    						//such as the value of an on-screen stimulus
 
     thread broadcastThread(BroadcastStatus);
 
@@ -202,19 +197,25 @@ int main(int argc, char** argv) {
         // advance PO8e buffer pointer
         card->flushBufferedData(numberOfSamples);
 
+            // change grouping from channel-based to sample-based
+            for (unsigned ch=0; ch<numberOfChannels; ch++) {
+                for (unsigned sample=0; sample<numberOfSamples; sample++) {
+                    dBuffSeq[sample*numberOfChannels + ch] = dBuff[ch * numberOfSamples + sample];
+                }
+            }
+
         for(size_t i = 0; i < numberOfSamples; i++, timeStamp++) {//increment timeStamp based on number of samples received - assumes samples reeceived regularly
 
             //use the ZMQ protocol to broadcast the following values:
             //	tempBuff - the single current sample from every channel
             //	timeStamp - the counter on the PC that serves as the system clock to align ECoG with task events
-            tempBuff = &(dBuff[i * numberOfChannels]);
+            tempBuff = &(dBuffSeq[i * numberOfChannels]);
 
             zmq::message_t zmq_message(sizeof(float)*numberOfChannels+sizeof(size_t)); //form a ZMQ message object; note this will cause problems if it is moved out from the loop
             //form the zmq message that contains timeStamp and tempBuff
             //(memcpy is a standard C function that copies the timeStamp into the memory address given by zmq_message.data())
-            memcpy(zmq_message.data(), &timeStamp, sizeof(size_t)*1);
-            //memcpy(&timeStamp, zmq_message.data(), sizeof(size_t)*1);
-            memcpy(static_cast<size_t*>(zmq_message.data())+1, tempBuff, sizeof(float)*numberOfChannels);
+            memcpy(zmq_message.data(), &timeStamp, sizeof(size_t)*1);  
+            memcpy(static_cast<size_t*>(zmq_message.data())+1, tempBuff, sizeof(float)*numberOfChannels);  
 
             if ((timeStamp % 24000) == 0) {
                 //if (timeStamp == 25000) {
@@ -234,8 +235,6 @@ int main(int argc, char** argv) {
             //    "%05d %d", 10001, timeStamp);
             //s_sendmore(publisher, "A");
             publisher.send(zmq_message);	//ZMQ command to trigger the broadcast of tempBuff and timeStamp
-
-
         }
 
         // get record/stop command from launcher/gui script

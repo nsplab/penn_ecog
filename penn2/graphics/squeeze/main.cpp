@@ -8,8 +8,8 @@
 #include <sstream>
 #include <chrono> // timing
 #include <time.h>
-#include <boost/random/mersenne_twister.hpp>
-#include <boost/random/uniform_int_distribution.hpp>
+//#include <boost/random/mersenne_twister.hpp>
+//#include <boost/random/uniform_int_distribution.hpp>
 #include <zmq.hpp>
 #include <boost/circular_buffer.hpp> // to hold recent samples
 #include <thread>
@@ -24,6 +24,9 @@
 #include <boost/accumulators/statistics/variance.hpp>
 #include <boost/accumulators/statistics/stats.hpp>
 #include <boost/accumulators/statistics/mean.hpp>
+
+#include <random>
+#include <algorithm>
 
 //#include "GetPot.h"
 
@@ -100,7 +103,7 @@ void powerTh()
         livePwrSamples.push_back(0);
     double liveAvgPow = 0.0;
 
-    unsigned const numberOfChannels = 36;
+    unsigned const numberOfChannels = 64;
 
     bool prevBaseline = true;
 
@@ -148,7 +151,7 @@ void powerTh()
                     sensorFile.close();
                 }
 
-                baselinePowerMean = 0.03;
+                baselinePowerMean = 0.6;
                 cout<<"point[0] "<<point[0]<<endl;
                 cout<<"threshold: "<<(baselinePowerMean + baselinePowerSD*8.0)<<endl;
                 //cout<<"emgState: "<<emgState<<endl;
@@ -156,7 +159,7 @@ void powerTh()
                 cout<<"timsestamp: "<<timeStamp<<endl;
                 //cout<<"prvEmgState "<<prvEmgState<<endl;
 
-                if (point[0] > (baselinePowerMean + baselinePowerSD*8.0)) {
+                if (point[0] > (baselinePowerMean)){// + baselinePowerSD*8.0)) {
                     emgClick = true;
                 } else {
                     emgClick = false;
@@ -281,10 +284,10 @@ int main(int argc, char** argv)
     TTF_Font *fontBig = NULL;
     TTF_Font *fontBigBack = NULL;
 
-    size_t sw = 1000;
-    size_t sh = 700;
+    size_t sw = 1024;
+    size_t sh = 768;
 
-    const unsigned numImages = 3;
+    const unsigned numImages = 4;
     SDL_Surface *screen;	//This pointer will reference the backbuffer
     vector<SDL_Surface *> image(numImages);	//This pointer will reference our bitmap sprite
     vector<SDL_Surface *> temp(numImages);	//This pointer will temporarily reference our bitmap sprite
@@ -325,7 +328,8 @@ int main(int argc, char** argv)
     //When this program exits, SDL_Quit must be called
     atexit(SDL_Quit);
 
-    //Set the video mode to fullscreen 640x480 with 16bit colour and double-buffering
+    //Set the video mode with 16bit colour and double-buffering
+    SDL_putenv("SDL_VIDEO_WINDOW_POS=0,0");
     screen = SDL_SetVideoMode(sw, sh, 16, SDL_DOUBLEBUF /*| SDL_FULLSCREEN*/);
     if (screen == NULL) {
         printf("Unable to set video mode: %s\n", SDL_GetError());
@@ -350,6 +354,7 @@ int main(int argc, char** argv)
     temp[0] = SDL_LoadBMP("../circle.bmp");
     temp[1] = SDL_LoadBMP("../square.bmp");
     temp[2] = SDL_LoadBMP("../triangle.bmp");
+    temp[3] = SDL_LoadBMP("../circle2.bmp");
 
     //Release the temporary surface
     /*for (size_t i=0; i<numImages; i++) {
@@ -361,9 +366,11 @@ int main(int argc, char** argv)
     image[0] = SDL_DisplayFormat(temp[0]);
     image[1] = SDL_DisplayFormat(temp[1]);
     image[2] = SDL_DisplayFormat(temp[2]);
+    image[3] = SDL_DisplayFormat(temp[3]);
     SDL_FreeSurface(temp[0]);
     SDL_FreeSurface(temp[1]);
     SDL_FreeSurface(temp[2]);
+    SDL_FreeSurface(temp[3]);
 
     //Construct the source rectangle for our blit
     src.x = 0;
@@ -394,15 +401,47 @@ int main(int argc, char** argv)
         apply_surface(sw/2-message->w/2, 350, message, screen);
         SDL_FreeSurface(message);
 
+        if (argc > 1) {
+            SDL_Surface *message = TTF_RenderText_Blended(fontBig, "Relax", textColorBlue);
+            apply_surface(sw/2-message->w/2, 200, message, screen);
+            SDL_FreeSurface(message);
+        }
+
         SDL_Flip(screen);
 
-        usleep(1500000);
+        usleep(1000000);
 
         if (t > 2) {
             start = true;
         } if (t > 7) {
             baseline = false;
         }
+    }
+
+    if (argc > 1) {
+        quit = true;
+        usleep(1500000);
+
+        helper1.join();
+
+        fclose(pFilePause);
+        fclose(pFileImage);
+
+        cout<<"q1"<<endl;
+        //Release the surface
+        for (size_t i=0; i<numImages; i++)
+            SDL_FreeSurface(image[i]);
+
+        //SDL_FreeSurface(background);
+
+        TTF_CloseFont(font);
+        TTF_CloseFont(fontMed);
+        TTF_CloseFont(fontBig);
+        TTF_CloseFont(fontBigBack);
+        TTF_Quit();
+
+      return 0;
+
     }
 
     usleep(1500000);
@@ -460,6 +499,16 @@ int main(int argc, char** argv)
 
     int sState = 0;
     size_t imgNum = 0;
+
+    int squeezeMs = 500;
+    int restMs = 1500;
+
+    int sRMs = 1500;
+
+    int numSqueezes = 0;
+
+    default_random_engine rng(random_device{}());
+    uniform_int_distribution<int> dist(0,500);
 
     while( quit == false ) {
       // background image
@@ -539,7 +588,7 @@ int main(int argc, char** argv)
       // start with rest
 
       if (sState == 0) {
-          if (ms.count() > 3000) {
+          if (ms.count() > restMs) {
               start = high_resolution_clock::now();
               sState = 1;
           } else if (emgClick) {
@@ -547,14 +596,20 @@ int main(int argc, char** argv)
           }
       }
       else if (sState == 1) {
-          if (ms.count() > 2000) {
+          if (ms.count() > squeezeMs) {
               start = high_resolution_clock::now();
               sState = 0;
+              numSqueezes += 1;
+              restMs = sRMs + dist(rng);
           }
       }
 
       if (sState == 0) {
-          SDL_BlitSurface(image[0], &src, screen, &dest);
+          if (!emgClick) {
+            SDL_BlitSurface(image[0], &src, screen, &dest);
+          } else {
+              SDL_BlitSurface(image[3], &src, screen, &dest);
+          }
           imgNum = 0;
       } else if (sState == 1) {
           if (emgClick) {
@@ -565,6 +620,13 @@ int main(int argc, char** argv)
               imgNum = 1;
           }
       }
+
+      ostringstream numss;
+      numss<<numSqueezes;
+      SDL_Surface *message = TTF_RenderText_Blended(fontMed, numss.str().c_str(), textColorBlue);
+      apply_surface(20, 20, message, screen);
+      SDL_FreeSurface(message);
+
 
       SDL_Flip(screen);
 

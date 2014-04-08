@@ -9,7 +9,7 @@
 
 #include "../../libs/GetPot.h"  //this open-source library let's us parse text from config files to easily store and retrieve filter parameters.
 
-#include "naive_filter.h"
+#include "moving_average_filter.h"
 #include "jointrse_filter.h"
 
 #include "tests.h"
@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
         testFile.close();                                       // close the file
     }
 
-
+    // parse config file
     GetPot ifile(cfgFile.c_str(), "#", "\n");                   // define the GetPot class ifile: initiates parsing for the config file; GetPot is an open-source utility for parsing a configuration file
     ifile.print();                                              // ifile("string_to_look_for", default value) is syntax
                                                                 // loading values of these variables from 'filter.cfg' using the GetPot class instance 'ifile'.
@@ -85,32 +85,43 @@ int main(int argc, char** argv) {
     }
 
 
-    if (filterType == 0) {                                      // if the filter type requested is the static filter (Mosalam's ad hoc filtering method)
-        NaiveFilter filter(featureRate);                        // define an object of the NaiveFilter class which implements Mosalam's ad hoc filtering method
-        filter.Run();                                           // run Mosalam's static filter
-    } else {                                                    // otherwise, assume that the user wanted to implement the adaptive filter, specifically jointRSE based on Kevin's implementation
-        jointRSE_filter filter(dimensions,                      // dimension
-                           velocityParams,                      // boolean which determines whether to include velocity parameters in the observation model
-                           positionParams,                      // boolean which determines whether to include position parameters in the observation model
-                           affineParam,                         // boolean which determines whether to include affine parameters in the observation model
-                           useRSE,                              // boolean which indicates whether to use RSE as the state equation
-                           timeInvariant,                       // boolean which indicates whether to use a time invariant model as the state equation
-                           log,                                 // records various values to file: innovations, prediction and update values at every timestep; used for debugging jointRSE_filter
-                           trialTime,                           // assumed duration of the reach (sec) used by the RSE
-                           maxTrialTime,                        // maximum time (sec) allowed to the user before trial expires
-                           diagQ,                               // increment covariance (duplicated on the diagonal (?)) of the random walk on which the RSE is based
-                           finalPosCov,                         // covariance of the final position (used by the RSE; relevant to jointrse_filter.cpp)
-                           finalVelCov,                         // covariance of the final velocity (used by the RSE; relevant to jointrse_filter.cpp)
-                           featureRate,                         // rate at which the features (typically, power in various frequency bands) are being updated
-                           channelCov,                          // ?? not sure... related to noise in the observation model?
-                           initialArmPosVar,                    // covariance of the initial position (used by the RSE; relevant to jointrse_filter.cpp)
-                           initialArmVelVar,                    // covariance of the initial velocity (used by the RSE; relevant to jointrse_filter.cpp)
-                           true,                                // ?? not sure... relates to length of history dependence in the observation model
-                           numLags
-                           );
-        filter.Run();                                           // run the jointRSE filter
+    // create a pointer to the base filter class
+    // using dynamic binding we can switch between filter at runtime
+    FilterClass* filterObj;
+
+    // check what filter type has been requested
+    switch (filterType) {
+    case 0:
+        filterObj = new MovingAverageFilter(featureRate);
+        break;
+    case 1:
+    default:
+        filterObj = new jointRSE_filter(dimensions,                      // dimension
+                                        velocityParams,                      // boolean which determines whether to include velocity parameters in the observation model
+                                        positionParams,                      // boolean which determines whether to include position parameters in the observation model
+                                        affineParam,                         // boolean which determines whether to include affine parameters in the observation model
+                                        useRSE,                              // boolean which indicates whether to use RSE as the state equation
+                                        timeInvariant,                       // boolean which indicates whether to use a time invariant model as the state equation
+                                        log,                                 // records various values to file: innovations, prediction and update values at every timestep; used for debugging jointRSE_filter
+                                        trialTime,                           // assumed duration of the reach (sec) used by the RSE
+                                        maxTrialTime,                        // maximum time (sec) allowed to the user before trial expires
+                                        diagQ,                               // increment covariance (duplicated on the diagonal (?)) of the random walk on which the RSE is based
+                                        finalPosCov,                         // covariance of the final position (used by the RSE; relevant to jointrse_filter.cpp)
+                                        finalVelCov,                         // covariance of the final velocity (used by the RSE; relevant to jointrse_filter.cpp)
+                                        featureRate,                         // rate at which the features (typically, power in various frequency bands) are being updated
+                                        channelCov,                          // ?? not sure... related to noise in the observation model?
+                                        initialArmPosVar,                    // covariance of the initial position (used by the RSE; relevant to jointrse_filter.cpp)
+                                        initialArmVelVar,                    // covariance of the initial velocity (used by the RSE; relevant to jointrse_filter.cpp)
+                                        true,                                // ?? not sure... relates to length of history dependence in the observation model
+                                        numLags);
+        break;
     }
+
+    // run the main loop of the selected function
+    filterObj->Run();                                           // run the filter
     
+    // delete the create object on heap
+    delete filterObj;
 
     //filter.RunPredictOnly();                                  // debugging code
     //testRSE();                                                // debugging code

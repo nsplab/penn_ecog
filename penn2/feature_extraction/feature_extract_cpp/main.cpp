@@ -94,11 +94,6 @@ int main(int argc, char** argv)
         }
     }
 
-    int bciChann = 0;
-
-    if (argc > 2) {
-        bciChann = atoi(argv[2]);
-    }
 
     if (baseline) {
         baselineDataFileCopy.open("baselineData.txt");
@@ -115,6 +110,15 @@ int main(int argc, char** argv)
                                fftWinSize, numChannels, samplingRate,
                                neuralIndex)) {
         return 1;
+    }
+
+
+    if (argc > 2) {
+        samplingRate = atof(argv[2]);
+    }
+
+    if (argc > 3) {
+        numChannels = atoi(argv[3]);
     }
 
     SparseMatrix<float> spatialFilterMx(numFeatureChannels, numChannels);
@@ -207,6 +211,7 @@ int main(int argc, char** argv)
         memcpy(buffer, (size_t*)signal.data()+1, signal.size()-sizeof(size_t));
         memcpy(points.data(), &(buffer[neuralIndex]), sizeof(float) * numChannels);
 
+        // downsample the raw signals by a factor of 2
         if (decimater.AddSample(points)) {
             decimater.GetDecSample(decimatedPoints);
             //if (timestamp % 1000 == 0) {
@@ -219,21 +224,29 @@ int main(int argc, char** argv)
             /// TODO: FIXME
             // baseline assume first feature is the one we want
 
+            // spatial filter the raw data
             MatrixXf decVec(numChannels,1);
             decVec = Map<MatrixXf>(decimatedPoints.data(), numChannels, 1);
+
             spatialFilteredChannels = spatialFilterMx * decVec;
 
-            memcpy(spatiallyFilteredPoints.data(), spatialFilteredChannels.data(), sizeof(float) * numChannels);
+
+            memcpy(spatiallyFilteredPoints.data(), spatialFilteredChannels.data(), sizeof(float) * numFeatureChannels);
             //for (unsigned i=0; i<numFeatureChannels; i++) {
             //    spatiallyFilteredPoints[i] = spatialFilteredChannels(i);
             //}
 
             fft.AddPoints(spatiallyFilteredPoints);
 
+            // control the rate of feature extraction
             if (counter % (numberOfSamplesSkip) == 0)
+
+            // try to compute fft (if the fewer number of samples than window length fails)
             if (fft.Process()) {
+                // get the powers vector (each channel is an element)
                 fft.GetPower(powers);
 
+                //
                 for (unsigned ch=0; ch<numFeatureChannels; ch++) {
                     float pwr = 0.0;
                     cout<<binFrom<<" "<<binTo<<endl;
@@ -266,8 +279,8 @@ int main(int argc, char** argv)
                 end = std::chrono::system_clock::now();
                 std::chrono::duration<double> elapsed_seconds = end-start;
 
-                cout<<"t "<<timestamp<<endl;
-                cout<<"c "<<counter<<endl;
+                //cout<<"t "<<timestamp<<endl;
+                //cout<<"c "<<counter<<endl;
                 cout<< "elapsed time: " << elapsed_seconds.count() << "s\n";
             }
         }
@@ -424,8 +437,8 @@ int parsConfig(string& signalConfig, string& matrixFile, size_t& fftWinSize,
         testFile.close();
     }
 
-    //spatialFilterFile = ifile("spatialFilterFile", "");
-    spatialFilterFile = "featuremx.csv";
+    spatialFilterFile = ifile("spatialFilterFile", "");
+    //spatialFilterFile = "featuremx.csv";
     /*// check if spatialFilterFile exists
     testFile.open(spatialFilterFile.c_str());
     if (! testFile.good()) {

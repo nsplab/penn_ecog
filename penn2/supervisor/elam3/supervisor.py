@@ -21,6 +21,8 @@ import datetime
 
 import sys
 
+import time
+
 # the state machines to present the state of the graphics and filter modules
 from state import GameState
 from state import FilterState
@@ -43,13 +45,17 @@ init_obj_pos = True  # initialize positions of ball and box
 start_trial = False  # if trial has started
 goal_is_ball = True  # ball or box is goal
 
+if (len(sys.argv) > 1):
+    config.blockWidth = float(sys.argv[1]) * config.workspaceRadius
+
+if (len(sys.argv) > 2):
+    config.blockLengthTime = float(sys.argv[2])
+
 # create state objects
 gameState = GameState()
 gameState.generateBlocks()
 filterState = FilterState()
 
-if (len(sys.argv) > 1):
-    config.blockWidth = float(sys.argv[1]) * config.workspaceRadius
 
 
 # capture the kill signal and terminate the process
@@ -157,9 +163,33 @@ while run:
 
     f.write(str(timestamp))
     f.write(' ')
+
+    f.write(str(time.time()))
+    f.write(' ')
+
     f.write(str(filterState.trial))
     f.write(' ')
     f.write(str(gameState.box_pos))
+    f.write(' ')
+    f.write(str(gameState.hand_pos[0]))
+    f.write(' ')
+    f.write(str(gameState.hand_pos[1]))
+    f.write(' ')
+    f.write(str(gameState.hand_pos[2]))
+    f.write(' ')
+
+    f.write(str(gameState.score))
+    f.write(' ')
+
+    f.write(str(config.blockWidth))
+    f.write(' ')
+
+    f.write(str(config.blockLengthTime))
+    f.write(' ')
+
+    f.write(str(config.workspaceRadius))
+    f.write(' ')
+
     f.write('\n')
 
     #gameState.hand_pos[0] = (float(vec[0]) - 320) / 26.0

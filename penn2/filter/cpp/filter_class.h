@@ -9,6 +9,8 @@ enum TrialMode {TRAINING, TESTING};
 class FilterClass {
 public:
   FilterClass();
+  virtual ~FilterClass() {};
+
   void GrabFeatures();                                              // receive features from the feature extraction module
   void SendHandPosGetState(const std::vector<float>& hand_movement);// receive virtual hand state from supervisor: hand position, mode (training/testing), target position
 
@@ -18,6 +20,9 @@ public:
                                                                     // setting the function to 0 tells the compiler there is no implementation for these functions
                                                                     // this prevents the compiler from creating objects of this base class
                                                                     // we're expecting to create derived classes that implement these functions (like naive_filter)
+  virtual void Run() = 0;                                           // virtual function that should contain the main loop of the filter,
+                                                                    // using dynamic binding at runtime we select the filter we want to use
+
   // auxiliary function to test the filter
   void Simulate(std::vector<float> features, size_t trial, std::vector<float> target, std::vector<float> initHandPosition);
   std::vector<float> GetHandState() {return handState_;}            // returns the handState_

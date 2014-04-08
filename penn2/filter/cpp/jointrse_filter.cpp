@@ -108,6 +108,10 @@ jointRSE_filter::jointRSE_filter(size_t dim, bool velocityParams, bool positionP
     cout<<"constructor done"<<endl;
 }
 
+jointRSE_filter::~jointRSE_filter() {
+
+}
+
 void jointRSE_filter::Predict() {
     cout<<"predict"<<endl;
     timeStep_ ++;
