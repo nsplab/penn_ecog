@@ -207,6 +207,7 @@ int main(int argc, char** argv)
         memcpy(buffer, (size_t*)signal.data()+1, signal.size()-sizeof(size_t));
         memcpy(points.data(), &(buffer[neuralIndex]), sizeof(float) * numChannels);
 
+        // downsample the raw signals by a factor of 2
         if (decimater.AddSample(points)) {
             decimater.GetDecSample(decimatedPoints);
             //if (timestamp % 1000 == 0) {
@@ -219,6 +220,7 @@ int main(int argc, char** argv)
             /// TODO: FIXME
             // baseline assume first feature is the one we want
 
+            // spatial filter the raw data
             MatrixXf decVec(numChannels,1);
             decVec = Map<MatrixXf>(decimatedPoints.data(), numChannels, 1);
             spatialFilteredChannels = spatialFilterMx * decVec;
@@ -230,10 +232,15 @@ int main(int argc, char** argv)
 
             fft.AddPoints(spatiallyFilteredPoints);
 
+            // control the rate of feature extraction
             if (counter % (numberOfSamplesSkip) == 0)
+
+            // try to compute fft (if the fewer number of samples than window length fails)
             if (fft.Process()) {
+                // get the powers vector (each channel is an element)
                 fft.GetPower(powers);
 
+                //
                 for (unsigned ch=0; ch<numFeatureChannels; ch++) {
                     float pwr = 0.0;
                     cout<<binFrom<<" "<<binTo<<endl;
