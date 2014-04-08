@@ -20,6 +20,10 @@ statusSocket = context.socket(zmq.SUB)
 statusSocket.connect("ipc:///tmp/signalstream.pipe")
 
 
+##################################################################
+# parse the config file
+##################################################################
+
 config = ConfigParser.RawConfigParser()
 config.read('tdt.cfg')
 
@@ -32,13 +36,18 @@ channelBCI = config.getint('TDT', 'channelBCI')
 
 print 'sampleRate: ', sampleRate
 
+# to be removed ?
+#def saveconfig(*args):
+    #try:
+        #print 'test'
+        #value = float(channelNumber.get())
+    #except ValueError:
+        #pass
 
-def saveconfig(*args):
-    try:
-        print 'test'
-        value = float(channelNumber.get())
-    except ValueError:
-        pass
+
+##################################################################
+# process ids
+##################################################################
 
 pFeature = None
 pFilter = None
@@ -47,6 +56,9 @@ pGraphics = None
 pSqueez = None
 
 
+##################################################################
+# function called when stop BCI button is pressed
+##################################################################
 def StopBCI(*args):
     global pFeature
     global pFilter
@@ -67,6 +79,9 @@ def StopBCI(*args):
         pass
 
 
+##################################################################
+# function called when stop squeeze button is pressed
+##################################################################
 def StopSqueeze(*args):
     global pSqueeze
     global pFeature
@@ -81,7 +96,9 @@ def StopSqueeze(*args):
     except:
         pass
 
-
+##################################################################
+# creates a log file for each run of experiement
+##################################################################
 def WriteData(*args):
         missingInfo = False
         if not gender.get():
@@ -146,6 +163,9 @@ def WriteData(*args):
         return True
 
 
+##################################################################
+# function called when start squeeze button is pressed
+##################################################################
 def StartSqueeze(*args):
     global pSqueeze
     global pFeature
@@ -170,6 +190,9 @@ def StartSqueeze(*args):
         pass
 
 
+##################################################################
+# function called when start BCI button is pressed
+##################################################################
 def StartBCI(*args):
     global pFeature
     global pFilter
@@ -217,6 +240,9 @@ def StartBCI(*args):
 
 
 
+##################################################################
+# prepare the gui window
+##################################################################
 root = Tk()
 root.title("Elam3 Launcher")
 root.geometry("-1+1")
@@ -232,7 +258,7 @@ channelNumber.set(channelBCI)
 blockWidth = StringVar()
 
 ##################
-### Subject's info
+### GUI: Subject's info
 ##################
 
 s = ttk.Style()
@@ -290,7 +316,7 @@ rowNumber += 1
 rowNumber = 1
 
 ##################
-### Baseline/Squeeze
+### GUI: Baseline/Squeeze
 ##################
 
 lfSqueeze = ttk.LabelFrame(mainframe, text='Squeeze Task: ', style='s2.TLabelframe')
@@ -376,7 +402,7 @@ rowNumber += 1
 rowNumber += 1
 
 ##################
-### TDT config
+### GUI: TDT config
 ##################
 
 lfTDT = ttk.Labelframe(mainframe, text='TDT: ', style='s4.TLabelframe')
@@ -427,6 +453,9 @@ for child in mainframe.winfo_children():
 ageE.focus()
 #root.bind('<Return>', saveconfig)
 
+##################################################################
+# prepare the gui window
+##################################################################
 # 0. load kernel module
 cwd = os.getcwd()
 os.chdir("../signal_acquisition/tdt/")
@@ -438,7 +467,7 @@ os.chdir(cwd)
 
 if errmsg:
     tkMessageBox.showinfo(message='Could not load the kernel module! Make sure the TDT kernel module is compiled for the current kernel version.')
-    sys.exit("Couldn't load TDT kernel module. This may be because the TDT kernel module is missing or not compiled for the current kernel version.")
+    #sys.exit("Couldn't load TDT kernel module")
 
 # 1. set TDT mode
 
@@ -447,6 +476,9 @@ if errmsg:
 # 3.
 
 
+##################################################################
+# check TDT streaming status and update the GUI element
+##################################################################
 def checkStatus():
     msg = ""
     try:
@@ -469,5 +501,8 @@ def checkStatus():
 
     root.after(0, checkStatus)
 
+##################################################################
+# run main loop of the gui
+##################################################################
 root.after(0, checkStatus)
 root.mainloop()
