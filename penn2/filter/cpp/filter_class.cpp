@@ -71,8 +71,8 @@ void FilterClass::SendHandPosGetState(const vector<float>& hand_movement) {     
     stringstream message;                                                                   // message is a stringstream that will contain featureTimestamp and hand_movement data
     message<<featureTimestamp_<<" ";                                                        // pack the featureTimestamp into message
     for (vector<float>::const_iterator it=hand_movement.begin();                            // iterate over the array values in hand_movement and copy them to the message stringstream
-         it<hand_movement.end(); it++) {input
-      message<<*it<<" ";
+        it<hand_movement.end(); it++) {
+        message<<*it<<" ";
     }
     message<<endl;                                                                          // complete the message stringstream with an endl character.
     zmq::message_t zmq_message(message.str().length());                                     // create a zmq message_t to send the message to the supervisor

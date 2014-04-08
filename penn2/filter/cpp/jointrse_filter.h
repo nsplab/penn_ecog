@@ -4,7 +4,7 @@
 #include "reachstateequation.h"
 #include "filter_class.h"
 
-class jointRSE_filter : public FilterClass {
+class jointRSE_filter : virtual public FilterClass {
 public:
     static const size_t numChannels = 1;
     static const size_t sensoryDelay = 5;
@@ -13,6 +13,8 @@ public:
                     bool timeInvariant, bool log, float trialTime, float maxTrialTime, double diagQ, double finalPosCov,
                     double finalVelCov, unsigned featureRate, double channelCov, double initialArmPosVar, double initialArmVelVar,
                     bool integrateVel, unsigned numLags);
+    virtual ~jointRSE_filter();
+
     void Update();
     void Predict();
     // main loop function
