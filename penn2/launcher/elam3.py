@@ -11,17 +11,19 @@ import os
 import sys
 import zmq
 
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%       # Purpose: create the ZMQ channels to communicate with: (1) TDT module, (2)
+                                                                            # create ZMQ communication channels
+context = zmq.Context()                                                     # declares that there will be one thread for a single zmq channel
+socket = context.socket(zmq.REQ)                                            # creates a request socket for a request-reply communication protocol with the TDT module
+socket.connect("ipc:///tmp/record.pipe")                                    # this channel is used to communicate with the TDT module to start and stop recording the data stream into a file
 
-context = zmq.Context()
-socket = context.socket(zmq.REQ)
-socket.connect("ipc:///tmp/record.pipe")
+statusSocket = context.socket(zmq.SUB)                                      # creates the subscribe socket of a subscribe-publish communication protocol with the
+statusSocket.connect("ipc:///tmp/signalstream.pipe")                        #
 
-statusSocket = context.socket(zmq.SUB)
-statusSocket.connect("ipc:///tmp/signalstream.pipe")
-
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%       # Purpose: read the TDT config file and load settings into variables
 
 config = ConfigParser.RawConfigParser()
-config.read('tdt.cfg')
+config.read('tdt.cfg')                                                      # We're expecting tdt.cfg to be in the same directory as this file, elam3.py
 
 sampleRate = config.getfloat('TDT', 'sampleRate')
 forceSensorCh = config.getint('TDT', 'forceSensorCh')
@@ -429,8 +431,9 @@ ageE.focus()
 
 # 0. load kernel module
 cwd = os.getcwd()
-os.chdir("../signal_acquisition/tdt/")
-lproc = Popen([r'sudo', './loaddriver.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+os.chdir("../signal_acquisition/tdt/")                                                          #change directory to the directory containing the TDT kernel module (driver)
+lproc = Popen([r'sudo', './loaddriver.sh'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)     #execute the shell script that loads the TDT kernel module into the operating system kernel (Plx0954.ko)
+                                                                                                #note that this .ko file has been specially compiled for this specific version of Linux.
 (outmsg, errmsg) = lproc.communicate()
 print 'errmsg :', errmsg
 print 'outmsg :', outmsg

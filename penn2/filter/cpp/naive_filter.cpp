@@ -21,18 +21,22 @@ NaiveFilter::NaiveFilter(float featureRate){                                    
                                                                                                     //          is expected to be updated.
                                                                                                     //
   featureRate_ = featureRate;                                                                       // rate (in Hz) at which new features (eg. power in different frequencies/channels) are calculated
-  gamma_ = 0.5;                                                                                     // gamma is the
-  scale_ = 0.001;                                                                                   //
+  gamma_ = 0.5;                                                                                     // gamma is the running average forgetting factor:  m_{k+1} = \gamma m_k + (1-\gamma)p_k
+                                                                                                    // where m_k is the running average (ewmaValues), and p_k is the average scalar
+                                                                                                    // power at time step k (based on features_)
+  scale_ = 0.001;                                                                                   // scale is the multiplier for the moving average that determines the resulting velx
+                                                                                                    // specifically, velx = scaleX & ewmaValues
   q5_ = 0.0;                                                                                        //
   q95_ = 0.0;                                                                                       //
 }
 
 void NaiveFilter::Predict() {
-  GrabFeatures();                                                                                   // get new features: implemented by FilterClass; refreshes features_ with latest values
+  GrabFeatures();
+                                                                                                    // get new features: implemented by FilterClass; refreshes features_ with latest values
                                                                                                     //                   from feature_extraction module
   // process features
   //for (size_t i=0; i<features_.size(); i++) {
-  //    features_[i] *= 0.5;                                                                        // (inactive debug code) scale each feature value by 50%
+  //    features_[i] *= 0.5;                                                                        // (inactive debug code) scale each feature value by 50%; used to compare these values with the original simulated sin waves
   //}
 }
 

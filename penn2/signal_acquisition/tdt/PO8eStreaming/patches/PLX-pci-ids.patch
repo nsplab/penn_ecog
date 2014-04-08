@@ -1,0 +1,19 @@
+diff -Naur TDTDrivers-70/3rd_Party/PlxSdk/Linux/Driver/Source.Plx9000/Driver.c TDTDrivers-70.new/3rd_Party/PlxSdk/Linux/Driver/Source.Plx9000/Driver.c
+--- ./PlxSdk/Linux/Driver/Source.Plx9000/Driver.c	2009-08-10 18:00:20.000000000 -0400
++++ ./PlxSdk/Linux/Driver/Source.Plx9000/Driver.c	2009-12-30 13:51:31.000000000 -0500
+@@ -67,13 +67,13 @@
+ #elif defined(PCI9080)
+     char SupportedDevices[] = "908010b5 040110b5 086010b5";
+ #elif defined(PCI9054)
+-    char SupportedDevices[] = "905410b5 186010b5 c86010b5 540610b5";
++    char SupportedDevices[] = "905410b5 186010b5 c86010b5 540610b5 90544550 08544550";
+ #elif defined(PCI9056)
+     char SupportedDevices[] = "905610b5 560110b5 56c210b5";
+ #elif defined(PCI9656)
+     char SupportedDevices[] = "965610b5 960110b5 96c210b5";
+ #elif defined(PCI8311)
+-    char SupportedDevices[] = "831110b5 86e110b5";
++    char SupportedDevices[] = "831110b5 86e110b5 90544550 08544550";
+ #else
+     #error Supported Device IDs not provided
+ #endif

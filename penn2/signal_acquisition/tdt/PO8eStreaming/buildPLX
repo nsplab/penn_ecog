@@ -1,0 +1,14 @@
+#!/bin/bash
+
+tar -xf PlxSdk-6.50.tar
+patch -p0 < patches/PLX-pci-ids.patch
+patch -p0 < patches/PLX-kernelVer.patch
+patch -p0 < patches/PLX-system_h.patch
+patch -p0 < patches/PLX-VM_RESERVED.patch
+cd PlxSdk/Linux/Driver
+PLX_SDK_DIR=`pwd`/../.. ./builddriver 9054
+cd -
+cp PlxSdk/Linux/Driver/Plx9054/Plx9054.ko .
+
+# cleanup
+rm -rf PlxSdk
