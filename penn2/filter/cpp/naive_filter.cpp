@@ -13,7 +13,7 @@
 #include <Fl/Fl_Input.H>
 #include <FL/Fl_Output.H>
 
-using namespace std;
+using namespace std;                                                                                //allows you to write cout << instead of std:cout <<
 
 
 NaiveFilter::NaiveFilter(float featureRate){
@@ -103,8 +103,13 @@ void NaiveFilter::Update() {
 }
 
 void NaiveFilter::Run() {
+    bool updated = false;
 
     ifstream baseline("../../../feature_extraction/feature_extract_cpp/build/baseline.txt");
+    if (! baseline.is_open()) {
+        cout<<"You need to first run a baseline recording for this static filter in order to generate /penn2/feature_extraction/feature_extract_cpp/build/baseline.txt"<<endl;
+        return;
+    }
     float mean, variance;
     while (baseline) {
         baseline>>mean;

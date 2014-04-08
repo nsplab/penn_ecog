@@ -8,6 +8,12 @@
 
 #include <chrono>
 
+#include <thread>
+
+// for lpt
+//#include <unistd.h>
+//#include <sys/io.h>
+
 #include <zmq.hpp>  //provides protocol for communicating between different modules in the ECoG system
 
 #include "PO8e.h"   //code provided by TDT to stream/read signal amplitudes
@@ -32,8 +38,40 @@ void signal_callback_handler(int signum) {
     quit = true;
 }
 
+bool dataBeingStreamed = false;
+void BroadcastStatus() {
+
+    context_t context(1);			//number of threads used by ZMQ
+    socket_t publisher(context, ZMQ_PUB);	//socket used to broadcast data
+    int hwm = 1;				//hwm - high water mark - determines buffer size for
+    //data passed through ZMQ. hwm = 1 makes the ZMQ buffer
+    //size = 1. This means that if no module has accessed a
+    //value written through ZMQ, new values will be dropped
+    //until any module reads the value
+    publisher.setsockopt(ZMQ_SNDHWM, &hwm, sizeof(hwm));
+    publisher.bind("ipc:///tmp/signalstream.pipe");	//gives address of data that other modules can reference
+
+    while (!quit) {
+        char status = '0';
+        if (dataBeingStreamed) {
+            status = '1';
+        }
+        publisher.send(&status, sizeof(char));
+    }
+
+}
+
 int main(int argc, char** argv) {
+//    if (ioperm(lptDataBase,1,1))
+//        fprintf(stderr, "Couldn't get the port at %x\n", lptDataBase), exit(1);
+
     signal(SIGINT, signal_callback_handler);
+
+
+//    if (ioperm(lptDataBase,1,1))
+//        fprintf(stderr, "Couldn't get the port at %x\n", lptDataBase), exit(1);
+
+//    outb(0x10, lptDataBase);
 
     // parse command line arguments
     GetPot cl(argc, argv);
@@ -51,7 +89,7 @@ int main(int argc, char** argv) {
     GetPot ifile(cfgFile.c_str(), "#", "\n");
     ifile.print();	//print the config file to the terminal for user reference
 
-    size_t numberOfChannels = ifile("numberOfChannels", 0);	//load total number of channels (ECoG plus any other channels)
+    const size_t numberOfChannels = ifile("numberOfChannels", 0);	//load total number of channels (ECoG plus any other channels)
     cout<<"numberOfChannels: "<<numberOfChannels<<endl;			//print number of channels to the screen
 
     if (argc > 1) {
@@ -96,8 +134,8 @@ int main(int argc, char** argv) {
 
     // clear contents of the buffer containing data received by the PO8e
     //one way to flush the buffer
-    card->flushBufferedData(card->samplesReady());  
-    						    //remove a certain number of samples from the buffer specified by samplesRead()
+    card->flushBufferedData(card->samplesReady());
+    //remove a certain number of samples from the buffer specified by samplesRead()
     //another way to flush the buffer, just to be sure
     card->flushBufferedData(-1);	  //flushBufferedData(-1) flushes all data in the buffer
 
@@ -131,6 +169,9 @@ int main(int argc, char** argv) {
     						//for aligning ECoG and other TDT data with task events on the PC
     						//such as the value of an on-screen stimulus
 
+    thread broadcastThread(BroadcastStatus);
+
+    bool record = false;
 
     std::chrono::time_point<std::chrono::system_clock> start, end;
 
@@ -139,18 +180,22 @@ int main(int argc, char** argv) {
 
         numberOfSamples = card->samplesReady();  // how many samples are currently available for reading from the PO8e
 
-        if (numberOfSamples < 1)		//if no samples are ready,
+        if (numberOfSamples < 1) {		//if no samples are ready,
+            dataBeingStreamed = false;
             continue;				//skip remaining code in the while loop and start a new cycle
+        }
 
-            start = std::chrono::system_clock::now();
-            if (card->readBlock(dBuff, numberOfSamples) != numberOfSamples) {	//readblock(tempBuff,1) loads one sample from every channel into tempBuff, returning 1 if successful, and advances to the next sample
-                cout<<"reading sample "<<" failed!"<<endl;  //if there is a problem accessing the buffer, print failure message to terminal
-                return 1;
-            }
-            end = std::chrono::system_clock::now();
+        dataBeingStreamed = true;
 
-            // advance PO8e buffer pointer
-            card->flushBufferedData(numberOfSamples);
+        start = std::chrono::system_clock::now();
+        if (card->readBlock(dBuff, numberOfSamples) != numberOfSamples) {	//readblock(tempBuff,1) loads one sample from every channel into tempBuff, returning 1 if successful, and advances to the next sample
+            cout<<"reading sample "<<" failed!"<<endl;  //if there is a problem accessing the buffer, print failure message to terminal
+            return 1;
+        }
+        end = std::chrono::system_clock::now();
+
+        // advance PO8e buffer pointer
+        card->flushBufferedData(numberOfSamples);
 
             // change grouping from channel-based to sample-based
             for (unsigned ch=0; ch<numberOfChannels; ch++) {
@@ -173,19 +218,66 @@ int main(int argc, char** argv) {
             memcpy(static_cast<size_t*>(zmq_message.data())+1, tempBuff, sizeof(float)*numberOfChannels);  
 
             if ((timeStamp % 24000) == 0) {
+                //if (timeStamp == 25000) {
+                //outb(0x0, lptDataBase);
+                //}
                 cout<<"number of channels: "<<card->numChannels()<<endl;
-	            cout<<"t: "<<timeStamp<<endl;	//every 50 timeStamps, print the timeStamp
+                cout<<"t: "<<timeStamp<<endl;	//every 50 timeStamps, print the timeStamp
+                //cout<<zmq_message.size()<<endl;			//
                 cout<<numberOfSamples<<endl;			//and # of samples that were ready in the PO8e buffer
                 std::chrono::duration<double> elapsed_seconds = end-start;
                 cout<<"elapsed time: " << elapsed_seconds.count() << "s\n";
             }
 
+            //char tstr[] = "10001 this that";
+            //memcpy(zmq_message.data(), tstr, strlen(tstr));
+            //snprintf ((char *) zmq_message.data(), 20 ,
+            //    "%05d %d", 10001, timeStamp);
+            //s_sendmore(publisher, "A");
             publisher.send(zmq_message);	//ZMQ command to trigger the broadcast of tempBuff and timeStamp
         }
-            // write timeStamp and tempBuff into the data file on the PC harddrive
-            // fwrite(&timeStamp, sizeof(size_t), 1, pFile);
-            fwrite(&(dBuffSeq[0]), sizeof(float), numberOfChannels*numberOfSamples, pFile);
+
+        // get record/stop command from launcher/gui script
+        message_t recMsg;
+        if (recordSocket.recv(&recMsg, ZMQ_DONTWAIT)) {
+            string strMsg((char *)recMsg.data(), recMsg.size());
+            if (strMsg.compare("stop") == 0) {
+                cout<<"stop recording"<<endl;
+                record = false;
+                if (pFile != NULL) {
+                    fclose(pFile);
+                    pFile = NULL;
+                }
+            } else {
+                cout<<"str: "<<strMsg<<endl;
+                time_t t = time(nullptr);
+                tm ptm = *std::localtime(&t);
+                char nameBuffer[34];
+                strftime(nameBuffer, 34, "_%a_%d.%m.%Y_%H:%M:%S", &ptm);
+                cout<<"filename: "<<filename+string(strMsg)+string(nameBuffer)<<endl;
+                record = true;
+                if (pFile != NULL) {
+                    fclose(pFile);
+                    pFile = NULL;
+                }
+                string finalFilename(filename+string(strMsg)+string(nameBuffer));
+
+                pFile = fopen(finalFilename.c_str(), "wb");
+                setvbuf (pFile, NULL, _IOFBF, 10*numberOfChannels*sizeof(float));
+
+            }
+            recordSocket.send("ok", 2);
+        }
+
+        // write timeStamp and tempBuff into the data file on the PC harddrive
+        // fwrite(&timeStamp, sizeof(size_t), 1, pFile);
+        if (record) {
+            fwrite(&(dBuff[0]), sizeof(float), numberOfChannels*numberOfSamples, pFile);
+        }
+
     } // end of main loop
+
+    broadcastThread.join();
 
     fclose(pFile);		//close the data file that records all TDT channels with timeStamp onto the PC (Puget)
     PO8e::releaseCard(card);	//for PO8e

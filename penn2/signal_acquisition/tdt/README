@@ -1,0 +1,23 @@
+The c++ code to interface with the TDT hardware.
+
+
+main.cpp contians the main funciton which has the main loop.
+
+makepo.sh generates the binary file
+
+PO8e.h has the function declerations of the PO8e library inplemented in the TDT PO8e kernel module (driver) with extension .lo located in this directory.
+
+__.lo - the PO8e kernel module (driver). This binary file needs to be compiled for the specific linux version that you're using. We previously had problems where the kernel module had been compiled for an earlier version of Linux; when the Ubuntu linux on the Penn Puget computer auto-updated, the kernel module that had been compiled for the previous version didn't work. We had to contact the Linux person at TDT through Andrew Richardson's contact. We gave that person the exact Linux version we were using, by entering the following command at the command line:  uname -a
+
+Once we received the new kernel module (.lo file), the code worked again. (Mosalam had also tried to fix the code directly and compile by himself on the new version of Linux, but this didn't work for some unknown reason.)
+
+As a historic note, TDT uses a generic PCI card to implement the PO8e. Much of the code that defines the kernel module is actually written by this generic PCI card product. TDT wrote patches on top of that code to provide the streaming functionality for its TDT as implemented by the PO8e. (detail from Mosalam 4/7/14).
+
+GetPot.h the command line / config file parser
+
+libPO8eStreaming.so the PO8e library
+
+penn.cfg config file for the TDT module/code (number of channels, sampling rate, etc.)
+
+loaddriver.sh loads the TDT-PO8e kernel module
+

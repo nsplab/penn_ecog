@@ -49,13 +49,16 @@ The Graphics module receives the state of the game from "ipc:///tmp/graphics.pip
 
 How to compile and run
 --------------
-The required external libraries:
+The required external libraries: (important: you always want to add the dev versions of these packages, because it includes header files needed for compiling)
 1. ZMQ
 2. Visual Python for the python graphics module
 3. Openscenegraph for the C++ graphics module
 4. openkinect and its python wrapper
 5. opencv 2 or 3 and its python wrapper
 6. IT++
+7. Boost:  in Synaptic Package Manager, the exact name is libboost-math-dev (we have been using the most stable version, whatever version that is).
+8. Armadillo - for linear algebra in matlab-like syntax
+9. FLTK - used for making the popup window that lets you update the filter parameters while the game is running (FLTK is for creating GUIs)
 
 To compile C++ modules use cmake, create a build subdirectory and in that directory run:
 cmake ../

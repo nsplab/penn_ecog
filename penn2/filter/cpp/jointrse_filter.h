@@ -26,7 +26,11 @@ private:
     void LogStateVector(arma::mat state);
     void LogUpdateStateVector(arma::mat state);
 
-    // state evolution matrix
+    /** state equation matrices
+     * The state equation is written x_{k+1} = F x_k + b + \epsilon
+     * where \epsilon \tilde N(0,covariance).
+     */
+
     arma::cube F_;
     arma::cube Q_;
     arma::mat covariance_;
