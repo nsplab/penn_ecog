@@ -183,7 +183,7 @@ def StartBCI(*args):
 ##################################################################
 # function called when start Demo BCI button is pressed
 ##################################################################
-def StartBCI(*args):
+def StartDemoBCI(*args):
     global pFeature
     global pFilter
     global pSupervisor
