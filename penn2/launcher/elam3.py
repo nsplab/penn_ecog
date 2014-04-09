@@ -170,6 +170,9 @@ def StartBCI(*args):
         time.sleep(0.1)
 
         # start filter
+        filterTypeStr = filterType.get()
+        # TODO:
+        # send the filter type to the filter process 
         pFilter = Popen([r'../../cpp/build/filter'],
                 cwd=r'../filter/cpp/build')
         time.sleep(0.1)
@@ -392,6 +395,16 @@ rowNumber = 1
 
 lfBCI = ttk.Labelframe(mainframe, text='BCI Task: ', style='s3.TLabelframe')
 lfBCI.grid(column=1, row=3, sticky=(W, E))
+
+# GUI drop-down list to select the filter type
+ttk.Label(lfBCI, text="BCI Algorithm being used:").grid(column=1, row=rowNumber, sticky=E)
+filterTypeVar = StringVar()
+filterType = ttk.Combobox(lfBCI, textvariable=filterTypeVar, state='readonly')
+filterType['values'] = ('MovingAverage', 'JointRSE_test', 'JointRSE_train')
+filterType.grid(column=2, row=rowNumber, sticky=(W, E))
+filterType.current(0)
+rowNumber += 1
+
 
 # GUI radiobutton for option to invert the power (multiply all powers by -1)
 ttk.Label(lfBCI, text="Invert the power:").grid(column=1, row=rowNumber, sticky=E)
