@@ -180,6 +180,59 @@ def StartBCI(*args):
     except:
         pass
 
+##################################################################
+# function called when start Demo BCI button is pressed
+##################################################################
+def StartBCI(*args):
+    global pFeature
+    global pFilter
+    global pSupervisor
+    global pGraphics
+    global pSqueez
+
+    try:
+	# do not log this run
+        #if not WriteData():
+        #    return
+
+	# don't ask data acquision to start recording
+        #dataacquisitionSocket.send("bci_task")
+
+        # generate the spatial matrix
+        Popen([r'../../feature_extract_cpp/spatial_matrix/build/spatial_matrix',
+                '3', str(int(firstEcogChV.get()) + int(numberOfEcogChsV.get()) - 2),
+                 str(int(chNum_entry.get()) - 1), '2', '3', 'featuremx.csv'],
+                cwd=r'../feature_extraction/feature_extract_cpp/build/')
+        time.sleep(1)
+
+        # start feature extractor
+        pFeature = Popen([r'../../feature_extract_cpp/build/feature_extract_cpp'],
+                cwd=r'../feature_extraction/feature_extract_cpp/build/')
+        time.sleep(0.1)
+
+        # start supervisor
+        pSupervisor = Popen([r'./supervisor.py'],
+                cwd=r'../supervisor/elam3/')
+        time.sleep(0.1)
+
+        # start graphics
+        pGraphics = Popen([r'../../elam3/build/elam3',
+                '3', str(int(firstEcogChV.get()) + int(numberOfEcogChsV.get()) - 2),
+                 str(int(chNum_entry.get()) - 1), '2', '3', 'featuremx.csv'],
+                cwd=r'../graphics/elam3/build/')
+        time.sleep(0.1)
+
+        # start filter
+        filterTypeStr = filterType.get()
+        # TODO:
+        # send the filter type to the filter process 
+        pFilter = Popen([r'../../cpp/build/filter'],
+                cwd=r'../filter/cpp/build')
+        time.sleep(0.1)
+
+    except:
+        pass
+
 
 
 ##################################################################
@@ -452,9 +505,12 @@ blockLengthE.grid(column=2, row=rowNumber, sticky=(W, E))
 rowNumber += 1
 
 ## buttons
+ttk.Button(lfBCI, text="Start Demo BCI Task\n(data not written to file)", command=StartDemoBCI).grid(column=1, row=rowNumber,
+                                                                    sticky='e')
+rowNumber += 1
 ttk.Button(lfBCI, text="Start BCI Task", command=StartBCI).grid(column=1, row=rowNumber,
                                                                     sticky='e')
-ttk.Button(lfBCI, text="Stop BCI Task", command=StopBCI).grid(column=2, row=rowNumber,
+ttk.Button(lfBCI, text="\nStop BCI Task\n", command=StopBCI).grid(column=2, row=rowNumber-1, rowspan=2,
                                                                      sticky='e')
 rowNumber += 1
 
