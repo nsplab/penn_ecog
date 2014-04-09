@@ -86,6 +86,33 @@ def StartSqueeze(*args):
         pass
 
 
+##################################################################
+# function called when start demo squeeze button is pressed
+##################################################################
+def StartDemoSqueeze(*args):
+    global pSqueeze
+    global pFeature
+
+    try:
+        # do not log this run
+        #if not WriteData():
+        #    return
+
+        # do not ask the data acquision module to record data for this run
+        #dataacquisitionSocket.send("squeeze_task")
+
+        # generate the spatial matrix
+        pSqueeze = Popen([r'../../squeeze/build/squeeze'],
+                cwd=r'../graphics/squeeze/build/')
+        time.sleep(0.1)
+
+        # start feature extractor
+        pFeature = Popen([r'../../feature_extract_cpp/build/feature_extract_cpp', '1'],
+                cwd=r'../feature_extraction/feature_extract_cpp/build/')
+        time.sleep(0.1)
+
+    except:
+        pass
 
 
 
@@ -426,9 +453,12 @@ forceSensorHandLE.grid(column=2, row=rowNumber, sticky=(W, E))
 rowNumber += 1
 
 ## buttons to start and stop the squeeze task
+ttk.Button(lfSqueeze, text="Start Demo Squeeze Task\n(data is not written to file)", command=StartDemoSqueeze).grid(column=1, row=rowNumber,
+                                                                          sticky='we')
+rowNumber += 1
 ttk.Button(lfSqueeze, text="Start Squeeze Task", command=StartSqueeze).grid(column=1, row=rowNumber,
                                                                           sticky='we')
-ttk.Button(lfSqueeze, text="Stop Squeeze Task", command=StopSqueeze).grid(column=2, row=rowNumber,
+ttk.Button(lfSqueeze, text="\nStop Squeeze Task\n", command=StopSqueeze).grid(column=2, row=rowNumber-1, rowspan=2,
                                                                          sticky='we')
 
 ##################
