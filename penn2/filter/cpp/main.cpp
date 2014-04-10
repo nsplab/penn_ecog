@@ -87,7 +87,7 @@ int main(int argc, char** argv) {
 
     // create a pointer to the base filter class
     // using dynamic binding we can switch between filter at runtime
-    FilterClass* filterObj;
+    FilterClass* filterObj;    
 
     // check what filter type has been requested
     switch (filterType) {
@@ -116,6 +116,7 @@ int main(int argc, char** argv) {
                                         numLags);
         break;
     }
+
 
     // run the main loop of the selected function
     filterObj->Run();                                           // run the filter
