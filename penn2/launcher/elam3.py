@@ -374,9 +374,33 @@ root.geometry("-1+1")
 
 # main frame
 mainframe = ttk.Frame(root, padding="3 3 12 12")
-mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
-mainframe.columnconfigure(0, weight=1)
-mainframe.rowconfigure(0, weight=1)
+mainframe.pack(fill=BOTH)
+#mainframe.grid(column=0, row=0, sticky=(N, W, E, S))
+#mainframe.columnconfigure(0, weight=1)
+#mainframe.rowconfigure(0, weight=1)
+
+streamingLabel = ttk.Label(mainframe, text="Not streaming from data acquisition system", style='s6.Label')
+streamingLabel.pack()
+#streamingLabel.state(['disabled'])
+notStreamingLabel = ttk.Label(mainframe, text="Not recording to local disk", style='s6.Label')
+notStreamingLabel.pack()
+#notStreamingLabel.state(['disabled'])
+#rowNumber += 1
+
+
+# create the notebook
+notebook = ttk.Notebook(mainframe)
+notebook.pack(fill=BOTH, padx=2, pady=3)
+# create the tabs
+subjectTab = ttk.Frame(notebook)
+dataTab = ttk.Frame(notebook)
+squeezeTab = ttk.Frame(notebook)
+bciTab = ttk.Frame(notebook)
+# add the tabs to the notebook
+notebook.add(subjectTab, text='Subject\nregistration')
+notebook.add(dataTab, text='Data\nacquisition')
+notebook.add(squeezeTab, text='Squeeze\ntask')
+notebook.add(bciTab, text='BCI\ntask')
 
 channelNumber = StringVar()
 channelNumber.set(channelBCI)
@@ -396,42 +420,45 @@ s.configure('s4.TLabelframe.Label', background='#E680A5')
 s.configure('s5.Label', background='#75EB8B')
 s.configure('s6.Label', background='#FA7373')
 
-lfSubject = ttk.Labelframe(mainframe, text='Subject: ', style='s1.TLabelframe')
-lfSubject.grid(column=1, row=1, sticky=(W, E))
+
+#lfSubject = ttk.Labeliframe(mainframe, text='Subject: ', style='s1.TLabelframe')
+#lfSubject.grid(column=1, row=1, sticky=(W, E))
 
 ## GUI form to enter gender
 rowNumber = 1                                                                                    #go to row 1 of the baseline/squeeze GUI frame
-ttk.Label(lfSubject, text="Gender:").grid(column=1, row=rowNumber, sticky=E)
+#subjectTab.columnconfigure(0,weight=1)
+#subjectTab.columnconfigure(1,weight=1)
+ttk.Label(subjectTab, text="Gender:").grid(column=1, row=rowNumber, sticky=E)
 gender = StringVar()
-maleE = ttk.Radiobutton(lfSubject, text='Male', variable=gender, value='Male')
-femaleE = ttk.Radiobutton(lfSubject, text='Female', variable=gender, value='Female')
-maleE.grid(column=2, row=rowNumber, sticky=(W, E))
+maleE = ttk.Radiobutton(subjectTab, text='Male', variable=gender, value='Male')
+femaleE = ttk.Radiobutton(subjectTab, text='Female', variable=gender, value='Female')
+maleE.grid(column=2, row=rowNumber, sticky='we')
 rowNumber += 1
-femaleE.grid(column=2, row=rowNumber, sticky=(W, E))
+femaleE.grid(column=2, row=rowNumber, sticky='we')
 rowNumber += 1
 
 ## GUI form to enter age
 age = StringVar()
-ttk.Label(lfSubject, text="Age:").grid(column=1, row=rowNumber, sticky=E)
-ageE = ttk.Entry(lfSubject, width=7, textvariable=age)
-ageE.grid(column=2, row=rowNumber, sticky=(W, E))
+ttk.Label(subjectTab, text="Age:").grid(column=1, row=rowNumber, sticky=E)
+ageE = ttk.Entry(subjectTab, width=7, textvariable=age)
+ageE.grid(column=2, row=rowNumber, sticky='we')
 rowNumber += 1
 
 ## GUI form to enter hand dominance
-ttk.Label(lfSubject, text="Dominant Hand:").grid(column=1, row=rowNumber, sticky=E)
+ttk.Label(subjectTab, text="Hand Dominance:").grid(column=1, row=rowNumber, sticky=E)
 hand = StringVar()
-rightHandE = ttk.Radiobutton(lfSubject, text='Right-handed', variable=hand, value='Right-handed')
-leftHandE = ttk.Radiobutton(lfSubject, text='Left-handed', variable=hand, value='Left-handed')
+rightHandE = ttk.Radiobutton(subjectTab, text='Right-handed', variable=hand, value='Right-handed')
+leftHandE = ttk.Radiobutton(subjectTab, text='Left-handed', variable=hand, value='Left-handed')
 rightHandE.grid(column=2, row=rowNumber, sticky=(W, E))
 rowNumber += 1
 leftHandE.grid(column=2, row=rowNumber, sticky=(W, E))
 rowNumber += 1
 
 ## GUI form to enter grid hemisphere
-ttk.Label(lfSubject, text="Grid Hemisphere:").grid(column=1, row=rowNumber, sticky=E)
+ttk.Label(subjectTab, text="Grid Hemisphere:").grid(column=1, row=rowNumber, sticky=E)
 grid = StringVar()
-rightGridE = ttk.Radiobutton(lfSubject, text='Right', variable=grid, value='Right')
-leftGridE = ttk.Radiobutton(lfSubject, text='Left', variable=grid, value='Left')
+rightGridE = ttk.Radiobutton(subjectTab, text='Right', variable=grid, value='Right')
+leftGridE = ttk.Radiobutton(subjectTab, text='Left', variable=grid, value='Left')
 rightGridE.grid(column=2, row=rowNumber, sticky=(W, E))
 rowNumber += 1
 leftGridE.grid(column=2, row=rowNumber, sticky=(W, E))
@@ -442,18 +469,18 @@ leftGridE.grid(column=2, row=rowNumber, sticky=(W, E))
 ### GUI Frame for: Baseline/Squeeze
 ####################################
 rowNumber = 1                                                                                        #go to row 1 of the baseline/squeeze GUI frame
-lfSqueeze = ttk.LabelFrame(mainframe, text='Squeeze Task: ', style='s2.TLabelframe')                 #define a new GUI frame for the squeeze task
-lfSqueeze.grid(column=1, row=2, sticky=(W, E))                                                       #positions the squeeze task frame relative to the whole window
+#lfSqueeze = ttk.LabelFrame(mainframe, text='Squeeze Task: ', style='s2.TLabelframe')                 #define a new GUI frame for the squeeze task
+#lfSqueeze.grid(column=1, row=2, sticky=(W, E))                                                       #positions the squeeze task frame relative to the whole window
 
 ## GUI field to specify force sensor channel
-tlabel = ttk.Label(lfSqueeze, text="Force Sensor in:")
+tlabel = ttk.Label(squeezeTab, text="Force Sensor is in patient's:")
 tlabel.grid(column=1, row=rowNumber, sticky=E)                                                        #positions the force sensor field relative to the squeeze task frame
 #tlabel.config(background='green')
 forceSensorHand = StringVar()
-forceSensorHandRE = ttk.Radiobutton(lfSqueeze, text='Right Hand', variable=forceSensorHand,
+forceSensorHandRE = ttk.Radiobutton(squeezeTab, text='Right Hand', variable=forceSensorHand,
                                     value='Right Hand')
 
-forceSensorHandLE = ttk.Radiobutton(lfSqueeze, text='Left Hand', variable=forceSensorHand,
+forceSensorHandLE = ttk.Radiobutton(squeezeTab, text='Left Hand', variable=forceSensorHand,
                                     value='Left Hand')
 forceSensorHandRE.grid(column=2, row=rowNumber, sticky=(W, E))
 rowNumber += 1
@@ -461,12 +488,12 @@ forceSensorHandLE.grid(column=2, row=rowNumber, sticky=(W, E))
 rowNumber += 1
 
 ## buttons to start and stop the squeeze task
-ttk.Button(lfSqueeze, text="Start Demo Squeeze Task\n(data is not written to file)", command=StartDemoSqueeze).grid(column=1, row=rowNumber,
+ttk.Button(squeezeTab, text="Start Demo Squeeze Task\n(data is not written to file)", command=StartDemoSqueeze).grid(column=1, row=rowNumber,
                                                                           sticky='we')
 rowNumber += 1
-ttk.Button(lfSqueeze, text="Start Squeeze Task", command=StartSqueeze).grid(column=1, row=rowNumber,
+ttk.Button(squeezeTab, text="Start Squeeze Task", command=StartSqueeze).grid(column=1, row=rowNumber,
                                                                           sticky='we')
-ttk.Button(lfSqueeze, text="\nStop Squeeze Task\n", command=StopSqueeze).grid(column=2, row=rowNumber-1, rowspan=2,
+ttk.Button(squeezeTab, text="\nStop Squeeze Task\n", command=StopSqueeze).grid(column=2, row=rowNumber-1, rowspan=2,
                                                                          sticky='we')
 
 ##################
@@ -484,13 +511,13 @@ ttk.Button(lfSqueeze, text="\nStop Squeeze Task\n", command=StopSqueeze).grid(co
 ####################################
 rowNumber = 1
 
-lfBCI = ttk.Labelframe(mainframe, text='BCI Task: ', style='s3.TLabelframe')
-lfBCI.grid(column=1, row=3, sticky=(W, E))
+#lfBCI = ttk.Labelframe(mainframe, text='BCI Task: ', style='s3.TLabelframe')
+#lfBCI.grid(column=1, row=3, sticky=(W, E))
 
 # GUI drop-down list to select the filter type
-ttk.Label(lfBCI, text="BCI Algorithm being used:").grid(column=1, row=rowNumber, sticky=E)
+ttk.Label(bciTab, text="BCI Algorithm being used:").grid(column=1, row=rowNumber, sticky=E)
 filterTypeVar = StringVar()
-filterType = ttk.Combobox(lfBCI, textvariable=filterTypeVar, state='readonly')
+filterType = ttk.Combobox(bciTab, textvariable=filterTypeVar, state='readonly')
 filterType['values'] = ('MovingAverage', 'JointRSE_test', 'JointRSE_train')
 filterType.grid(column=2, row=rowNumber, sticky=(W, E))
 filterType.current(0)
@@ -498,10 +525,10 @@ rowNumber += 1
 
 
 # GUI radiobutton for option to invert the power (multiply all powers by -1)
-ttk.Label(lfBCI, text="Invert the power:").grid(column=1, row=rowNumber, sticky=E)
+ttk.Label(bciTab, text="Invert the power:").grid(column=1, row=rowNumber, sticky=E)
 invertPower = StringVar()
-invertPowerYE = ttk.Radiobutton(lfBCI, text='Yes', variable=invertPower, value='Yes')
-invertPowerNE = ttk.Radiobutton(lfBCI, text='No', variable=invertPower, value='No')
+invertPowerYE = ttk.Radiobutton(bciTab, text='Yes', variable=invertPower, value='Yes')
+invertPowerNE = ttk.Radiobutton(bciTab, text='No', variable=invertPower, value='No')
 invertPowerNE.grid(column=2, row=rowNumber, sticky=(W, E))
 rowNumber += 1
 invertPowerYE.grid(column=2, row=rowNumber, sticky=(W, E))
@@ -519,36 +546,36 @@ rowNumber += 1
 #
 
 # GUI input box for one single channel used in the Moving Average Filter
-ttk.Label(lfBCI, text="Channel Number for\n Moving Average Filter:").grid(column=1, row=rowNumber, sticky=E)
-chNum_entry = ttk.Entry(lfBCI, width=7, textvariable=channelNumber)
+ttk.Label(bciTab, text="Channel Number for\n Moving Average Filter:").grid(column=1, row=rowNumber, sticky=E)
+chNum_entry = ttk.Entry(bciTab, width=7, textvariable=channelNumber)
 chNum_entry.grid(column=2, row=rowNumber, sticky=(W, E))
 rowNumber += 1
 
 # input box for block width
 blockWidth = StringVar()
 blockWidth.set(0.25)
-ttk.Label(lfBCI, text="Block Width percent\n of Screen:").grid(column=1, row=rowNumber,
+ttk.Label(bciTab, text="Block Width percent\n of Screen:").grid(column=1, row=rowNumber,
           sticky=E)
-blockWidthE = ttk.Entry(lfBCI, width=7, textvariable=blockWidth)
-blockWidthE.grid(column=2, row=rowNumber, sticky='e')
+blockWidthE = ttk.Entry(bciTab, width=7, textvariable=blockWidth)
+blockWidthE.grid(column=2, row=rowNumber, sticky='we')
 rowNumber += 1
 
 # input box for block width
 blockLength = StringVar()
 blockLength.set(10)
-ttk.Label(lfBCI, text="Block Length in Seconds:").grid(column=1, row=rowNumber,
+ttk.Label(bciTab, text="Block Length in Seconds:").grid(column=1, row=rowNumber,
           sticky=E)
-blockLengthE = ttk.Entry(lfBCI, width=7, textvariable=blockLength)
+blockLengthE = ttk.Entry(bciTab, width=7, textvariable=blockLength)
 blockLengthE.grid(column=2, row=rowNumber, sticky=(W, E))
 rowNumber += 1
 
 ## buttons
-ttk.Button(lfBCI, text="Start Demo BCI Task\n(data not written to file)", command=StartDemoBCI).grid(column=1, row=rowNumber,
+ttk.Button(bciTab, text="Start Demo BCI Task\n(data not written to file)", command=StartDemoBCI).grid(column=1, row=rowNumber,
                                                                     sticky='e')
 rowNumber += 1
-ttk.Button(lfBCI, text="Start BCI Task", command=StartBCI).grid(column=1, row=rowNumber,
+ttk.Button(bciTab, text="Start BCI Task", command=StartBCI).grid(column=1, row=rowNumber,
                                                                     sticky='e')
-ttk.Button(lfBCI, text="\nStop BCI Task\n", command=StopBCI).grid(column=2, row=rowNumber-1, rowspan=2,
+ttk.Button(bciTab, text="\nStop BCI Task\n", command=StopBCI).grid(column=2, row=rowNumber-1, rowspan=2,
                                                                      sticky='e')
 rowNumber += 1
 
@@ -557,64 +584,79 @@ rowNumber += 1
 rowNumber += 1
 
 ##################
-### GUI: TDT config
+### GUI: Data acquisition config
 ##################
 
-lfTDT = ttk.Labelframe(mainframe, text='TDT: ', style='s4.TLabelframe')
-lfTDT.grid(column=1, row=4, sticky=(W, E))
+#lfTDT = ttk.Labelframe(mainframe, text='TDT: ', style='s4.TLabelframe')
+#lfTDT.grid(column=1, row=4, sticky=(W, E))
 
-streamingLabel = ttk.Label(lfTDT, text="Streaming", style='s5.Label')
-streamingLabel.grid(column=1, row=rowNumber, sticky=E)
-#streamingLabel.state(['disabled'])
-notStreamingLabel = ttk.Label(lfTDT, text="Not streaming", style='s6.Label')
-notStreamingLabel.grid(column=2, row=rowNumber, sticky=E)
-#notStreamingLabel.state(['disabled'])
+# GUI drop-down list to select the machine being used
+ttk.Label(dataTab, text="Machine being used:").grid(column=1, row=rowNumber, sticky=E)
+machineVar = StringVar()
+machineType = ttk.Combobox(dataTab, textvariable=machineVar, state='readonly')
+machineType['values'] = ('TDT', 'g.HiAmp')
+machineType.grid(column=2, row=rowNumber, sticky=(W, E))
+machineType.current(0)
 rowNumber += 1
 
-ttk.Label(lfTDT, text="Sampling Rate:").grid(column=1, row=rowNumber, sticky=E)
+# GUI drop-down list to select the sampling rate
+ttk.Label(dataTab, text="Sampling rate options:").grid(column=1, row=rowNumber, sticky=E)
+samplingVar = StringVar()
+samplingType = ttk.Combobox(dataTab, textvariable=samplingVar, state='readonly')
+samplingType['values'] = ('256', '1024', '2048', '24400')
+samplingType.grid(column=2, row=rowNumber, sticky=(W, E))
+samplingType.current(0)
+rowNumber += 1
+
+
+ttk.Label(dataTab, text="Sampling Rate:").grid(column=1, row=rowNumber, sticky=E)
 sampleRateV = StringVar()
 sampleRateV.set(sampleRate)
-sampleRateE = ttk.Entry(lfTDT, textvariable=sampleRateV)
+sampleRateE = ttk.Entry(dataTab, textvariable=sampleRateV)
 sampleRateE.grid(column=2, row=rowNumber, sticky='e')
 rowNumber += 1
 
-ttk.Label(lfTDT, text="Force sensor Ch Number:").grid(column=1, row=rowNumber, sticky=E)
+ttk.Label(dataTab, text="Force sensor Ch Number:").grid(column=1, row=rowNumber, sticky=E)
 forceCh = StringVar()
 forceCh.set(forceSensorCh)
-forceChE = ttk.Entry(lfTDT, textvariable=forceCh)
+forceChE = ttk.Entry(dataTab, textvariable=forceCh)
 forceChE.grid(column=2, row=rowNumber, sticky='e')
 rowNumber += 1
 
-ttk.Label(lfTDT, text="First ECoG Ch Number:").grid(column=1, row=rowNumber, sticky=E)
+ttk.Label(dataTab, text="First ECoG Ch Number:").grid(column=1, row=rowNumber, sticky=E)
 firstEcogChV = StringVar()
 firstEcogChV.set(firstEcogCh)
-firstEcogChE = ttk.Entry(lfTDT, textvariable=firstEcogChV)
+firstEcogChE = ttk.Entry(dataTab, textvariable=firstEcogChV)
 firstEcogChE.grid(column=2, row=rowNumber, sticky='e')
 rowNumber += 1
 
-ttk.Label(lfTDT, text="Number of ECoG Channels:").grid(column=1, row=rowNumber, sticky=E)
+ttk.Label(dataTab, text="Number of ECoG Channels:").grid(column=1, row=rowNumber, sticky=E)
 numberOfEcogChsV = StringVar()
 numberOfEcogChsV.set(numberOfEcogChs)
-numberOfEcogChsE = ttk.Entry(lfTDT, textvariable=numberOfEcogChsV)
+numberOfEcogChsE = ttk.Entry(dataTab, textvariable=numberOfEcogChsV)
 numberOfEcogChsE.grid(column=2, row=rowNumber, sticky='e')
+rowNumber += 1
+
+ttk.Label(dataTab, text="Synchronizing pulse channel:").grid(column=1, row=rowNumber, sticky=E)
+synchChsV = StringVar()
+synchChsV.set(numberOfEcogChs)
+synchChsE = ttk.Entry(dataTab, textvariable=numberOfEcogChsV)
+synchChsE.grid(column=2, row=rowNumber, sticky='e')
 
 #ttk.Label(mainframe, textvariable=channelNumber).grid(column=2, row=2, sticky=(W, E))
 #ttk.Label(mainframe, text="").grid(column=1, row=2, sticky=E)
 #ttk.Label(mainframe, text="").grid(column=3, row=2, sticky=W)
 
-for child in mainframe.winfo_children():
+for child in subjectTab.winfo_children():
     child.grid_configure(padx=5, pady=3)
 
-for child in lfTDT.winfo_children():
+for child in dataTab.winfo_children():
     child.grid_configure(padx=5, pady=3)
 
-for child in lfSqueeze.winfo_children():
+for child in squeezeTab.winfo_children():
     child.grid_configure(padx=5, pady=3)
 
-for child in lfBCI.winfo_children():
-    child.grid_configure(padx=5, pady=3)
-
-for child in lfSubject.winfo_children():
+for child in bciTab.winfo_children():
     child.grid_configure(padx=5, pady=3)
 
 ageE.focus()
@@ -658,11 +700,11 @@ def checkStatus():
         status = 1
 
     if status == 0:
-        streamingLabel.state(['disabled'])
-        notStreamingLabel.state(['!disabled'])
+        pass
+        #streamingLabel.state(['disabled'])
     else:
-        streamingLabel.state(['!disabled'])
-        notStreamingLabel.state(['disabled'])
+        pass
+        #streamingLabel.state(['!disabled'])
 
     root.update()
 
