@@ -59,6 +59,10 @@ The required external libraries: (important: you always want to add the dev vers
 7. Boost:  in Synaptic Package Manager, the exact name is libboost-math-dev (we have been using the most stable version, whatever version that is).
 8. Armadillo - for linear algebra in matlab-like syntax
 9. FLTK - used for making the popup window that lets you update the filter parameters while the game is running (FLTK is for creating GUIs)
+10. install python-pip - Python installing program. needed to complete the ConfigObj installation. Use the Synaptic program to download.
+11. ConfigObj - python library used by penn2/launcher/elam3.py in order to edit config files while keeping comment lines intact.
+		to install, use this command: sudo pip install configobj (you probably can't install synaptic package manager for this)
+		note that pip (python-pip) is the Python installing program, used to distribute packages in Python
 
 To compile C++ modules use cmake, create a build subdirectory and in that directory run:
 cmake ../
