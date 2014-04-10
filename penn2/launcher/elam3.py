@@ -10,7 +10,15 @@ from signal import SIGINT
 import os
 import sys
 import zmq
+from configobj import ConfigObj                                  # class used to read and write config file of other module
 
+# create objects to read/write config files
+configSignalTdt = ConfigObj('../config/signal_tdt.cfg')
+configSignalGtec = ConfigObj('../config/signal_gtec.cfg')
+configFeature = ConfigObj('../config/feature_extract_config.cfg')
+configFilter = ConfigObj('../config/filter.cfg')
+configSupervisor = ConfigObj('../config/supervisor_config.cfg')
+configGraphics = ConfigObj('../config/graphics.cfg')
 
 context = zmq.Context()
 dataacquisitionSocket = context.socket(zmq.REQ)
