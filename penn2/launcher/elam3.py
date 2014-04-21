@@ -207,7 +207,7 @@ def StartBCI(*args):
         # start filter
         filterTypeStr = filterType.get()
         # TODO:
-        # send the filter type to the filter process 
+        # send the filter type to the filter process
         pFilter = Popen([r'../../cpp/build/filter'],
                 cwd=r'../filter/cpp/build')
         time.sleep(0.1)
@@ -260,7 +260,7 @@ def StartDemoBCI(*args):
         # start filter
         filterTypeStr = filterType.get()
         # TODO:
-        # send the filter type to the filter process 
+        # send the filter type to the filter process
         pFilter = Popen([r'../../cpp/build/filter'],
                 cwd=r'../filter/cpp/build')
         time.sleep(0.1)
@@ -428,7 +428,8 @@ s.configure('s6.Label', background='#FA7373')
 rowNumber = 1                                                                                    #go to row 1 of the baseline/squeeze GUI frame
 #subjectTab.columnconfigure(0,weight=1)
 #subjectTab.columnconfigure(1,weight=1)
-ttk.Label(subjectTab, text="Gender:").grid(column=1, row=rowNumber, sticky=E)
+guiItem = ttk.Label(subjectTab, text="Gender:")#.grid(column=1, row=rowNumber, sticky=E)
+guiItem.pack(side=LEFT)
 gender = StringVar()
 maleE = ttk.Radiobutton(subjectTab, text='Male', variable=gender, value='Male')
 femaleE = ttk.Radiobutton(subjectTab, text='Female', variable=gender, value='Female')
