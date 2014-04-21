@@ -351,6 +351,7 @@ int main(int argc, char** argv)
     }
     tmpBackground = SDL_LoadBMP("b2.bmp");
     */
+    cout<<"loading images .."<<endl;
     temp[0] = SDL_LoadBMP("../circle.bmp");
     temp[1] = SDL_LoadBMP("../square.bmp");
     temp[2] = SDL_LoadBMP("../triangle.bmp");
@@ -371,6 +372,8 @@ int main(int argc, char** argv)
     SDL_FreeSurface(temp[1]);
     SDL_FreeSurface(temp[2]);
     SDL_FreeSurface(temp[3]);
+
+    cout<<"loaded images."<<endl;
 
     //Construct the source rectangle for our blit
     src.x = 0;

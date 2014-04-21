@@ -508,9 +508,9 @@ class Launcher:
         self.Entry16.configure(textvariable=l12_support.psdWindowLength)
 
         self.Label26 = Label (self.TNotebook2_pg2)
-        self.Label26.place(relx=0.54,rely=0.57,height=19,width=53)
+        self.Label26.place(relx=0.54,rely=0.57,height=19,width=83)
         self.Label26.configure(activebackground="#f9f9f9")
-        self.Label26.configure(text='''seconds''')
+        self.Label26.configure(text='''milliseconds''')
 
         self.TLabelframe2 = ttk.Labelframe (self.TNotebook1_pg3)
         self.TLabelframe2.place(relx=0.02,rely=0.51,relheight=0.26

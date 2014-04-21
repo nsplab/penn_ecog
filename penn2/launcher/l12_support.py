@@ -20,8 +20,10 @@ except ImportError:
     import tkinter.ttk as ttk
     py3 = 1
 
+from subprocess import Popen
 import tkMessageBox
 from configobj import ConfigObj
+from signal import SIGINT
 
 def set_Tk_var():
     # These are Tk variables used passed to Tkinter and must be
@@ -164,6 +166,18 @@ def set_Tk_var():
     barWidth.set(secLog['BarWidth'])
     barLength.set(secLog['BarLength'])
 
+##################################################################
+# process IDs (one for each program that we run)
+# these are handles to individual processes for starting
+# and terminating them individually.
+##################################################################
+
+pFeature = None                                                   # pFeature - feature extractor
+pFilter = None                                                    # pFilter - filter module
+pSupervisor = None                                                # pSupervisor - supervisor module
+pGraphics = None                                                  # pGraphics - graphics module
+pSqueez = None                                                    # pSqueez - squeeze task module
+
 
 def RunBCI():
         print ('l12_support.RunBCI')
@@ -181,6 +195,15 @@ def RunSqueeze():
         print ('l12_support.RunSqueeze')
         sys.stdout.flush()
         Record("Squeeze")
+        global pSqueeze
+        #try:
+            #dataacquisitionSocket.send("squeeze_task")
+        pSqueeze = Popen([r'../../squeeze/build/squeeze'],
+                         cwd=r'../graphics/squeeze/build/')
+        time.sleep(0.1)
+        #except:
+        #    pass
+
 
 def StartDemoBCI():
         print ('l12_support.StartDemoBCI')
@@ -191,8 +214,19 @@ def StopBCITask():
         sys.stdout.flush()
 
 def StopSqueezeTask():
-        print ('l12_support.StopSqueezeTask')
-        sys.stdout.flush()
+    print ('l12_support.StopSqueezeTask')
+    sys.stdout.flush()
+    global pSqueeze
+    pSqueeze.send_signal(SIGINT)
+
+    #try:
+        # stop tdt recording
+        #dataacquisitionSocket.send("stop")
+        #dataacquisitionSocket.recv()
+        # terminate squeeze and feature_extraxtor modules
+        #pSqueeze.send_signal(SIGINT)
+    #except:
+        #pass
 
 def MachineChanged(event):
         print machineBeingUsed.get()
@@ -301,6 +335,32 @@ def RecordBCI(logFile, logFileBackup):
 
     logFile.write(logText)
     logFileBackup.write(logText)
+
+    # update config file of feature extractor
+    featureCfg = ConfigObj('../config/feature_extract_config.cfg', file_error=True)
+    featureSec = featureCfg['feature']
+    featureSec['fftWinSize'] = psdWindowLength.get()
+    featureSec['outputRate'] = psdFeatureRate.get()
+    if psdWindowType.get() == 'Rectangle':
+        featureSec['fftWinType'] = 0
+    if psdWindowType.get() == 'Hamming':
+        featureSec['fftWinType'] = 1
+    if psdWindowType.get() == 'Blackman-Harris':
+        featureSec['fftWinType'] = 2
+    featureCfg.write()
+
+    # update config file of filter
+    print 'algo', algorithm.get()
+    filterCfg = ConfigObj('../config/filter.cfg', file_error=True)
+    filterSec = filterCfg['filter']
+    if algorithm.get() == 'Running Average':
+        filterSec['filterType'] = 0
+    if algorithm.get() == 'Testing JointRSE':
+        filterSec['filterType'] = 1
+    if algorithm.get() == 'Training JointRSE':
+        filterSec['filterType'] = 2
+    filterCfg.write()
+
 
 
 def CheckSubjectData():
