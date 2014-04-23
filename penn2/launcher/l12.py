@@ -18,6 +18,7 @@ except ImportError:
     py3 = 1
 
 import l12_support
+import tooltip
 
 def vp_start_gui():
     '''Starting point when module is the main routine.'''
@@ -214,6 +215,7 @@ class Launcher:
         l12_support.TComboboxFrq.configure(takefocus="")
         l12_support.TComboboxFrq.configure(state='readonly')
         l12_support.TComboboxFrq.configure(cursor="hand1")
+        tooltip.createToolTip(l12_support.TComboboxFrq, "Warning: the sampling rate should match the hardware,\n but it does not set the sampling rate of the hardware!")
 
         self.Entry3 = Entry (self.TNotebook1_pg1)
         self.Entry3.place(relx=0.45,rely=0.24,relheight=0.05,relwidth=0.24)
@@ -237,6 +239,11 @@ class Launcher:
         self.Label11.configure(activebackground="#f9f9f9")
         self.Label11.configure(text='''Synchronizing pulse channel:''')
 
+        self.Label33 = Label (self.TNotebook1_pg1)
+        self.Label33.place(relx=0.12,rely=0.60,height=19,width=182)
+        self.Label33.configure(activebackground="#f9f9f9")
+        self.Label33.configure(text='''Total number of channels:''')
+
         self.Entry4 = Entry (self.TNotebook1_pg1)
         self.Entry4.place(relx=0.45,rely=0.33,relheight=0.05,relwidth=0.08)
         self.Entry4.configure(background="white")
@@ -257,6 +264,13 @@ class Launcher:
         self.Entry6.configure(font="TkFixedFont")
         self.Entry6.configure(selectbackground="#c4c4c4")
         self.Entry6.configure(textvariable=l12_support.synchronizingPulseChannel)
+
+        self.Entry19 = Entry (self.TNotebook1_pg1)
+        self.Entry19.place(relx=0.45,rely=0.60,relheight=0.05,relwidth=0.08)
+        self.Entry19.configure(background="white")
+        self.Entry19.configure(font="TkFixedFont")
+        self.Entry19.configure(selectbackground="#c4c4c4")
+        self.Entry19.configure(textvariable=l12_support.totalNumberOfChannels)
 
         self.Button1 = Button (self.TNotebook1_pg2)
         self.Button1.place(relx=0.55,rely=0.38,height=97,width=117)

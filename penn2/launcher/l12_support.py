@@ -24,6 +24,7 @@ from subprocess import Popen
 import tkMessageBox
 from configobj import ConfigObj
 from signal import SIGINT
+import os
 
 def set_Tk_var():
     # These are Tk variables used passed to Tkinter and must be
@@ -65,6 +66,9 @@ def set_Tk_var():
 
     global synchronizingPulseChannel
     synchronizingPulseChannel = StringVar()
+
+    global totalNumberOfChannels
+    totalNumberOfChannels = StringVar()
 
     global sensorHand
     sensorHand = StringVar()
@@ -144,6 +148,7 @@ def set_Tk_var():
     forceSensorChannel.set(secLog['ForceSensorChannel'])
     emgChannels.set(secLog['EmgChannels'])
     synchronizingPulseChannel.set(secLog['SynchronizingPulseChannel'])
+    totalNumberOfChannels.set(secLog['TotalNumberOfChannels'])
 
     # squeeze
     sensorHand.set(secLog['SensorInHand'])
@@ -166,6 +171,7 @@ def set_Tk_var():
     barWidth.set(secLog['BarWidth'])
     barLength.set(secLog['BarLength'])
 
+
 ##################################################################
 # process IDs (one for each program that we run)
 # these are handles to individual processes for starting
@@ -179,21 +185,17 @@ pGraphics = None                                                  # pGraphics - 
 pSqueez = None                                                    # pSqueez - squeeze task module
 
 
-def RunBCI():
-        print ('l12_support.RunBCI')
-        sys.stdout.flush()
-
-def CalibrateBCI():
-        print ('l12_support.CalibrateBCI')
-        sys.stdout.flush()
-
 def RunDemoSqueeze():
-        print ('l12_support.RunDemoSqueeze')
-        sys.stdout.flush()
+        UpdateDemoMode('0')
+        global pSqueeze
+        #try:
+            #dataacquisitionSocket.send("squeeze_task")
+        pSqueeze = Popen([r'../../squeeze/build/squeeze'],
+                         cwd=r'../graphics/squeeze/build/')
+        time.sleep(0.1)
 
 def RunSqueeze():
-        print ('l12_support.RunSqueeze')
-        sys.stdout.flush()
+        UpdateDemoMode('1')
         Record("Squeeze")
         global pSqueeze
         #try:
@@ -205,17 +207,7 @@ def RunSqueeze():
         #    pass
 
 
-def StartDemoBCI():
-        print ('l12_support.StartDemoBCI')
-        sys.stdout.flush()
-
-def StopBCITask():
-        print ('l12_support.StopBCITask')
-        sys.stdout.flush()
-
 def StopSqueezeTask():
-    print ('l12_support.StopSqueezeTask')
-    sys.stdout.flush()
     global pSqueeze
     pSqueeze.send_signal(SIGINT)
 
@@ -228,6 +220,25 @@ def StopSqueezeTask():
     #except:
         #pass
 
+def RunBCI():
+        UpdateDemoMode('0')
+        print ('l12_support.RunBCI')
+        sys.stdout.flush()
+
+def CalibrateBCI():
+        UpdateDemoMode('1')
+        print ('l12_support.CalibrateBCI')
+        sys.stdout.flush()
+
+def StartDemoBCI():
+        UpdateDemoMode('1')
+        print ('l12_support.StartDemoBCI')
+        sys.stdout.flush()
+
+def StopBCITask():
+        print ('l12_support.StopBCITask')
+        sys.stdout.flush()
+
 def MachineChanged(event):
         print machineBeingUsed.get()
         print ('l12_support.MachineChanged')
@@ -238,6 +249,18 @@ def MachineChanged(event):
             TComboboxFrq['values'] = ['24414.062500']
             TComboboxFrq.current(0)
         sys.stdout.flush()
+
+def UpdateDemoMode(state):
+    # signal acquisition
+    # feature extractor
+    featureCfg = ConfigObj('../config/feature_extract_config.cfg', file_error=True)
+    featureSec = featureCfg['feature']
+    featureSec['DemoMode'] = state
+    featureCfg.write()
+    # filter
+    # supervisor
+    # graphics
+
 
 def Record(task):
     res,msg = CheckSubjectData()
@@ -256,9 +279,18 @@ def Record(task):
     if not res:
         tkMessageBox.showinfo("Cannot continue!", message = '"'+msg+'" is left blank!')
 
+    timestr = time.strftime("%m_%d_%Y")
+    directory = '../data/subject_' + subjectNumber.get() + '_@_' + timestr
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+    global dataPath
+    dataPath = os.path.abspath(directory)
+    print dataPath
+
     timestr = time.strftime("%Y_%m_%d-%H_%M_%S")
     ptimestr = time.strftime("%Y/%m/%d %H:%M:%S")
-    logFile = open('../data/log_' + timestr + ".txt", 'w')
+    logFile = open(directory + '/log_' + timestr + ".txt", 'w')
     logFileBackup = open('../data/log.txt', 'w')
 
     logFile.write('[ExperimentLog]\n')
@@ -301,6 +333,7 @@ def RecordDataAcquisition(logFile, logFileBackup):
     logText += 'ForceSensorChannel = ' + forceSensorChannel.get() + "\n"
     logText += 'EmgChannels = ' + emgChannels.get() + "\n"
     logText += 'SynchronizingPulseChannel = ' + synchronizingPulseChannel.get() + "\n"
+    logText += 'TotalNumberOfChannels = ' + totalNumberOfChannels.get() + "\n"
 
     logFile.write(logText)
     logFileBackup.write(logText)
@@ -347,6 +380,8 @@ def RecordBCI(logFile, logFileBackup):
         featureSec['fftWinType'] = 1
     if psdWindowType.get() == 'Blackman-Harris':
         featureSec['fftWinType'] = 2
+    global dataPath
+    featureSec['dataPath'] = dataPath
     featureCfg.write()
 
     # update config file of filter
