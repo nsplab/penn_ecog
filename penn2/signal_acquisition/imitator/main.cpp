@@ -8,8 +8,8 @@
 #include <armadillo>
 #include <eigen3/Eigen/Dense>
 
-#include "../../libs/rse/reachstateequation.h"
-#include "../../libs/rse/matrix.h"
+#include "../../../libs/rse/reachstateequation.h"
+#include "../../../libs/rse/matrix.h"
 
 using namespace std;
 using namespace zmq;

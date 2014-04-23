@@ -496,10 +496,10 @@ int main()
     cartoon->setOutlineLineWidth(2.0);
 
     // load upper arm model
-    osg::ref_ptr<osg::Node> upperArm = osgDB::readNodeFile("./upper_arm.3ds");
+    osg::ref_ptr<osg::Node> upperArm = osgDB::readNodeFile("../upper_arm.3ds");
 
     // load upper arm model
-    osg::ref_ptr<osg::Node> foreArm = osgDB::readNodeFile("./fore_arm.3ds");
+    osg::ref_ptr<osg::Node> foreArm = osgDB::readNodeFile("../fore_arm.3ds");
 
     MakeTransparent mkTransparent(0.6);
     upperArm->accept(mkTransparent);
@@ -721,12 +721,11 @@ int main()
     camera->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF );
     root->addChild( camera );
 
-
-
-
     float score = 0;
     float prevScore = 0;
-    while ( !visor.done()){
+    while ( !visor.done() ){
+
+        visor.frame();
 
         cout<<"send"<<endl;
         if (pauseGame) {
@@ -735,7 +734,7 @@ int main()
             subscriber.send("p", 2);
         }
         cout<<"sent"<<endl;
-        subscriber.recv(&state_msg);
+        subscriber.recv(&state_msg, ZMQ_NOBLOCK);
         cout<<"received"<<endl;
         string state_str(((char *)state_msg.data()));
         cout<<"message: "<<state_str<<endl;
@@ -816,8 +815,6 @@ int main()
             patForeArm->setAttitude(osg::Quat(elbowQuat.x(),elbowQuat.y(),elbowQuat.z(),elbowQuat.w()));
 
         }
-
-        visor.frame();
     }
 
     return 0;
