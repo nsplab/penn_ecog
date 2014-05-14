@@ -199,7 +199,7 @@ class Launcher:
         self.TCombobox1 = ttk.Combobox (self.TNotebook1_pg1)
         self.TCombobox1.place(relx=0.45,rely=0.07,relheight=0.04,relwidth=0.21)
         self.TCombobox1.bind("<<ComboboxSelected>>", l12_support.MachineChanged)
-        self.value_list = ['TDT','gHIamp',]
+        self.value_list = ['TDT','gHIamp','Imitator']
         self.TCombobox1.configure(values=self.value_list)
         self.TCombobox1.configure(textvariable=l12_support.machineBeingUsed)
         self.TCombobox1.configure(takefocus="")
@@ -271,6 +271,15 @@ class Launcher:
         self.Entry19.configure(font="TkFixedFont")
         self.Entry19.configure(selectbackground="#c4c4c4")
         self.Entry19.configure(textvariable=l12_support.totalNumberOfChannels)
+
+        self.ButtonDriver = Button (self.TNotebook1_pg1)
+        self.ButtonDriver.place(relx=0.4,rely=0.69,height=37,width=127)
+        self.ButtonDriver.configure(activebackground="#d9d9d9")
+        self.ButtonDriver.configure(command=l12_support.LoadDriver)
+        self.ButtonDriver.configure(cursor="hand1")
+        self.ButtonDriver.configure(text='''Re/Load''')
+        self.ButtonDriver.configure(wraplength="100")
+
 
         self.Button1 = Button (self.TNotebook1_pg2)
         self.Button1.place(relx=0.55,rely=0.38,height=97,width=117)

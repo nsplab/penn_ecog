@@ -18,7 +18,9 @@
 #include <boost/accumulators/statistics/mean.hpp>
 #include <boost/accumulators/statistics/tail_quantile.hpp>
 
-#include "GetPot.h"
+//#include "GetPot.h"
+#include "../../libs/inih/cpp/INIReader.h"
+
 #include "../../libs/stft/fft.h"
 #include "../../libs/decimate/decimate.h"
 
@@ -32,11 +34,13 @@ typedef boost::accumulators::accumulator_set<double, boost::accumulators::stats<
 int parsConfig(string& signalConfig, string& matrixFile, size_t& fftWinSize,
                size_t& fftWinType, size_t& outputRate, string& spatialFilterFile,
                unsigned& frqRangeFrom, unsigned& frqRangeTo, unsigned& baseline,
-               size_t& numFeatureChannels);
+               size_t& numFeatureChannels, size_t& baselineTime);
 
 int GetWinSizeSamples(string signalConfig, size_t& fftWinSizeSamples,
                       size_t fftWinSize, size_t& numChannels, size_t& samplingRate,
-                      size_t& neuralIndex);
+                      size_t& neuralIndex,
+                      vector<vector<int> >& ecogChannels,
+                      vector<vector<int> >& ecogFrqs);
 
 void loadMatrix(SparseMatrix<float>& coefMx, string matrixFile, vector<unsigned>& rows, size_t numChannels, size_t numFeatureChannels);
 
@@ -74,6 +78,7 @@ int main(int argc, char** argv)
     unsigned frqRangeFrom;
     unsigned frqRangeTo;
     unsigned baseline;
+    size_t baselineTime;
 
     // the spatial matrix is numFeatureChannels by numChannels
     size_t numFeatureChannels;
@@ -81,18 +86,18 @@ int main(int argc, char** argv)
     if (0 != parsConfig(signalConfig, matrixFile, fftWinSize,
                         fftWinType, outputRate, spatialFilterFile,
                         frqRangeFrom, frqRangeTo, baseline,
-                        numFeatureChannels)) {
+                        numFeatureChannels, baselineTime)) {
         return 1;
     }
 
-    if (argc > 1) {
+    /*if (argc > 1) {
         int a1 = atoi(argv[1]);
         if (a1 == 1) {
             baseline = true;
         } else {
             baseline = false;
         }
-    }
+    }*/
 
 
     if (baseline) {
@@ -106,9 +111,15 @@ int main(int argc, char** argv)
     size_t fftWinSizeSamples;
     size_t samplingRate;
     size_t neuralIndex;
+
+    vector<vector<int> > ecogChannels;
+    vector<vector<int> > ecogFrqs;
+
     if (0 != GetWinSizeSamples(signalConfig, fftWinSizeSamples,
                                fftWinSize, numChannels, samplingRate,
-                               neuralIndex)) {
+                               neuralIndex,
+                               ecogChannels,
+                               ecogFrqs)) {
         return 1;
     }
 
@@ -121,10 +132,10 @@ int main(int argc, char** argv)
         numChannels = atoi(argv[3]);
     }
 
-    SparseMatrix<float> spatialFilterMx(numFeatureChannels, numChannels);
+    //SparseMatrix<float> spatialFilterMx(numFeatureChannels, numChannels);
     vector<unsigned> rows;
     //Matrix<float, 60, 60> spatialFilterMx;
-    loadMatrix(spatialFilterMx, spatialFilterFile, rows, numChannels, numFeatureChannels);
+    //loadMatrix(spatialFilterMx, spatialFilterFile, rows, numChannels, numFeatureChannels);
 
     vector<float> pwrFeature(numFeatureChannels);
 
@@ -140,10 +151,16 @@ int main(int argc, char** argv)
     // this allows selecting channels by the spatial filter matrix, before
     // computing the FFT
 
-    Fft<float> fft(fftWinSizeSamples, Fft<float>::windowFunc::BLACKMAN_HARRIS, samplingRate/2.0, numFeatureChannels);
+    //Fft<float> fft(fftWinSizeSamples, Fft<float>::windowFunc::BLACKMAN_HARRIS, samplingRate/2.0, numFeatureChannels);
+    Fft<float> fft(fftWinSizeSamples, Fft<float>::windowFunc::BLACKMAN_HARRIS, samplingRate/2.0, numChannels);
 
     unsigned binFrom = fft.GetBin(frqRangeFrom);
     unsigned binTo = fft.GetBin(frqRangeTo);
+
+    for (unsigned i=0; i<ecogFrqs.size(); i++) {
+        ecogFrqs[i][0] = fft.GetBin(ecogFrqs[i][0]);
+        ecogFrqs[i][1] = fft.GetBin(ecogFrqs[i][1]);
+    }
 
     context_t context(3);
     socket_t publisher(context, ZMQ_PUB);
@@ -168,8 +185,12 @@ int main(int argc, char** argv)
     size_t prevProcSample = 0;
 
     unsigned freqRange = fftWinSizeSamples / 2 + 1;
-    vector<vector<float> > powers(numFeatureChannels);
+    /*vector<vector<float> > powers(numFeatureChannels);
     for (unsigned i=0; i<numFeatureChannels; i++) {
+        powers[i].resize(freqRange);
+    }*/
+    vector<vector<float> > powers(numChannels);
+    for (unsigned i=0; i<numChannels; i++) {
         powers[i].resize(freqRange);
     }
 
@@ -178,7 +199,7 @@ int main(int argc, char** argv)
 
     Decimate decimater(numChannels);
 
-    MatrixXf spatialFilteredChannels(numFeatureChannels, 1);
+    //MatrixXf spatialFilteredChannels(numFeatureChannels, 1);
 
     // if running in the baseline mode feature statistics are collected and stored in a text file
     boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::variance> > acc[numFeatureChannels];
@@ -188,6 +209,9 @@ int main(int argc, char** argv)
 
 
     ofstream dataLogFile("datalog.txt");
+
+    std::chrono::time_point<std::chrono::system_clock> startBaseline;
+    startBaseline = std::chrono::system_clock::now();
 
     size_t counter = 0;
     while (!quit) {
@@ -228,33 +252,49 @@ int main(int argc, char** argv)
             MatrixXf decVec(numChannels,1);
             decVec = Map<MatrixXf>(decimatedPoints.data(), numChannels, 1);
 
-            spatialFilteredChannels = spatialFilterMx * decVec;
+            //spatialFilteredChannels = spatialFilterMx * decVec;
 
 
-            memcpy(spatiallyFilteredPoints.data(), spatialFilteredChannels.data(), sizeof(float) * numFeatureChannels);
+            //memcpy(spatiallyFilteredPoints.data(), spatialFilteredChannels.data(), sizeof(float) * numFeatureChannels);
+            //memcpy(spatiallyFilteredPoints.data(), spatialFilteredChannels.data(), sizeof(float) * numFeatureChannels);
             //for (unsigned i=0; i<numFeatureChannels; i++) {
             //    spatiallyFilteredPoints[i] = spatialFilteredChannels(i);
             //}
 
-            fft.AddPoints(spatiallyFilteredPoints);
+            //fft.AddPoints(spatiallyFilteredPoints);
+            fft.AddPoints(decimatedPoints);
 
             // control the rate of feature extraction
             if (counter % (numberOfSamplesSkip) == 0)
 
             // try to compute fft (if the fewer number of samples than window length fails)
             if (fft.Process()) {
+
+                if (baseline) {
+                    std::chrono::duration<double> elapsed_seconds = std::chrono::system_clock::now()-startBaseline;
+                    //cout<<"elapsed_seconds.count() : "<<elapsed_seconds.count()<<endl;
+                    if (elapsed_seconds.count() > baselineTime)
+                        quit = true;
+                }
+
                 // get the powers vector (each channel is an element)
                 fft.GetPower(powers);
 
                 //
                 for (unsigned ch=0; ch<numFeatureChannels; ch++) {
+
                     float pwr = 0.0;
-                    cout<<binFrom<<" "<<binTo<<endl;
-                    cout<<frqRangeFrom<<" "<<frqRangeTo<<endl;
-                    for (unsigned bin=binFrom; bin<=binTo; bin++) {
-                        pwr += powers[ch][bin];
-                        //cout<<"ch: "<<ch<<"  bin:"<<bin<<" pwr:"<<powers[ch][bin]<<endl;
+                    for (unsigned ec=0; ec<ecogChannels[ch].size(); ec++) {
+                        for (unsigned bin=ecogFrqs[ch][0]; bin<=ecogFrqs[ch][1]; bin++) {
+                            pwr += powers[ecogChannels[ch][ec]-1][bin];
+                            cout<<"ch: "<<ch<<"  ec: "<<ec<<"  bin:"<<bin<<"  pwr:"<<powers[ecogChannels[ch][ec]][bin]<<endl;
+                        }
                     }
+                    pwr /= ecogChannels.size();
+
+                    //cout<<binFrom<<" "<<binTo<<endl;
+                    //cout<<frqRangeFrom<<" "<<frqRangeTo<<endl;
+
                     pwrFeature[ch] = pwr;
                     if (baseline == 1) {
                         acc[ch](pwr);
@@ -399,9 +439,32 @@ int main(int argc, char** argv)
 int parsConfig(string& signalConfig, string& matrixFile, size_t& fftWinSize,
                size_t& fftWinType, size_t& outputRate, string& spatialFilterFile,
                unsigned& frqRangeFrom, unsigned& frqRangeTo, unsigned& baseline,
-               size_t& numFeatureChannels) {
+               size_t& numFeatureChannels, size_t& baselineTime) {
 
-    string cfgFile("../config.cfg");
+    INIReader reader("../../../config/feature_extract_config.cfg");
+    if (reader.ParseError() < 0) {
+        std::cout << "Can't load '../../../config/feature_extract_config.cfg'\n";
+        return 1;
+    }
+
+    //signalConfig = reader.Get("feature", "signalConfig", 3);
+
+    fftWinSize = reader.GetInteger("feature", "fftWinSize", 500);
+    //fftWinSize = ifile("fftWinSize", 500);
+    fftWinType = reader.GetInteger("feature", "fftWinType", 0);
+    //fftWinType = ifile("fftWinType", 0);
+    outputRate = reader.GetInteger("feature", "outputRate", 11);
+    //outputRate = ifile("outputRate", 10);
+    //frqRangeFrom = ifile("freqRangeFrom", 75);
+    //frqRangeTo = ifile("freqRangeTo", 100);
+    baseline = reader.GetInteger("feature", "baseline", 0);
+    //baseline = ifile("baseline", 0);
+
+    baselineTime = reader.GetInteger("feature", "baselineTime", 30);
+
+    numFeatureChannels = 3;//ifile("numFeatureChannels", 60);
+
+    /*string cfgFile("../config.cfg");
 
     // check if the config file exists
     ifstream testFile(cfgFile.c_str());
@@ -439,7 +502,7 @@ int parsConfig(string& signalConfig, string& matrixFile, size_t& fftWinSize,
 
     spatialFilterFile = ifile("spatialFilterFile", "");
     //spatialFilterFile = "featuremx.csv";
-    /*// check if spatialFilterFile exists
+    /*//* check if spatialFilterFile exists
     testFile.open(spatialFilterFile.c_str());
     if (! testFile.good()) {
         cout<<"Could not open spatialFilterFile: "<<spatialFilterFile<<endl;
@@ -448,7 +511,7 @@ int parsConfig(string& signalConfig, string& matrixFile, size_t& fftWinSize,
         testFile.close();
     }*/
 
-    fftWinSize = ifile("fftWinSize", 500);
+    /*fftWinSize = ifile("fftWinSize", 500);
     fftWinType = ifile("fftWinSize", 0);
     outputRate = ifile("outputRate", 10);
     frqRangeFrom = ifile("freqRangeFrom", 75);
@@ -456,36 +519,98 @@ int parsConfig(string& signalConfig, string& matrixFile, size_t& fftWinSize,
     baseline = ifile("baseline", 0);
 
     numFeatureChannels = ifile("numFeatureChannels", 60);
+    */
 
     return 0;
 }
 
+void split( vector<string> & theStringVector,  /* Altered/returned value */
+       const  string  & theString,
+       const  string  & theDelimiter)
+{
+    size_t  start = 0, end = 0;
+
+    while ( end != string::npos)
+    {
+        end = theString.find( theDelimiter, start);
+
+        // If at end, use length=maxLength.  Else use length=end-start.
+        theStringVector.push_back( theString.substr( start,
+                       (end == string::npos) ? string::npos : end - start));
+
+        // If at end, use start=maxSize.  Else use start=end+delimiter.
+        start = (   ( end > (string::npos - theDelimiter.size()) )
+                  ?  string::npos  :  end + theDelimiter.size());
+    }
+}
 
 int GetWinSizeSamples(string signalConfig, size_t& fftWinSizeSamples,
                       size_t fftWinSize, size_t& numChannels, size_t& samplingRate,
-                      size_t& neuralIndex) {
+                      size_t& neuralIndex,
+                      vector<vector<int> >& ecogChannels,
+                      vector<vector<int> >& ecogFrqs) {
 
     // check if signalConfig exists
-    ifstream testFile(signalConfig.c_str());
+    /*ifstream testFile(signalConfig.c_str());
     if (! testFile.good()) {
         cout<<"Could not open the config file: "<<signalConfig<<endl;
         return 1;
     } else {
         testFile.close();
+    }*/
+
+    INIReader reader("../../../config/feature_extract_config.cfg");
+    if (reader.ParseError() < 0) {
+        std::cout << "Can't load '../../../config/feature_extract_config.cfg'\n";
+        return 1;
     }
 
-    GetPot ifile(signalConfig.c_str(), "#", "\n");
-    size_t outSampleRate = ifile("outSampleRate", 0);
-    samplingRate = outSampleRate;
-    numChannels = ifile("numChannels", 0);
+    //GetPot ifile(signalConfig.c_str(), "#", "\n");
 
-    neuralIndex = ifile("neuralIndex", 0);
+    size_t outSampleRate = reader.GetInteger("feature", "samplingRate", 9600);
+    //size_t outSampleRate = ifile("outSampleRate", 0);
+
+    samplingRate = outSampleRate;
+
+
+    numChannels = reader.GetInteger("feature", "numChannels", 64);
+    //numChannels = ifile("numChannels", 0);
+
+    neuralIndex = 0;
+    //neuralIndex = ifile("neuralIndex", 0);
 
     // outSampleRate/2.0: because the signal gets downsampled by a factor of 2
     // in the main function
     fftWinSizeSamples = fftWinSize / 1000.0 * (outSampleRate/2.0);
 
     cout<<"fftWinSizeSamples "<<fftWinSizeSamples<<endl;
+
+    string featureChannelsStr = reader.Get("feature", "featureChannels", "1,2,3");
+    string featureFrqsStr = reader.Get("feature", "featureFrequencies", "20,20,20");
+
+    vector<string> splitChannels;
+    split(splitChannels, featureChannelsStr, "*");
+    for (unsigned i=0; i<splitChannels.size(); i++) {
+        vector<string> splitChannelsTmp;
+        split(splitChannelsTmp, splitChannels[i], ",");
+        vector<int> avgChs;
+        for (unsigned j=0; j<splitChannelsTmp.size(); j++) {
+            avgChs.push_back(atoi(splitChannelsTmp[j].c_str()));
+        }
+        ecogChannels.push_back(avgChs);
+    }
+
+    vector<string> splitFrqs;
+    split(splitFrqs, featureFrqsStr, "*");
+    for (unsigned i=0; i<splitFrqs.size(); i++) {
+        vector<string> splitFrqsTmp;
+        split(splitFrqsTmp, splitFrqs[i], "-");
+        vector<int> avgFrqs;
+        for (unsigned j=0; j<splitFrqsTmp.size(); j++) {
+            avgFrqs.push_back(atoi(splitFrqsTmp[j].c_str()));
+        }
+        ecogFrqs.push_back(avgFrqs);
+    }
 
     return 0;
 }

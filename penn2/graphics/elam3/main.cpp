@@ -79,7 +79,7 @@ osgParticle::ParticleSystem* createFireParticles(
     ps->getDefaultParticleTemplate().setColorRange(
     osgParticle::rangev4(osg::Vec4(0.1f,0.3f,0.4f,1.0f),
     osg::Vec4(0.0f,0.1f,0.3f,0.5f)) );
-    ps->setDefaultAttributes("smoke.rgb", true, false );
+    ps->setDefaultAttributes("../smoke.rgb", true, false );
 
     osg::ref_ptr<osgParticle::RandomRateCounter> rrc =
     new osgParticle::RandomRateCounter;
@@ -390,8 +390,10 @@ private:
     float alpha_;
 };
 
-float SolveArmInvKinematics(Eigen::Vector3f targetPos, Eigen::Vector3f& currentPos, Eigen::Quaternionf& shoulderQuat, Eigen::Quaternionf& elbowQuat) {
+float SolveArmInvKinematics(Eigen::Vector3f targetPos, Eigen::Vector3f& currentPos, Eigen::Quaternionf& shoulderQuat, Eigen::Quaternionf& elbowQuat, osg::ref_ptr<osg::PositionAttitudeTransform> patUpperArm) {
     float error = 1.0;
+
+    osg::ref_ptr<osg::PositionAttitudeTransform> tmpUpperArm = static_cast<osg::PositionAttitudeTransform*>(patUpperArm->cloneType());
 
     Eigen::Vector3f elbowAxisZ(0.0, 0.0, 1.0);
     Eigen::Vector3f shoulderAxisX(1.0, 0.0, 0.0);
@@ -400,8 +402,8 @@ float SolveArmInvKinematics(Eigen::Vector3f targetPos, Eigen::Vector3f& currentP
 
     Eigen::Vector3f handPos(1.50601, -0.23667, -0.30729);
     Eigen::Vector3f shoulderPos(0.0, 0.0, -2.0);
-    Eigen::Vector3f elbowPos(-4.92282, -0.1, -2.0);
-    Eigen::Vector3f wristPos(-8.78673, -0.09678, 0.04826 - 2.0);
+    Eigen::Vector3f elbowPos(4.92282, 0.0999968, -2.0);
+    Eigen::Vector3f wristPos(8.72282, 0.206994, -1.96923);
 
     Eigen::Vector3f currentShoulderAxisX = shoulderQuat._transformVector(shoulderAxisX);
     Eigen::Vector3f currentShoulderAxisY = shoulderQuat._transformVector(shoulderAxisY);
@@ -414,10 +416,16 @@ float SolveArmInvKinematics(Eigen::Vector3f targetPos, Eigen::Vector3f& currentP
     currentWristPos = elbowQuat._transformVector(currentWristPos);
     currentWristPos += currentElbowPos;
 
+    cout<<"currentElbowPos: "<<endl;
+    cout<<currentElbowPos<<endl;
+    cout<<"currentWristPos: "<<endl;
+    cout<<currentWristPos<<endl;
+
+
 
     auto start = chrono::high_resolution_clock::now();
     // ik 2 iterate until error is small
-    while (error > 0.01) {
+    while (error > 0.001) {
 
         // ik 3 get current orientations and positions
 
@@ -438,7 +446,7 @@ float SolveArmInvKinematics(Eigen::Vector3f targetPos, Eigen::Vector3f& currentP
 
         Eigen::Vector3f jjtd = jacobian * jacobian.transpose() * displacement;
 
-        float alpha = displacement.dot(jjtd) / jjtd.dot(jjtd) * 0.01;
+        float alpha = displacement.dot(jjtd) / jjtd.dot(jjtd) * 0.001;
         //cout<<"alpha "<<alpha<<endl;
 
         // ik 5 compute rotation updates
@@ -473,12 +481,17 @@ float SolveArmInvKinematics(Eigen::Vector3f targetPos, Eigen::Vector3f& currentP
 
         displacement = targetPos - currentWristPos;
         error = displacement.norm();
+
+        tmpUpperArm->setAttitude(osg::Quat(shoulderQuat.x(),shoulderQuat.y(),shoulderQuat.z(),shoulderQuat.w()));
+        //cout<<"num children:  "<<tmpUpperArm->getNumChildren()<<endl;
+        //osg::ref_ptr<osg::PositionAttitudeTransform> tmpForearm = static_cast<osg::PositionAttitudeTransform*>(tmpUpperArm->getChild(2));
+
         //cout<<"error "<<error<<endl;
         //this_thread::sleep_for(chrono::milliseconds(500));
 
     }
     auto end = chrono::high_resolution_clock::now();
-    cout<<chrono::duration_cast<chrono::nanoseconds>(end-start).count()<<"ns\n";
+    //cout<<chrono::duration_cast<chrono::nanoseconds>(end-start).count()<<"ns\n";
 
     currentPos = currentWristPos;
 
@@ -512,6 +525,20 @@ int main()
     osg::ref_ptr<osg::PositionAttitudeTransform> patForeArm = new osg::PositionAttitudeTransform();
     patForeArm->setPosition(osg::Vec3(0,0,-2.0));
     patForeArm->setAttitude(osg::Quat(0, osg::Vec3d(1,0,0)) * osg::Quat(0, osg::Vec3d(0,1,0)) * osg::Quat(0, osg::Vec3d(0,0,1)));
+
+
+    osg::ref_ptr<osg::ShapeDrawable> elbowPoint = new osg::ShapeDrawable;
+    elbowPoint->setShape( new osg::Sphere(osg::Vec3(0.0, 0.0, 0.0), 0.01f) );
+    osg::ref_ptr<osg::Geode> elbowPointGeode = new osg::Geode;
+    elbowPointGeode->addDrawable(elbowPoint.get());
+    patForeArm->addChild(elbowPointGeode);
+
+    osg::ref_ptr<osg::ShapeDrawable> shoulderPoint = new osg::ShapeDrawable;
+    shoulderPoint->setShape( new osg::Sphere(osg::Vec3(0.0, 0.0, 0.0), 0.01f) );
+    osg::ref_ptr<osg::Geode> shoulderPointGeode = new osg::Geode;
+    shoulderPointGeode->addDrawable(shoulderPoint.get());
+    patUpperArm->addChild(shoulderPointGeode);
+
 
     patUpperArm->addChild(upperArm);
 
@@ -587,12 +614,14 @@ int main()
 
     // ikf
     Eigen::Vector3f currentWristPos;
-    SolveArmInvKinematics(target, currentWristPos, shoulderQuat, elbowQuat);
+    SolveArmInvKinematics(target, currentWristPos, shoulderQuat, elbowQuat, patUpperArm);
 
     patBox->setPosition(osg::Vec3d(currentWristPos(0),currentWristPos(1),currentWristPos(2)));
 
-    patUpperArm->setAttitude(osg::Quat(shoulderQuat.x(),shoulderQuat.y(),shoulderQuat.z(),shoulderQuat.w()));
-    patForeArm->setAttitude(osg::Quat(elbowQuat.x(),elbowQuat.y(),elbowQuat.z(),elbowQuat.w()));
+    //patUpperArm->setAttitude(osg::Quat(shoulderQuat.x(),shoulderQuat.y(),shoulderQuat.z(),shoulderQuat.w()));
+    //patForeArm->setAttitude(osg::Quat(elbowQuat.x(),elbowQuat.y(),elbowQuat.z(),elbowQuat.w()));
+
+
 
     context_t context(1);
     socket_t subscriber(context, ZMQ_REQ);
@@ -651,7 +680,7 @@ int main()
 
     //fireSwitch->setAllChildrenOff();
 
-    osg::ref_ptr<osgText::Font> g_font = osgText::readFontFile("Ubuntu-B.ttf");
+    osg::ref_ptr<osgText::Font> g_font = osgText::readFontFile("../Ubuntu-B.ttf");
 
     osg::ref_ptr<osg::Geode> textGeode = new osg::Geode;
     osg::ref_ptr<osgText::Text> scoreText = createText(
@@ -727,17 +756,17 @@ int main()
 
         visor.frame();
 
-        cout<<"send"<<endl;
+        //cout<<"send"<<endl;
         if (pauseGame) {
             subscriber.send("c", 2);
         } else {
             subscriber.send("p", 2);
         }
-        cout<<"sent"<<endl;
-        subscriber.recv(&state_msg, ZMQ_NOBLOCK);
-        cout<<"received"<<endl;
+        //cout<<"sent"<<endl;
+        subscriber.recv(&state_msg);
+        //cout<<"received"<<endl;
         string state_str(((char *)state_msg.data()));
-        cout<<"message: "<<state_str<<endl;
+        //cout<<"message: "<<state_str<<endl;
         stringstream ss;
         ss.str(state_str);
         char type;
@@ -755,7 +784,7 @@ int main()
         float timeScale = 0.4;
 
         if (type == 'B') {
-            cout<<"B message: "<<state_str<<endl;
+            //cout<<"B message: "<<state_str<<endl;
             ss>>currentBlockLen;
             ss>>nextBlockStart;
             ss>>nextBlockLen;
@@ -789,8 +818,8 @@ int main()
                 fireSwitch->setChildValue(parent.get(), false);
             }
 
-            cout<<"******************"<<endl;
-            cout<<"scorePlot: "<<scorePlot<<endl;
+            //cout<<"******************"<<endl;
+            //cout<<"scorePlot: "<<scorePlot<<endl;
 
             if (scorePlot > -0.5) {
                 for (unsigned i=0; i<(plotArray->size()-1); i++){
@@ -804,15 +833,38 @@ int main()
             nextCube->setCenter(osg::Vec3(5.0 - nextBlockStart * timeScale - (nextBlockLen)/2.0 * timeScale, 2.5 + nextBlockX, -2.0));
             nextCube->setHalfLengths(osg::Vec3((nextBlockLen)/2.0 * timeScale,blockWidth/2.0, blockWidth/2.0));
 
-            target(0) = 5.0;
-            target(1) = 2.5 + handPos[0];
-            target(2) = -2.0;
+            //target(0) = 5.0;
+            //target(1) = 4.5;// + handPos[0];
+            //target(2) = 0.0;
+
+            //target(2) = 0.0;
+
 
             shoulderQuat = shoulderQuatO;
             elbowQuat = elbowQuatO;
-            SolveArmInvKinematics(target, currentWristPos, shoulderQuat, elbowQuat);
-            patUpperArm->setAttitude(osg::Quat(shoulderQuat.x(),shoulderQuat.y(),shoulderQuat.z(),shoulderQuat.w()));
-            patForeArm->setAttitude(osg::Quat(elbowQuat.x(),elbowQuat.y(),elbowQuat.z(),elbowQuat.w()));
+            SolveArmInvKinematics(target, currentWristPos, shoulderQuat, elbowQuat, patUpperArm);
+            patUpperArm->setAttitude(osg::Quat(shoulderQuat.x(),shoulderQuat.y(),-shoulderQuat.z(),shoulderQuat.w()));
+            patForeArm->setAttitude(osg::Quat(elbowQuat.x(),elbowQuat.y(),-elbowQuat.z(),elbowQuat.w()));
+
+            osg::BoundingBox handbb = sphere->getBoundingBox();
+            osg::BoundingBox elbowbb = elbowPointGeode->getBoundingBox();
+            osg::BoundingBox shoulderbb = shoulderPointGeode->getBoundingBox();
+
+            osg::Vec3d whandpos = handbb.center() * osg::computeLocalToWorld(sphere->getParentalNodePaths()[0]);
+            osg::Vec3d welbowpos = elbowbb.center() * osg::computeLocalToWorld(elbowPointGeode->getParentalNodePaths()[0]);
+            osg::Vec3d wshoulderpos = shoulderbb.center() * osg::computeLocalToWorld(shoulderPointGeode->getParentalNodePaths()[0]);
+
+            cout<<"hand x: "<<whandpos.x()<<endl;
+            cout<<"hand y: "<<whandpos.y()<<endl;
+            cout<<"hand z: "<<whandpos.z()<<endl;
+
+            cout<<"elbow x: "<<welbowpos.x()<<endl;
+            cout<<"elbow y: "<<welbowpos.y()<<endl;
+            cout<<"elbow z: "<<welbowpos.z()<<endl;
+
+            cout<<"shoulder x: "<<wshoulderpos.x()<<endl;
+            cout<<"shoulder y: "<<wshoulderpos.y()<<endl;
+            cout<<"shoulder z: "<<wshoulderpos.z()<<endl;
 
         }
     }

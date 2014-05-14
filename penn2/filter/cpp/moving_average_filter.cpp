@@ -185,8 +185,8 @@ void MovingAverageFilter::runGUI(float& alpha, float& scale, bool& updated) {
     snprintf(bufferScale, 20, "%f", scale);
     Fl_Window* w = new Fl_Window(0,0,330,190, "Static Filter");
     Fl_Button ok(110,130, 100, 35, "Update");
-    Fl_Input input(60, 40, 250, 25, "Kalman Gain:");
-    Fl_Input inputScale(60, 80, 250, 25, "Alpha:");
+    Fl_Input input(110, 40, 200, 25, "Kalman Gain:");
+    Fl_Input inputScale(110, 80, 200, 25, "Alpha:");
     input.value(buffer);
     inputScale.value(bufferScale);
     w->end();

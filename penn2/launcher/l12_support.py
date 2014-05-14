@@ -155,7 +155,7 @@ def set_Tk_var():
 
     # bci
     algorithm.set(secLog['Algorithm'])
-    bciMovingaverageXChannels.set(secLog['BciMovingaverageXChannels'])
+    bciMovingaverageXChannels.set(",".join(secLog['BciMovingaverageXChannels']))
     bciMovingaverageXFrequencies.set(secLog['BciMovingaverageXFrequencies'])
     bciMovingaverageYChannels.set(secLog['BciMovingaverageYChannels'])
     bciMovingaverageYFrequencies.set(secLog['BciMovingaverageYFrequencies'])
@@ -183,7 +183,33 @@ pFilter = None                                                    # pFilter - fi
 pSupervisor = None                                                # pSupervisor - supervisor module
 pGraphics = None                                                  # pGraphics - graphics module
 pSqueez = None                                                    # pSqueez - squeeze task module
+pSignal = None                                                      # pgTec - gtec module
 
+
+def LoadDriver():
+    global pSignal
+    print machineBeingUsed.get()
+    if machineBeingUsed.get() == "gHIamp":
+        if not (pSignal is None):
+            pSignal.send_signal(SIGINT)
+            pSignal = None
+        pSignal = Popen([r'../../gtec/build/gtec', '1'],
+                cwd=r'../signal_acquisition/gtec/build/')
+        time.sleep(0.1)
+    elif machineBeingUsed.get() == "TDT":
+        if not (pSignal is None):
+            pSignal.send_signal(SIGINT)
+            pSignal = None
+        pSignal = Popen([r'../../tdt/PO8eBroadcast'],
+                cwd=r'../signal_acquisition/tdt/')
+        time.sleep(0.1)
+    elif machineBeingUsed.get() == "Imitator":
+        if not (pSignal is None):
+            pSignal.send_signal(SIGINT)
+            pSignal = None
+        pSignal = Popen([r'../../imitator/build/imitator'],
+                cwd=r'../signal_acquisition/imitator/build/')
+        time.sleep(0.1)
 
 def RunDemoSqueeze():
         UpdateDemoMode('0')
@@ -226,18 +252,84 @@ def RunBCI():
         sys.stdout.flush()
 
 def CalibrateBCI():
-        UpdateDemoMode('1')
+        global pFeature
+        UpdateDemoMode('0')
+        UpdateBaselineMode('1')
         print ('l12_support.CalibrateBCI')
         sys.stdout.flush()
 
+        if not (pFeature is None):
+            pFeature.send_signal(SIGINT)
+            pFeature = None
+
+        Record('Calibrate')
+
+        pFeature = Popen([r'../../feature_extract_cpp/build/feature_extract_cpp'],
+                cwd=r'../feature_extraction/feature_extract_cpp/build/')
+        time.sleep(0.1)
+        UpdateBaselineMode('0')
+
 def StartDemoBCI():
+        global pFeature, pFilter, pSupervisor, pGraphics
         UpdateDemoMode('1')
         print ('l12_support.StartDemoBCI')
         sys.stdout.flush()
 
+        Record('Demo BCI')
+
+        if not (pFeature is None):
+            pFeature.send_signal(SIGINT)
+            pFeature = None
+
+        pFeature = Popen([r'../../feature_extract_cpp/build/feature_extract_cpp'],
+                cwd=r'../feature_extraction/feature_extract_cpp/build/')
+        time.sleep(0.1)
+
+        if not (pFilter is None):
+            pFilter.send_signal(SIGINT)
+            pFilter = None
+
+        pFilter = Popen([r'../../cpp/build/filter'],
+                cwd=r'../filter/cpp/build/')
+        time.sleep(0.1)
+
+        if not (pSupervisor is None):
+            pSupervisor.send_signal(SIGINT)
+            pSupervisor = None
+
+        pSupervisor = Popen([r'./supervisor.py'],
+                cwd=r'../supervisor/elam3/')
+        time.sleep(0.1)
+
+        if not (pGraphics is None):
+            pGraphics.send_signal(SIGINT)
+            pGraphics = None
+
+        pGraphics = Popen([r'../../elam3/build/elam3'],
+                cwd=r'../graphics/elam3/build/')
+        time.sleep(0.1)
+
 def StopBCITask():
+        global pFeature, pFilter, pSupervisor, pGraphics
         print ('l12_support.StopBCITask')
         sys.stdout.flush()
+
+        if not (pGraphics is None):
+            pGraphics.send_signal(SIGINT)
+            pGraphics = None
+
+        if not (pSupervisor is None):
+            pSupervisor.send_signal(SIGINT)
+            pSupervisor = None
+
+        if not (pFilter is None):
+            pFilter.send_signal(SIGINT)
+            pFilter = None
+
+        if not (pFeature is None):
+            pFeature.send_signal(SIGINT)
+            pFeature = None
+
 
 def MachineChanged(event):
         print machineBeingUsed.get()
@@ -247,6 +339,9 @@ def MachineChanged(event):
             TComboboxFrq.current(0)
         if machineBeingUsed.get() == "TDT":
             TComboboxFrq['values'] = ['24414.062500']
+            TComboboxFrq.current(0)
+        if machineBeingUsed.get() == "Imitator":
+            TComboboxFrq['values'] = ['-']
             TComboboxFrq.current(0)
         sys.stdout.flush()
 
@@ -258,8 +353,24 @@ def UpdateDemoMode(state):
     featureSec['DemoMode'] = state
     featureCfg.write()
     # filter
+    filterCfg = ConfigObj('../config/filter.cfg', file_error=True)
+    filterSec = filterCfg['filter']
+    filterSec['DemoMode'] = state
+    filterCfg.write()
     # supervisor
+    supervisorCfg = ConfigObj('../config/supervisor_config.cfg', file_error=True)
+    supervisorSec = supervisorCfg['supervisor']
+    supervisorSec['DemoMode'] = state
+    supervisorCfg.write()
     # graphics
+
+
+def UpdateBaselineMode(state):
+    # feature extractor
+    featureCfg = ConfigObj('../config/feature_extract_config.cfg', file_error=True)
+    featureSec = featureCfg['feature']
+    featureSec['baseline'] = state
+    featureCfg.write()
 
 
 def Record(task):
@@ -374,6 +485,14 @@ def RecordBCI(logFile, logFileBackup):
     featureSec = featureCfg['feature']
     featureSec['fftWinSize'] = psdWindowLength.get()
     featureSec['outputRate'] = psdFeatureRate.get()
+    featureSec['samplingRate'] = samplingRate.get()
+    featureSec['numChannels'] = "64"
+    featureSec['featureChannels'] = (bciMovingaverageXChannels.get() + '*' +
+                                     bciMovingaverageYChannels.get() + '*' +
+                                     bciMovingaverageZChannels.get())
+    featureSec['featureFrequencies'] = (bciMovingaverageXFrequencies.get() + '*' +
+                                     bciMovingaverageYFrequencies.get() + '*' +
+                                     bciMovingaverageZFrequencies.get())
     if psdWindowType.get() == 'Rectangle':
         featureSec['fftWinType'] = 0
     if psdWindowType.get() == 'Hamming':
