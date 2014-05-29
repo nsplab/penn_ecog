@@ -16,7 +16,7 @@
 using namespace std;                                                                                //allows you to write cout << instead of std:cout <<
 
 
-MovingAverageFilter::MovingAverageFilter(float featureRate){
+MovingAverageFilter::MovingAverageFilter(float featureRate, string dataPath){
   featureRate_ = featureRate;
   gamma_ = 1.0;
   scale_ = 1000.0;
@@ -29,8 +29,14 @@ MovingAverageFilter::MovingAverageFilter(float featureRate){
   char nameBuffer[24];
   tm * ptm = localtime(&rawtime);
   strftime(nameBuffer, 24, "%a_%d.%m.%Y_%H:%M:%S", ptm);
-  string imageFilename = string("filter_data_")+string(nameBuffer);
+  dataPath_ = dataPath;
+  string imageFilename = dataPath_+string("/filter_data_")+string(nameBuffer);
   eFile = fopen(imageFilename.c_str(), "wb");
+
+  ifstream filterCfg("../../../data/filter_settings.cfg");
+  filterCfg>>gamma_;
+  filterCfg>>scale_;
+  filterCfg.close();
 }
 
 MovingAverageFilter::~MovingAverageFilter() {
@@ -115,6 +121,8 @@ void MovingAverageFilter::Run() {
         return;
     }
     float mean, variance;
+
+
     while (baseline) {
         baseline>>mean;
         baseline>>variance;
@@ -206,7 +214,6 @@ void MovingAverageFilter::runGUI(float& alpha, float& scale, bool& updated) {
         values.push_back(value);
     }*/
 
-
     while (true) {
         Fl::wait();
         Fl_Widget *o;
@@ -216,6 +223,10 @@ void MovingAverageFilter::runGUI(float& alpha, float& scale, bool& updated) {
                 alpha = atof(buffer);
                 strcpy(bufferScale, inputScale.value());
                 scale = atof(bufferScale);
+
+                ofstream filterCfg("../../../data/filter_settings.cfg");
+                filterCfg<<alpha<<" "<<scale<<endl;
+                filterCfg.close();
 
                 /*int c = values.size()-1;
                 accumulator_t_right accRight( boost::accumulators::tag::tail<boost::accumulators::right>::cache_size = c );

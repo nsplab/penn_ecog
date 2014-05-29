@@ -16,7 +16,7 @@ public:
   typedef boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::tail_quantile<boost::accumulators::right> > > accumulator_t_right;
   typedef boost::accumulators::accumulator_set<double, boost::accumulators::stats<boost::accumulators::tag::tail_quantile<boost::accumulators::left> > > accumulator_t_left;
 
-  MovingAverageFilter(float featureRate);
+  MovingAverageFilter(float featureRate, std::string dataPath);
   virtual ~MovingAverageFilter();
 
   void Update();
@@ -38,6 +38,7 @@ private:
   float q95_;
   bool quit;
   bool updated_;
+  std::string dataPath_;
 };
 
 #endif // MOVING_AVERAGE_FILTER_H

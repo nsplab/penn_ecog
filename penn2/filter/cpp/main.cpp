@@ -76,6 +76,7 @@ int main(int argc, char** argv) {
     unsigned numLags = reader.GetInteger("filter", "numLags", 1);                     // ?? not sure... relates to length of history dependence in the observation model
 
 
+    string dataPath = reader.Get("filter", "dataPath", "../../../data");
 
     string featureConfig = reader.Get("filter", "featureConfig",               // get the filename of the *feature* configuration file from the filter.cfg file
                                  "../../../feature_extraction/"
@@ -112,7 +113,7 @@ int main(int argc, char** argv) {
     // check what filter type has been requested
     switch (filterType) {
     case 0:
-        filterObj = new MovingAverageFilter(featureRate);
+        filterObj = new MovingAverageFilter(featureRate, dataPath);
         break;
     case 1:
     default:

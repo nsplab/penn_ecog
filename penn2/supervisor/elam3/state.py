@@ -12,10 +12,11 @@ triainingTestSeq = np.array([0, 0, 0, 0, 0, 0])
 
 class GameState(object):
 
-    def __init__(self, hand_pos=np.zeros(3),
+    def __init__(self, workspaceRadius, blockWidth, blockLengthTime,
+                 hand_pos=np.zeros(3),
                  box_pos=np.zeros(3), score=0, level=1, sublevel=1):
         self.hand_pos = hand_pos
-        self.hand_pos[0] = -config.workspaceRadius / 2.0
+        self.hand_pos[0] = -workspaceRadius / 2.0
         self.box_pos = box_pos
         self.score = score
         self.level = level
@@ -37,6 +38,10 @@ class GameState(object):
         self.scorePlotRefTime = 0
         self.scorePlot = -1
         self.scorePrevPlot = 0
+        self.blockLengthTime = blockLengthTime
+        self.blockWidth = blockWidth
+        self.workspaceRadius = workspaceRadius
+
 
     def generateBlocks(self):
         #add their starting points in time to a list
@@ -49,14 +54,14 @@ class GameState(object):
             self.startingTimes.append(startingTime)
             if (x % 2) == 0:
                 startingTime += config.restLengthTime
-                self.positions.append(-0.5 * config.workspaceRadius)
+                self.positions.append(-0.5 * self.workspaceRadius)
                 self.lengths.append(config.restLengthTime)
             else:
-                startingTime += config.blockLengthTime
+                startingTime += self.blockLengthTime
                 self.positions.append(random.uniform(
-                                      -config.workspaceRadius / 2.0 + config.blockWidth,
-                                      config.workspaceRadius / 2.0))
-                self.lengths.append(config.blockLengthTime)
+                                      -self.workspaceRadius / 2.0 + self.blockWidth,
+                                      self.workspaceRadius / 2.0))
+                self.lengths.append(self.blockLengthTime)
 
     def serializeBlocks(self):
         # based on current time advance among the blocks?
@@ -82,16 +87,16 @@ class GameState(object):
                        str(self.lengths[cBlock + 1]) + " ")
             svalue += (str(self.positions[cBlock]) + " 0 0 " +
                        str(self.positions[cBlock + 1]) + " 0 0 ")
-            svalue += (str(config.blockWidth) + " ")
+            svalue += (str(self.blockWidth) + " ")
             self.box_pos = np.zeros(3)
             self.box_pos[0] = self.positions[cBlock]
         else:
             svalue += ("0 " +
                        str(self.startingTimes[cBlock + 1] - self.accumTime) + " " +
                        str(self.lengths[cBlock + 1]))
-            svalue += (" " + str(-config.workspaceRadius / 2.0) + " 0 5 " +
+            svalue += (" " + str(-self.workspaceRadius / 2.0) + " 0 5 " +
                        str(self.positions[cBlock + 1]) + " 0 0 ")
-            svalue += (str(config.blockWidth) + " ")
+            svalue += (str(self.blockWidth) + " ")
             self.box_pos = np.zeros(3)
             self.box_pos[2] = 15
 
@@ -154,7 +159,7 @@ class GameState(object):
             if config.jumpetoStart:
                 if (self.trial % 2) == 0:
                     self.hand_pos = np.zeros(3)
-                    self.hand_pos[0] = -config.workspaceRadius / 2.0
+                    self.hand_pos[0] = -self.workspaceRadius / 2.0
 
         # advance the trial number, sublevel number, and the level number
         if ret:

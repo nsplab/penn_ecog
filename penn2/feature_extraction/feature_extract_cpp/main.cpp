@@ -132,6 +132,8 @@ int main(int argc, char** argv)
         numChannels = atoi(argv[3]);
     }
 
+    cout<<"numChannels: "<<numChannels<<endl;
+
     //SparseMatrix<float> spatialFilterMx(numFeatureChannels, numChannels);
     vector<unsigned> rows;
     //Matrix<float, 60, 60> spatialFilterMx;
@@ -284,7 +286,10 @@ int main(int argc, char** argv)
                 for (unsigned ch=0; ch<numFeatureChannels; ch++) {
 
                     float pwr = 0.0;
+                    //cout<<"ch: "<<ch<<endl;
                     for (unsigned ec=0; ec<ecogChannels[ch].size(); ec++) {
+                        //cout<<"ec: "<<ec<<endl;
+                        //cout<<"ecogChannels[ch][ec]: "<<ecogChannels[ch][ec]<<endl;
                         for (unsigned bin=ecogFrqs[ch][0]; bin<=ecogFrqs[ch][1]; bin++) {
                             pwr += powers[ecogChannels[ch][ec]-1][bin];
                             cout<<"ch: "<<ch<<"  ec: "<<ec<<"  bin:"<<bin<<"  pwr:"<<powers[ecogChannels[ch][ec]][bin]<<endl;
@@ -587,6 +592,16 @@ int GetWinSizeSamples(string signalConfig, size_t& fftWinSizeSamples,
 
     string featureChannelsStr = reader.Get("feature", "featureChannels", "1,2,3");
     string featureFrqsStr = reader.Get("feature", "featureFrequencies", "20,20,20");
+
+    // remove qutation marks
+    featureChannelsStr.erase(std::remove(featureChannelsStr.begin(), featureChannelsStr.end(), '"'), featureChannelsStr.end());
+    featureFrqsStr.erase(std::remove(featureFrqsStr.begin(), featureFrqsStr.end(), '"'), featureFrqsStr.end());
+
+    // remove spaces
+    featureChannelsStr.erase(std::remove(featureChannelsStr.begin(), featureChannelsStr.end(), ' '), featureChannelsStr.end());
+    featureFrqsStr.erase(std::remove(featureFrqsStr.begin(), featureFrqsStr.end(), ' '), featureFrqsStr.end());
+
+    cout<<"featureChannelsStr "<<featureChannelsStr<<endl;
 
     vector<string> splitChannels;
     split(splitChannels, featureChannelsStr, "*");

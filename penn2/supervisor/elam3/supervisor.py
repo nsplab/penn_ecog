@@ -23,6 +23,10 @@ import sys
 
 import time
 
+# class used to read the config (ini) files written by the launcher script
+from configobj import ConfigObj
+
+
 # the state machines to present the state of the graphics and filter modules
 from state import GameState
 from state import FilterState
@@ -51,8 +55,18 @@ if (len(sys.argv) > 1):
 if (len(sys.argv) > 2):
     config.blockLengthTime = float(sys.argv[2])
 
+
+# read the config parameters that the launcher script has written
+# and use the relevant ones for the supervisor module
+lastLog = ConfigObj('../../data/log.txt', file_error=True)
+secLog = lastLog['ExperimentLog']
+
+config.blockWidthPercent = float(secLog['BarWidth'])
+config.blockWidth = config.workspaceRadius * float(config.blockWidthPercent) / 100.0
+config.blockLengthTime = float(secLog['BarLength'])
+
 # create state objects
-gameState = GameState()
+gameState = GameState(config.workspaceRadius, config.blockWidth, config.blockLengthTime)
 gameState.generateBlocks()
 filterState = FilterState()
 
@@ -89,6 +103,7 @@ def StartNewTrial():
 
 timestamp = 0
 
+# create the data log file to store the parameters of the game and the score
 filename = 'supervisor_event_%s.txt' % datetime.datetime.utcnow().strftime("%Y-%m-%d-%H%M%S")
 f = open(filename, 'w')
 
@@ -169,7 +184,11 @@ while run:
 
     f.write(str(filterState.trial))
     f.write(' ')
-    f.write(str(gameState.box_pos))
+    f.write(str(gameState.box_pos[0]))
+    f.write(' ')
+    f.write(str(gameState.box_pos[1]))
+    f.write(' ')
+    f.write(str(gameState.box_pos[2]))
     f.write(' ')
     f.write(str(gameState.hand_pos[0]))
     f.write(' ')
@@ -181,7 +200,10 @@ while run:
     f.write(str(gameState.score))
     f.write(' ')
 
-    f.write(str(config.blockWidth))
+    f.write(str(gameState.scorePlot))
+    f.write(' ')
+
+    f.write(str(config.blockWidthPercent))
     f.write(' ')
 
     f.write(str(config.blockLengthTime))
@@ -189,6 +211,11 @@ while run:
 
     f.write(str(config.workspaceRadius))
     f.write(' ')
+
+    f.write(str(config.jumpetoStart))
+    f.write(' ')
+
+    f.write(str(config.scoreDistanceThreshold))
 
     f.write('\n')
 

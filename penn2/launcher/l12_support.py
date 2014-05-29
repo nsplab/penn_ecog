@@ -7,6 +7,8 @@
 
 import sys
 import time
+from subprocess import call
+import threading
 
 try:
     from Tkinter import *
@@ -26,10 +28,48 @@ from configobj import ConfigObj
 from signal import SIGINT
 import os
 
+# to use the zmq library
+import zmq
+
+context = zmq.Context()
+
+# socket used to check the streaming status of the signal acquisition module
+statusSocket = context.socket(zmq.SUB)
+# receive all the messages, sets the filter to an empty string
+statusSocket.setsockopt(zmq.CONFLATE, 1)
+
+statusSocket.connect("ipc:///tmp/signalstream.pipe")
+statusSocket.setsockopt(zmq.SUBSCRIBE, "")
+
+def check_streaming_status():
+    global quitLauncher, Label31, streamingState
+    print "test"
+    print "quitLauncher ", quitLauncher
+
+    if not quitLauncher:
+
+        try:
+            msg = statusSocket.recv(zmq.DONTWAIT)
+            print "msg ", msg
+        except:
+            pass
+        if msg == "1":
+            Label31.configure(background="#30ff30")
+            streamingState.set("Streaming from data acquisitoin system")
+        else:
+            Label31.configure(background="#ff3030")
+            streamingState.set("Not streaming from data acquisitoin system")
+
+        streamingStatusTimer = threading.Timer(2.0, check_streaming_status)
+        streamingStatusTimer.start()
+
+
 def set_Tk_var():
     # These are Tk variables used passed to Tkinter and must be
     # defined before the widgets using them are created.
     global TComboboxFrq
+
+    global annotationBox
 
     global age
     age = StringVar()
@@ -129,6 +169,10 @@ def set_Tk_var():
     recordingState = StringVar()
     recordingState.set("Not recording to local disk")
 
+    global Label31
+    global streamingLabel
+    streamingLabel = StringVar()
+
     # load last used parameters
     lastLog = ConfigObj('../data/log.txt', file_error=True)
     secLog = lastLog['ExperimentLog']
@@ -183,10 +227,12 @@ pFilter = None                                                    # pFilter - fi
 pSupervisor = None                                                # pSupervisor - supervisor module
 pGraphics = None                                                  # pGraphics - graphics module
 pSqueez = None                                                    # pSqueez - squeeze task module
-pSignal = None                                                      # pgTec - gtec module
-
+pSignal = None                                                    # pgTec - gtec module
+quitLauncher = False
 
 def LoadDriver():
+    Record("Load Driver")
+
     global pSignal
     print machineBeingUsed.get()
     if machineBeingUsed.get() == "gHIamp":
@@ -197,10 +243,12 @@ def LoadDriver():
                 cwd=r'../signal_acquisition/gtec/build/')
         time.sleep(0.1)
     elif machineBeingUsed.get() == "TDT":
+        call(["killall", "PO8eBroadcast"])
+        call(["/home/user/Desktop/loaddriver.py"])
         if not (pSignal is None):
             pSignal.send_signal(SIGINT)
             pSignal = None
-        pSignal = Popen([r'../../tdt/PO8eBroadcast'],
+        pSignal = Popen([r'../tdt/PO8eBroadcast'],
                 cwd=r'../signal_acquisition/tdt/')
         time.sleep(0.1)
     elif machineBeingUsed.get() == "Imitator":
@@ -210,6 +258,9 @@ def LoadDriver():
         pSignal = Popen([r'../../imitator/build/imitator'],
                 cwd=r'../signal_acquisition/imitator/build/')
         time.sleep(0.1)
+
+    streamingStatusTimer = threading.Timer(2.0, check_streaming_status)
+    streamingStatusTimer.start()
 
 def RunDemoSqueeze():
         UpdateDemoMode('0')
@@ -246,12 +297,59 @@ def StopSqueezeTask():
     #except:
         #pass
 
+
 def RunBCI():
+        global pFeature, pFilter, pSupervisor, pGraphics
         UpdateDemoMode('0')
         print ('l12_support.RunBCI')
         sys.stdout.flush()
 
+        Record('Demo BCI')
+
+        if not (pFeature is None):
+            pFeature.send_signal(SIGINT)
+            pFeature = None
+
+        pFeature = Popen([r'../../feature_extract_cpp/build/feature_extract_cpp'],
+                cwd=r'../feature_extraction/feature_extract_cpp/build/')
+        time.sleep(0.1)
+
+        if not (pFilter is None):
+            pFilter.send_signal(SIGINT)
+            pFilter = None
+
+        pFilter = Popen([r'../../cpp/build/filter'],
+                cwd=r'../filter/cpp/build/')
+        time.sleep(0.1)
+
+        if not (pSupervisor is None):
+            pSupervisor.send_signal(SIGINT)
+            pSupervisor = None
+
+        pSupervisor = Popen([r'./supervisor.py'],
+                cwd=r'../supervisor/elam3/')
+        time.sleep(0.1)
+
+        if not (pGraphics is None):
+            pGraphics.send_signal(SIGINT)
+            pGraphics = None
+
+        pGraphics = Popen([r'../../elam3/build/elam3'],
+                cwd=r'../graphics/elam3/build/')
+        time.sleep(0.1)
+
+
 def CalibrateBCI():
+
+        answer = tkMessageBox.askokcancel("Calibrate",
+                                          "Please ask the subject to stay still for 30 seconds.")
+        if answer is False:
+            return
+
+        # show the countdown/stopwatch in a separate process
+        pxclock = Popen(['./gstopwatch'],
+                cwd=r'../libs/gstopwatch/')
+
         global pFeature
         UpdateDemoMode('0')
         UpdateBaselineMode('1')
@@ -268,6 +366,10 @@ def CalibrateBCI():
                 cwd=r'../feature_extraction/feature_extract_cpp/build/')
         time.sleep(0.1)
         UpdateBaselineMode('0')
+
+        time.sleep(30)
+        pxclock.send_signal(SIGINT)
+
 
 def StartDemoBCI():
         global pFeature, pFilter, pSupervisor, pGraphics
@@ -418,6 +520,9 @@ def Record(task):
     RecordSqueeze(logFile, logFileBackup)
     RecordBCI(logFile, logFileBackup)
 
+    logFile.write('Annotation = <START_OF_ANNOTATION ' + annotationBox.get('1.0', 'end')
+                     + ' END_OF_ANNOTATION>')
+
     logFile.close()
     logFileBackup.close()
 
@@ -513,9 +618,14 @@ def RecordBCI(logFile, logFileBackup):
         filterSec['filterType'] = 1
     if algorithm.get() == 'Training JointRSE':
         filterSec['filterType'] = 2
+    filterSec['dataPath'] = dataPath
     filterCfg.write()
 
-
+    # update config file of supervisor
+    supervisorCfg = ConfigObj('../config/supervisor_config.cfg', file_error=True)
+    supervisorSec = supervisorCfg['supervisor']
+    supervisorSec['dataPath'] = dataPath
+    supervisorCfg.write()
 
 def CheckSubjectData():
     if not age.get():
@@ -590,6 +700,16 @@ def init(top, gui, arg=None):
     root = top
 
 def destroy_window ():
+    global pSignal, quitLauncher
+
+    print "quit launcher"
+
+    quitLauncher = True
+
+    if not (pSignal is None):
+        pSignal.send_signal(SIGINT)
+        pSignal = None
+
     # Function which closes the window.
     global top_level
     top_level.destroy()

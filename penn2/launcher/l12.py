@@ -4,6 +4,10 @@
 # In conjunction with Tcl version 8.6
 #    Apr. 21, 2014 09:58:39 AM
 import sys
+import os
+from collections import namedtuple
+
+os.chdir(os.path.dirname(sys.argv[0]))
 
 try:
     from Tkinter import *
@@ -19,16 +23,60 @@ except ImportError:
 
 import l12_support
 import tooltip
+import tkMessageBox
+
+_ntuple_diskusage = namedtuple('usage', 'total used free')
+
+def disk_usage(path):
+    """Return disk usage statistics about the given path.
+
+    Returned valus is a named tuple with attributes 'total', 'used' and
+    'free', which are the amount of total, used and free space, in bytes.
+    """
+
+    st = os.statvfs(path)
+    free = st.f_bavail * st.f_frsize
+    total = st.f_blocks * st.f_frsize
+    used = (st.f_blocks - st.f_bfree) * st.f_frsize
+    return _ntuple_diskusage(total, used, free)
+
+primaryDiskFreePercent = 0.0
 
 def vp_start_gui():
     '''Starting point when module is the main routine.'''
+
     global val, w, root
     root = Tk()
     root.title('Launcher')
-    root.geometry('624x557+691+420')
+    root.geometry('624x757+691+420')
+
+    ###############################################################################
+    ## check the free space of the primary disk
+    ###############################################################################
+    global primaryDiskFreePercent
+
+    diskUsage = disk_usage('/')
+    print "diskUsage.free: ", diskUsage.free
+    print "disKUsage.total: ", diskUsage.total
+
+    primaryDiskFreePercent = float(diskUsage.free) / float(diskUsage.total)
+
+    print "primaryDiskFreePercent: ", primaryDiskFreePercent
+
+    # TODO: we can have a script that moves the data files from the primary disk to the secondary disk
+    #       rather than moving the files manually
+    if primaryDiskFreePercent < 0.3:
+        answer = tkMessageBox.askyesno("Out of space",
+                                          "The primary hard disk has less than 30% free space. Please move the data files from the primary disk to the secondary disk. We recommend you close the launcher and move the files and then run the launcher again. Do you still want to run the Launcher now?")
+        if answer is False:
+            return
+
+    # make the window non-resizable
+    root.resizable(width=False, height=False)
     l12_support.set_Tk_var()
-    w = Launcher (root)
+    w = Launcher(root)
     l12_support.init(root, w)
+    root.protocol("WM_DELETE_WINDOW", l12_support.destroy_window)
     root.mainloop()
 
 w = None
@@ -36,11 +84,13 @@ def create_Launcher (root, param=None):
     '''Starting point when module is imported by another program.'''
     global w, w_win, rt
     rt = root
-    w = Toplevel (root)
+    w = Toplevel(root)
     w.title('Launcher')
-    w.geometry('624x557+691+420')
+    # make the window non-resizable
+    w.geometry('624x757+691+420')
+    root.resizable(width=False, height=False)
     l12_support.set_Tk_var()
-    w_win = Launcher (w)
+    w_win = Launcher(w)
     l12_support.init(w, w_win, param)
     return w_win
 
@@ -70,13 +120,12 @@ class Launcher:
         master.configure(relief="sunken")
         master.configure(highlightcolor="black")
 
-
         self.style.configure('TNotebook.Tab',background=_bgcolor)
         self.style.configure('TNotebook.Tab',foreground=_fgcolor)
         self.style.map('TNotebook.Tab',background=
             [('selected', _compcolor), ('active',_ana2color)])
         self.TNotebook1 = ttk.Notebook(master)
-        self.TNotebook1.place(relx=0.02,rely=0.13,relheight=0.85,relwidth=0.96)
+        self.TNotebook1.place(relx=0.02,rely=0.12,relheight=0.635,relwidth=0.96)
         self.TNotebook1.configure(width=602)
         self.TNotebook1.configure(takefocus="")
         self.TNotebook1_pg0 = ttk.Frame(self.TNotebook1)
@@ -91,6 +140,18 @@ class Launcher:
         self.TNotebook1_pg3 = ttk.Frame(self.TNotebook1)
         self.TNotebook1.add(self.TNotebook1_pg3, padding=3)
         self.TNotebook1.tab(3, text="BCI Task",underline="-1",)
+
+        self.Label34 = Label(master)
+        self.Label34.place(relx=0.02,rely=0.765,height=19,width=90)
+        self.Label34.configure(activebackground="#f9f9f9")
+        self.Label34.configure(text='''Annotation:''')
+
+        l12_support.annotationBox = Text(master, width=80, height=40)
+        l12_support.annotationBox.place(relx=0.02,rely=0.79, relheight=0.20,relwidth=0.92)
+
+        self.Scrollbar0 = Scrollbar(master, orient=VERTICAL, command=l12_support.annotationBox.yview)
+        self.Scrollbar0.place(relx=0.95,rely=0.79, relheight=0.20,relwidth=0.03)
+        l12_support.annotationBox['yscrollcommand'] = self.Scrollbar0.set
 
         self.Label1 = Label (self.TNotebook1_pg0)
         self.Label1.place(relx=0.33,rely=0.04,height=19,width=31)
@@ -332,7 +393,7 @@ class Launcher:
         self.Button4.configure(activebackground="#d9d9d9")
         self.Button4.configure(command=l12_support.StopBCITask)
         self.Button4.configure(cursor="hand1")
-        self.Button4.configure(text='''Stop BCI Task''')
+        self.Button4.configure(text='''(4)Stop BCI Task''')
         self.Button4.configure(wraplength="100")
 
         self.Button5 = Button (self.TNotebook1_pg3)
@@ -340,7 +401,7 @@ class Launcher:
         self.Button5.configure(activebackground="#d9d9d9")
         self.Button5.configure(command=l12_support.StartDemoBCI)
         self.Button5.configure(cursor="hand1")
-        self.Button5.configure(text='''Start Demo BCI Task (data is not written to file)''')
+        self.Button5.configure(text='''(2)Start Demo BCI Task (data is not written to file)''')
         self.Button5.configure(wraplength="100")
 
         self.Button6 = Button (self.TNotebook1_pg3)
@@ -348,12 +409,12 @@ class Launcher:
         self.Button6.configure(activebackground="#d9d9d9")
         self.Button6.configure(command=l12_support.RunBCI)
         self.Button6.configure(cursor="hand1")
-        self.Button6.configure(text='''Run BCI Task''')
+        self.Button6.configure(text='''(3)Run BCI Task''')
 
         self.Button7 = Button (self.TNotebook1_pg3)
         self.Button7.place(relx=0.11,rely=0.78,height=97,width=107)
         self.Button7.configure(activebackground="#d9d9d9")
-        self.Button7.configure(text='''Calibrate''')
+        self.Button7.configure(text='''(1)Calibrate''')
         self.Button7.configure(command=l12_support.CalibrateBCI)
         self.Button7.configure(cursor="hand1")
 
@@ -394,32 +455,32 @@ class Launcher:
         self.Label19 = Label (self.TNotebook2_pg0)
         self.Label19.place(relx=0.02,rely=0.07,height=19,width=304)
         self.Label19.configure(activebackground="#f9f9f9")
-        self.Label19.configure(text='''x-axis channels (multiple channels are averaged):''')
+        self.Label19.configure(text='''x-axis channels to average(1 OR 1,2,3):''')
 
         self.Label14 = Label (self.TNotebook2_pg0)
         self.Label14.place(relx=0.02,rely=0.21,height=19,width=336)
         self.Label14.configure(activebackground="#f9f9f9")
-        self.Label14.configure(text='''x-axis frequencies (multiple frequencies are avergaed):''')
+        self.Label14.configure(text='''x-axis frequency to average(10-30 OR 10-30,30-50):''')
 
         self.Label15 = Label (self.TNotebook2_pg0)
         self.Label15.place(relx=0.02,rely=0.36,height=19,width=304)
         self.Label15.configure(activebackground="#f9f9f9")
-        self.Label15.configure(text='''y-axis channels (multiple channels are averaged):''')
+        self.Label15.configure(text='''y-axis channels to average(1 OR 1,2,3):''')
 
         self.Label16 = Label (self.TNotebook2_pg0)
         self.Label16.place(relx=0.02,rely=0.5,height=19,width=336)
         self.Label16.configure(activebackground="#f9f9f9")
-        self.Label16.configure(text='''y-axis frequencies (multiple frequencies are avergaed):''')
+        self.Label16.configure(text='''y-axis frequency ranges to average(10-30 OR 10-30,30-50):''')
 
         self.Label17 = Label (self.TNotebook2_pg0)
         self.Label17.place(relx=0.02,rely=0.64,height=19,width=303)
         self.Label17.configure(activebackground="#f9f9f9")
-        self.Label17.configure(text='''z-axis channels (multiple channels are averaged):''')
+        self.Label17.configure(text='''z-axis channels to average(1 OR 1,2,3):''')
 
         self.Label18 = Label (self.TNotebook2_pg0)
         self.Label18.place(relx=0.02,rely=0.79,height=19,width=335)
         self.Label18.configure(activebackground="#f9f9f9")
-        self.Label18.configure(text='''z-axis frequencies (multiple frequencies are avergaed):''')
+        self.Label18.configure(text='''z-axis frequency ranges to average(10-30 OR 10-30,30-50):''')
 
         self.Entry7 = Entry (self.TNotebook2_pg0)
         self.Entry7.place(relx=0.68,rely=0.07,relheight=0.15,relwidth=0.26)
@@ -598,16 +659,16 @@ class Launcher:
 
 
 
-        self.Label31 = Label (master)
-        self.Label31.place(relx=0.26,rely=0.02,height=19,width=305)
-        self.Label31.configure(activebackground="#ed0707")
-        self.Label31.configure(activeforeground="white")
-        self.Label31.configure(background="#ff3030")
-        self.Label31.configure(disabledforeground="#a30000")
-        self.Label31.configure(font=font10)
-        self.Label31.configure(highlightbackground="#d80000")
-        self.Label31.configure(text='''Not streaming from data acquisition system''')
-        self.Label31.configure(textvariable=l12_support.streamingState)
+        l12_support.Label31 = Label (master)
+        l12_support.Label31.place(relx=0.26,rely=0.02,height=19,width=305)
+        l12_support.Label31.configure(activebackground="#ed0707")
+        l12_support.Label31.configure(activeforeground="white")
+        l12_support.Label31.configure(background="#ff3030")
+        l12_support.Label31.configure(disabledforeground="#a30000")
+        l12_support.Label31.configure(font=font10)
+        l12_support.Label31.configure(highlightbackground="#d80000")
+        l12_support.Label31.configure(text='''Not streaming from data acquisition system''')
+        l12_support.Label31.configure(textvariable=l12_support.streamingState)
 
         self.Label32 = Label (master)
         self.Label32.place(relx=0.35,rely=0.07,height=19,width=183)

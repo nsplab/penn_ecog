@@ -17,7 +17,8 @@
 #include <zmq.hpp>  //provides protocol for communicating between different modules in the ECoG system
 
 #include "PO8e.h"   //code provided by TDT to stream/read signal amplitudes
-#include "GetPot.h" //code for reading config files (eg. signal.cfg) that contain parameters for the experiment
+//#include "GetPot.h" //code for reading config files (eg. signal.cfg) that contain parameters for the experiment
+#include "../../libs/inih/cpp/INIReader.h"
 
 using namespace std;
 using namespace zmq;
@@ -49,15 +50,38 @@ void BroadcastStatus() {
     //value written through ZMQ, new values will be dropped
     //until any module reads the value
     publisher.setsockopt(ZMQ_SNDHWM, &hwm, sizeof(hwm));
+    int conflate = 1;
+    publisher.setsockopt(ZMQ_CONFLATE, &conflate, sizeof(conflate));
     publisher.bind("ipc:///tmp/signalstream.pipe");	//gives address of data that other modules can reference
 
+    chrono::time_point<chrono::system_clock> lastReceiveTime;
+    lastReceiveTime = chrono::system_clock::now();
+
+    char status = '0';
+    publisher.send(&status, sizeof(char));
+
     while (!quit) {
-        char status = '0';
         if (dataBeingStreamed) {
-            status = '1';
+            lastReceiveTime = chrono::system_clock::now();
         }
+
+        if ((dataBeingStreamed) && (status == '0')) {
+            status = '1';
+            cout<<"published status 1"<<endl;
+
+        } else {
+            std::chrono::duration<double> elapsed_seconds = chrono::system_clock::now()-lastReceiveTime;
+            if ((status == '1') && (elapsed_seconds.count()>3.0)) {
+                status = '0';
+                cout<<"published status 0"<<endl;
+            }
+        }
+
         publisher.send(&status, sizeof(char));
     }
+
+    publisher.close();
+    context.close();
 
 }
 
@@ -74,27 +98,35 @@ int main(int argc, char** argv) {
 //    outb(0x10, lptDataBase);
 
     // parse command line arguments
-    GetPot cl(argc, argv);
+    //GetPot cl(argc, argv);
 
     // check if the config file exists (extension .cfg)
-    ifstream testCfgFile(cfgFile.c_str());
+/*    ifstream testCfgFile(cfgFile.c_str());
     if (! testCfgFile.good()) {
         cout<<"Could not open the config file needed to set recording parameters: "<<cfgFile<<endl;
         return 1;
     } else {
         testCfgFile.close();
     }
+*/
+
+    INIReader reader("../../data/log.txt");
+    if (reader.ParseError() < 0) {
+        std::cout << "Can't load '../../data/log.txt'\n";
+        return 1;
+    }
 
     // parse config file to load parameter values
-    GetPot ifile(cfgFile.c_str(), "#", "\n");
-    ifile.print();	//print the config file to the terminal for user reference
+    //GetPot ifile(cfgFile.c_str(), "#", "\n");
+    //ifile.print();	//print the config file to the terminal for user reference
 
-    const size_t numberOfChannels = ifile("numberOfChannels", 0);	//load total number of channels (ECoG plus any other channels)
+    //const size_t numberOfChannels = ifile("numberOfChannels", 0);	//load total number of channels (ECoG plus any other channels)
+    const size_t numberOfChannels = reader.GetInteger("ExperimentLog", "TotalNumberOfChannels", 64);
     cout<<"numberOfChannels: "<<numberOfChannels<<endl;			//print number of channels to the screen
 
-    if (argc > 1) {
-        numberOfChannels = atoi(argv[1]);
-    }
+    //if (argc > 1) {
+    //    numberOfChannels = atoi(argv[1]);
+    //}
 
     // define the data file that will contain all data received by the TDT,
     //timestamped using a counter running on the PC (Puget)
@@ -152,6 +184,10 @@ int main(int argc, char** argv) {
     //Initializing ZMQ protocol that allows us to communicate between modules of the code
     context_t context(1);			//number of threads used by ZMQ
     socket_t publisher(context, ZMQ_PUB);	//socket used to broadcast data
+
+    socket_t recordSocket(context, ZMQ_REP);
+    recordSocket.bind("ipc:///tmp/record.pipe");
+
     int hwm = 100;				//hwm - high water mark - determines buffer size for
     						//data passed through ZMQ. hwm = 1 makes the ZMQ buffer 
     						//size = 1. This means that if no module has accessed a
@@ -175,6 +211,8 @@ int main(int argc, char** argv) {
 
     std::chrono::time_point<std::chrono::system_clock> start, end;
 
+    string filename("../../data/data_");
+
     // main loop - runs an infinite loop until any key on the keyboard is hit.
     while(!quit) {
 
@@ -186,6 +224,7 @@ int main(int argc, char** argv) {
         }
 
         dataBeingStreamed = true;
+        cout<<"some samples are ready"<<endl;
 
         start = std::chrono::system_clock::now();
         if (card->readBlock(dBuff, numberOfSamples) != numberOfSamples) {	//readblock(tempBuff,1) loads one sample from every channel into tempBuff, returning 1 if successful, and advances to the next sample
@@ -206,6 +245,7 @@ int main(int argc, char** argv) {
 
         for(size_t i = 0; i < numberOfSamples; i++, timeStamp++) {//increment timeStamp based on number of samples received - assumes samples reeceived regularly
 
+            cout<<"i: "<<i<<endl;
             //use the ZMQ protocol to broadcast the following values:
             //	tempBuff - the single current sample from every channel
             //	timeStamp - the counter on the PC that serves as the system clock to align ECoG with task events
