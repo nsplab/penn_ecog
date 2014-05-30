@@ -29,3 +29,9 @@ The FeatureExtractor module continuously broadcasts the timestamped extracted fe
 
 ![Supervisor-Filter Interaction](../docs/filter_featureextractor.png)
 
+Moving Average Filter
+=============================
+
+The moving average filter, originally implemented by Mosalam, averages power in the desired channels and power bands to control 1 or more dimensions. We were thinking along the lines of implementing the simplest filter needed to study the predictions made in Bryan's IEEE ITA Feb 2014 paper on Neural Shaping.
+
+![Supervisor-Filter Interaction](../docs/moving_average.jpg)
