@@ -228,11 +228,8 @@ while run:
                     gameState.hand_pos[0] = -config.workspaceRadius / 2
                 numFeatures = int(vec[4])
                 numParameters = int(vec[5])
-                print "****************************************"
-                print "****************************************"
-                print "****************************************"
-                print "numFeatures",numFeatures
-                print "numParameters", numParameters
+                #print "numFeatures",numFeatures
+                #print "numParameters", numParameters
                 print timestamp
 
     filterState.hand_pos[0] = gameState.hand_pos[0]
@@ -246,6 +243,9 @@ while run:
 
     print 'filterState.trial ', filterState.trial
 
+    # if the game is paused do not write the log file
+    if gameState.pause:
+        continue
 # 1
     f.write(str(timestamp))
     f.write(' ')

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Gstopwatch
+GenericName=A simple stopwatch, written in GTK3.
+Comment=Start, pause, stop the timer with the ability to save laps.
+Icon=clocks
+Terminal=false
+Exec=gstopwatch
+Categories=GNOME;GTK;Utilies;
