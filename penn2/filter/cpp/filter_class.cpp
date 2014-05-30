@@ -84,6 +84,10 @@ void FilterClass::SendHandPosGetState(const vector<float>& hand_movement) {     
         it<parameters_.end(); it++) {
         message<<*it<<" ";
     }
+    for (vector<string>::const_iterator it=parametersNames_.begin();                            // iterate over the array values in parameters_ and copy them to the message stringstream
+        it<parametersNames_.end(); it++) {
+        message<<*it<<" ";
+    }
 
     message<<endl;                                                                          // complete the message stringstream with an endl character.
     zmq::message_t zmq_message(message.str().length());                                     // create a zmq message_t to send the message to the supervisor

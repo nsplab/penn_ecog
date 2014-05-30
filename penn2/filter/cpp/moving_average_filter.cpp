@@ -33,7 +33,12 @@ MovingAverageFilter::MovingAverageFilter(float featureRate, string dataPath){
   string imageFilename = dataPath_+string("/filter_data_")+string(nameBuffer);
   eFile = fopen(imageFilename.c_str(), "wb");
 
+  // populate the parameters vector sent to the supervisor in order to be added to the log file
   parameters_.resize(2);
+  parametersNames_.push_back(string("gamma"));
+  parametersNames_.push_back(string("scale"));
+
+
 
   ifstream filterCfg("../../../data/filter_settings.cfg");
   filterCfg>>gamma_;
