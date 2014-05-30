@@ -311,7 +311,7 @@ def RunBCI():
         options = {}
         options['defaultextension'] = '.txt'
         options['filetypes'] = [('text files', '.txt')]
-        options['initialdir'] = '../'
+        options['initialdir'] = '../data/'
         #options['initialfile'] = 'myfile.txt'
         #options['parent'] = master
         options['title'] = 'Select a session log file'

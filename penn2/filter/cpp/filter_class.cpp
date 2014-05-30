@@ -1,6 +1,7 @@
 #include "filter_class.h"
 #include <sstream>
 #include <iostream>
+#include <fstream>
 
 using namespace std;
 using namespace zmq;                                                                        // this library is used for asynchronous communication (ipc) between supervisor, feature_extraction, and filter modules
@@ -139,4 +140,14 @@ void FilterClass::Simulate(vector<float> features, size_t trial,                
     trial_id = trial;                                                                       // assign the protected FilterClass variable trial
     target_ = target;                                                                       // assign the protected FilterClass variable target
     handPos_ = initHandPosition;                                                            // assign the protected FilterClass variable initHandPosition
+}
+
+std::string FilterClass::getLastLine(std::ifstream& in)
+{
+    std::string line;
+    while (in >> std::ws && std::getline(in, line)) // skip empty lines
+        cout<<"linp ", line
+        ;
+
+    return line;
 }

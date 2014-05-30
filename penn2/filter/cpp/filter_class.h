@@ -23,6 +23,10 @@ public:
   virtual void Run() = 0;                                           // virtual function that should contain the main loop of the filter,
                                                                     // using dynamic binding at runtime we select the filter we want to use
 
+  virtual void LoadParametersFromSession(std::string selectedSession) = 0;
+
+  std::string getLastLine(std::ifstream& in);
+
   // auxiliary function to test the filter
   void Simulate(std::vector<float> features, size_t trial, std::vector<float> target, std::vector<float> initHandPosition);
   std::vector<float> GetHandState() {return handState_;}            // returns the handState_

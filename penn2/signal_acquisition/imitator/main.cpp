@@ -203,7 +203,7 @@ int main()
         */ // RSE control
 
 
-        // time-invariant control
+        // time-invariant control policy
         diffx = (target[0] - handPos[0]) / 10.0;
         cout<<"diffx "<<diffx<<endl;
 

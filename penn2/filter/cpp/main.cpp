@@ -78,6 +78,8 @@ int main(int argc, char** argv) {
 
     string dataPath = reader.Get("filter", "dataPath", "../../../data");
 
+    string selectedSession = reader.Get("filter", "selectedSession", "");
+
     string featureConfig = reader.Get("filter", "featureConfig",               // get the filename of the *feature* configuration file from the filter.cfg file
                                  "../../../feature_extraction/"
                                  "feature_extract_cpp/"
@@ -138,6 +140,9 @@ int main(int argc, char** argv) {
         break;
     }
 
+    if (selectedSession.size() != 0) {
+        filterObj->LoadParametersFromSession(selectedSession);
+    }
 
     // run the main loop of the selected function
     filterObj->Run();                                           // run the filter

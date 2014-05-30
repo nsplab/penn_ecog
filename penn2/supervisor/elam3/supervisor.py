@@ -103,8 +103,12 @@ def StartNewTrial():
 
 timestamp = 0
 
+supervisorCfg = ConfigObj('../../config/supervisor_config.cfg', file_error=True)
+supervisorSec = supervisorCfg['supervisor']
+
+
 # create the data log file to store the parameters of the game and the score
-filename = 'supervisor_event_%s.txt' % datetime.datetime.utcnow().strftime("%Y-%m-%d-%H%M%S")
+filename = supervisorSec['dataPath'] + '/supervisor_event_%s.txt' % datetime.datetime.utcnow().strftime("%Y-%m-%d-%H%M%S")
 f = open(filename, 'w')
 
 f.write("timestamp")
@@ -208,7 +212,13 @@ while run:
     vec = None
     if not gameState.pause:
         vec_str = ssocket.recv()
+        print '++++++++++++++++++++++++++++++++++++++'
+        print '++++++++++++++++++++++++++++++++++++++'
+        print '++++++++++++++++++++++++++++++++++++++'
         print 'vec_str ', vec_str
+        print '++++++++++++++++++++++++++++++++++++++'
+        print '++++++++++++++++++++++++++++++++++++++'
+        print '++++++++++++++++++++++++++++++++++++++'
         vec = vec_str.split(" ")
         if vec[0] != "pass":
             if config.trackingMode:
@@ -311,10 +321,10 @@ while run:
 
 # 19
     for nF in range(6, numFeatures + 6):
-        f.write(vec[nF])
+        f.write(str(vec[nF]))
         f.write(' ')
-    for nP in range(numFeatures + 7, numParameters + numFeatures + 7):
-        f.write(vec[nP])
+    for nP in range(numFeatures + 6, numParameters + numFeatures + 6):
+        f.write(str(vec[nP]))
         f.write(' ')
 
     f.write('\n')

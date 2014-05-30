@@ -196,6 +196,7 @@ void MovingAverageFilter::updateEwmaVariances() {
  *   \param updated whether any of the values has been updated
  *
 */
+
 void MovingAverageFilter::runGUI(float& alpha, float& scale, bool& updated) {
 
     using namespace boost;
@@ -272,3 +273,36 @@ void MovingAverageFilter::runGUI(float& alpha, float& scale, bool& updated) {
         }
     }
 }
+
+
+void MovingAverageFilter::LoadParametersFromSession(string selectedSession) {
+    ifstream file(selectedSession);
+    if (file) {
+        string line = getLastLine(file);
+        cout << line << '\n';
+
+        std::istringstream inputLine(line );
+        float tval = 0;
+        for (int i=0; i<=22; i++) {
+            inputLine >> tval;
+            //cout<<tval<<" $ ";
+            if (i == 21) {
+                gamma_ = tval;
+            } else if (i == 22) {
+                scale_ = tval;
+            }
+        }
+
+
+        cout<<"**********************"<<endl;
+        cout<<"**********************"<<endl;
+        cout<<"**********************"<<endl;
+        cout<<"**********************"<<endl;
+        cout<<"**********************"<<endl;
+        cout<<"**********************"<<endl;
+        cout<<"**********************"<<endl;
+        cout<<"**********************"<<endl;
+    } else
+        cout << "Unable to open file.\n";
+}
+

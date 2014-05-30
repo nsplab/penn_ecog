@@ -15,5 +15,7 @@ column 14: workspace radius
 column 15: whether to move the hand (1) to the initial/resting position after every even number of target bars passed or not (0)
  	   
 column 16: the distance threshold on the distance between the hand and the target bar, distances smaller than this threshold increase the score (you should divide this by the workspace radius to get the percentage of the workspace for this parameter)
-column 17-[17+n]: the n-dimensional feature vector 
+column 17: number of features
+column 18: number of parameters
+column 19-[19+n]: the n-dimensional feature vector 
 column [18+n]-[18+n+m]: the m-dimensional filter parameter vector

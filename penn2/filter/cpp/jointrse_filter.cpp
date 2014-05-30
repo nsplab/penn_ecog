@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 using namespace arma;
+//using namespace std;
 
 // todo: replace cube with vector of matrices
 
@@ -575,4 +576,13 @@ void jointRSE_filter::LogUpdateStateVector(arma::mat state) {
         stateFile<<state(c,0)<<" ";
     }
     stateFile<<endl;
+}
+
+void jointRSE_filter::LoadParametersFromSession(std::string selectedSession) {
+    std::ifstream file(selectedSession);
+    if (file) {
+        std::string line = getLastLine(file);
+        std::cout << line << '\n';
+    } else
+        std::cout << "Unable to open file.\n";
 }

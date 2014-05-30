@@ -25,6 +25,8 @@ public:
   void runGUI(float& alpha, float& scale, bool& updated);
   void updateEwmaVariances();
   void kill();
+  void LoadParametersFromSession(std::string selectedSession);
+
 private:
   FILE* eFile;
   float featureRate_;

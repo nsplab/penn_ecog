@@ -20,6 +20,7 @@ public:
     // main loop function
     void Run();
     void RunPredictOnly();
+    void LoadParametersFromSession(std::string selectedSession);
 private:
     arma::mat prepareINITIAL_ARM_COV();
     void InitNewTrial(arma::mat startPos, arma::mat reachTarget);
