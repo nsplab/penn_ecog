@@ -33,10 +33,15 @@ MovingAverageFilter::MovingAverageFilter(float featureRate, string dataPath){
   string imageFilename = dataPath_+string("/filter_data_")+string(nameBuffer);
   eFile = fopen(imageFilename.c_str(), "wb");
 
+  parameters_.resize(2);
+
   ifstream filterCfg("../../../data/filter_settings.cfg");
   filterCfg>>gamma_;
   filterCfg>>scale_;
   filterCfg.close();
+
+  parameters_[0] = gamma_;
+  parameters_[1] = scale_;
 }
 
 MovingAverageFilter::~MovingAverageFilter() {
@@ -147,6 +152,10 @@ void MovingAverageFilter::Run() {
           fwrite(&featureTimestamp_, sizeof(size_t),1 , eFile);
           fwrite(&gamma_, sizeof(float),1 , eFile);
           fwrite(&scale_, sizeof(float),1 , eFile);
+
+          parameters_[0] = gamma_;
+          parameters_[1] = scale_;
+
 
           fflush(eFile);
           //q5_ = q5;

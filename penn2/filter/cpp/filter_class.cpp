@@ -74,6 +74,17 @@ void FilterClass::SendHandPosGetState(const vector<float>& hand_movement) {     
         it<hand_movement.end(); it++) {
         message<<*it<<" ";
     }
+    message<<features_.size()<<" ";
+    message<<parameters_.size()<<" ";
+    for (vector<float>::const_iterator it=features_.begin();                            // iterate over the array values in features_ and copy them to the message stringstream
+        it<features_.end(); it++) {
+        message<<*it<<" ";
+    }
+    for (vector<float>::const_iterator it=parameters_.begin();                            // iterate over the array values in parameters_ and copy them to the message stringstream
+        it<parameters_.end(); it++) {
+        message<<*it<<" ";
+    }
+
     message<<endl;                                                                          // complete the message stringstream with an endl character.
     zmq::message_t zmq_message(message.str().length());                                     // create a zmq message_t to send the message to the supervisor
     memcpy((char *) zmq_message.data(), message.str().c_str(), message.str().length());     // insert the message stringstream into the message_t object zmq_message

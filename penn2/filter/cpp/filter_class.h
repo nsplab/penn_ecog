@@ -30,6 +30,7 @@ protected:
   std::vector<float> features_;                                     // feature vector at the current point in time, typically power at various frequencies/channels
   std::vector<float> handPos_;                                      // update-step-based hand position intended to be sent to the virtual environment at the current point in time
   std::vector<float> handState_;                                    // hand state variable - could be used to record position and velocity
+  std::vector<float> parameters_;
 
   TrialMode mode_;                                                  // trial mode - training (adaptive version of JointRSE) or testing (static version of JointRSE) mode
   float attending_;                                                 // whether the subject is attending to the task; future versions of the code will use head tracking, etc. to check if the
