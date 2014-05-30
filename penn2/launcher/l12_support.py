@@ -24,6 +24,7 @@ except ImportError:
 
 from subprocess import Popen
 import tkMessageBox
+import tkFileDialog
 from configobj import ConfigObj
 from signal import SIGINT
 import os
@@ -173,6 +174,9 @@ def set_Tk_var():
     global streamingLabel
     streamingLabel = StringVar()
 
+    global selectedSession
+    selectedSession = ""
+
     # load last used parameters
     lastLog = ConfigObj('../data/log.txt', file_error=True)
     secLog = lastLog['ExperimentLog']
@@ -299,12 +303,35 @@ def StopSqueezeTask():
 
 
 def RunBCI():
-        global pFeature, pFilter, pSupervisor, pGraphics
+        global pFeature, pFilter, pSupervisor, pGraphics, selectedSession
         UpdateDemoMode('0')
         print ('l12_support.RunBCI')
         sys.stdout.flush()
 
-        Record('Demo BCI')
+        options = {}
+        options['defaultextension'] = '.txt'
+        options['filetypes'] = [('text files', '.txt')]
+        options['initialdir'] = '../'
+        #options['initialfile'] = 'myfile.txt'
+        #options['parent'] = master
+        options['title'] = 'Select a session log file'
+
+        answer = tkMessageBox.askyesno("Filter parameter values",
+            "Do you want to load the filter parameter values from a previous session?")
+        if answer:
+            filename = tkFileDialog.askopenfilename(**options)
+
+            if filename:
+                print "selected file: ", filename
+                selectedSession = filename
+                #return open(filename, 'r')
+            else:
+                return
+        else:
+            selectedSession = ""
+
+
+        Record('BCI Task')
 
         if not (pFeature is None):
             pFeature.send_signal(SIGINT)
@@ -619,6 +646,7 @@ def RecordBCI(logFile, logFileBackup):
     if algorithm.get() == 'Training JointRSE':
         filterSec['filterType'] = 2
     filterSec['dataPath'] = dataPath
+    filterSec['selectedSession'] = selectedSession
     filterCfg.write()
 
     # update config file of supervisor
