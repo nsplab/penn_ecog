@@ -424,7 +424,7 @@ def RunBCI():
              bitmap  = 'questhead',
              default = 0, strings = ('Most recent', 'Other'))
 
-        if answer:
+        if answer.num  == 1:
             filename = tkFileDialog.askopenfilename(**options)
 
             if filename:
