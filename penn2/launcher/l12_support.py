@@ -273,7 +273,7 @@ def LoadDriver():
 
 def RunDemoSqueeze():
         if not isStreaming:
-            tkMessageBox.showinfo("Data missing", 'Data is not being streamed!')
+            tkMessageBox.showinfo("Data missing", 'Data not streaming. For TDT, make sure it\'s on Preview and check that data cables are connected. Finally, you may need to restart one or more computers')
             return
 
         UpdateDemoMode('0')
@@ -287,7 +287,7 @@ def RunDemoSqueeze():
 def RunSqueeze():
 
         if not isStreaming:
-            tkMessageBox.showinfo("Data missing", 'Data is not being streamed!')
+            tkMessageBox.showinfo("Data missing", 'Data not streaming. For TDT, make sure it\'s on Preview and check that data cables are connected. Finally, you may need to restart one or more computers')
             return
 
         UpdateDemoMode('1')
@@ -418,7 +418,7 @@ def mbox(msg, b1='OK', b2='Cancel', frame=True, t=False, entry=False):
 def RunBCI():
 
         if not isStreaming:
-            tkMessageBox.showinfo("Data missing", 'Data is not being streamed!')
+            tkMessageBox.showinfo("Data missing", 'Data not streaming. For TDT, make sure it\'s on Preview and check that data cables are connected. Finally, you may need to restart one or more computers')
             return
 
         global pFeature, pFilter, pSupervisor, pGraphics, selectedSession
@@ -493,7 +493,7 @@ def RunBCI():
 def CalibrateBCI():
 
         if not isStreaming:
-            tkMessageBox.showinfo("Data missing", 'Data is not being streamed!')
+            tkMessageBox.showinfo("Data missing", 'Data not streaming. For TDT, make sure it\'s on Preview and check that data cables are connected. Finally, you may need to restart one or more computers')
             return
 
 
