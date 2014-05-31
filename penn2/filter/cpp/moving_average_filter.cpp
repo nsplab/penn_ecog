@@ -151,7 +151,9 @@ void MovingAverageFilter::Run() {
     ewmaValues.resize(3, 0);
 
   for (;;) {
+      // if the the parameters are modified in the dialog box
       if (updated_) {
+          // update the variances based on previously recorded baseline data
           updated_ = false;
           updateEwmaVariances();
           fwrite(&featureTimestamp_, sizeof(size_t),1 , eFile);

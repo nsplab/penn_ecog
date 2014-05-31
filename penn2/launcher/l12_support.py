@@ -43,8 +43,10 @@ statusSocket.setsockopt(zmq.CONFLATE, 1)
 statusSocket.connect("ipc:///tmp/signalstream.pipe")
 statusSocket.setsockopt(zmq.SUBSCRIBE, "")
 
+isStreaming = False
+
 def check_streaming_status():
-    global quitLauncher, Label31, streamingState
+    global quitLauncher, Label31, streamingState, isStreaming
     print "test"
     print "quitLauncher ", quitLauncher
 
@@ -58,9 +60,11 @@ def check_streaming_status():
         if msg == "1":
             Label31.configure(background="#30ff30")
             streamingState.set("Streaming from data acquisitoin system")
+            isStreaming = True
         else:
             Label31.configure(background="#ff3030")
             streamingState.set("Not streaming from data acquisitoin system")
+            isStreaming = False
 
         streamingStatusTimer = threading.Timer(2.0, check_streaming_status)
         streamingStatusTimer.start()
@@ -268,6 +272,10 @@ def LoadDriver():
     streamingStatusTimer.start()
 
 def RunDemoSqueeze():
+        if not isStreaming:
+            tkMessageBox.showinfo("Data missing", 'Data is not being streamed!')
+            return
+
         UpdateDemoMode('0')
         global pSqueeze
         #try:
@@ -277,6 +285,11 @@ def RunDemoSqueeze():
         time.sleep(0.1)
 
 def RunSqueeze():
+
+        if not isStreaming:
+            tkMessageBox.showinfo("Data missing", 'Data is not being streamed!')
+            return
+
         UpdateDemoMode('1')
         Record("Squeeze")
         global pSqueeze
@@ -403,6 +416,11 @@ def mbox(msg, b1='OK', b2='Cancel', frame=True, t=False, entry=False):
     return msgbox.returning
 
 def RunBCI():
+
+        if not isStreaming:
+            tkMessageBox.showinfo("Data missing", 'Data is not being streamed!')
+            return
+
         global pFeature, pFilter, pSupervisor, pGraphics, selectedSession
         UpdateDemoMode('0')
         print ('l12_support.RunBCI')
@@ -474,6 +492,11 @@ def RunBCI():
 
 def CalibrateBCI():
 
+        if not isStreaming:
+            tkMessageBox.showinfo("Data missing", 'Data is not being streamed!')
+            return
+
+
         answer = tkMessageBox.askokcancel("Calibrate",
                                           "Please ask the subject to stay still for 30 seconds.")
         if answer is False:
@@ -505,6 +528,12 @@ def CalibrateBCI():
 
 
 def StartDemoBCI():
+
+        if not isStreaming:
+            tkMessageBox.showinfo("Data missing", 'Data not streaming. For TDT, make sure it\'s on Preview and check that data cables are connected. Finally, you may need to restart one or more computers')
+            return
+
+
         global pFeature, pFilter, pSupervisor, pGraphics
         UpdateDemoMode('1')
         print ('l12_support.StartDemoBCI')

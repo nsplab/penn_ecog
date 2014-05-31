@@ -398,6 +398,7 @@ float SolveArmInvKinematics(Eigen::Vector3f targetPos, Eigen::Vector3f& currentP
     Eigen::Vector3f shoulderAxisY(0.0, 1.0, 0.0);
     Eigen::Vector3f shoulderAxisZ(0.0, 0.0, 1.0);
 
+    /// find out what's the thing with the flipped sign in the elbow pos and wrist pos
     Eigen::Vector3f handPos(1.50601, -0.23667, -0.30729);
     Eigen::Vector3f shoulderPos(0.0, 0.0, -2.0);
     Eigen::Vector3f elbowPos(-4.92282, -0.1, -2.0);
@@ -463,13 +464,29 @@ float SolveArmInvKinematics(Eigen::Vector3f targetPos, Eigen::Vector3f& currentP
         //cout<<"currentElbowAxisZ "<<currentElbowAxisZ<<endl;
         //cout<<"elbowQuat "<<elbowQuat.w()<<" "<<elbowQuat.x()<<" "<<elbowQuat.y()<<" "<<elbowQuat.z()<<endl;
 
-
+        // compute the current position of the elbow given the rotation of the shoulder
+        // 1. move the shoulder to the origin, i.e., move the elbow according to that translation
+        // 2. rotate the elbow joint position according to the shoulder rotation
+        // 3. move back the shoulder to  its world coordinate, i.e, move the elbow according to that translation
+        elbowPos = elbowPos - shoulderPos;
         currentElbowPos = shoulderQuat._transformVector(elbowPos);
+        elbowPos = elbowPos + shoulderPos;
 
+        // 4. move the shoulder to the origin, i.e., move the wrist/hand according to that translation
+        // 5. rotate the  position wrist/hand according to the shoulder rotation
+        // 6. move back the shoulder to  its world coordinate, i.e, move the wrist/hand according to that translation
+        wristPos = wristPos - shoulderPos;
         currentWristPos = shoulderQuat._transformVector(wristPos);
-        currentWristPos -= currentElbowPos;
+        currentWristPos = currentWristPos + shoulderPos;
+
+        // 7. move the elbow to the origin, i.e., move the wrist/hand according to that translation
+        // 8. rotate the  position wrist/hand according to the elbow rotation
+        // 9. move back the elbow to  its world coordinate, i.e, move the wrist/hand according to that translation
+
+        currentWristPos = currentWristPos - currentElbowPos;
         currentWristPos = elbowQuat._transformVector(currentWristPos);
-        currentWristPos += currentElbowPos;
+        currentWristPos = currentWristPos + currentElbowPos;
+
 
         displacement = targetPos - currentWristPos;
         error = displacement.norm();
@@ -542,6 +559,35 @@ int main()
     fxNode->addChild(patUpperArm);
     cartoon->addChild(fxNode);
     //root->addChild(fxNode);
+
+
+    /// to debug
+    ///
+    {
+    osg::BoundingBox handbb = sphere->getBoundingBox();
+    osg::BoundingBox elbowbb = elbowPointGeode->getBoundingBox();
+    osg::BoundingBox shoulderbb = shoulderPointGeode->getBoundingBox();
+
+    osg::Vec3d whandpos = handbb.center() * osg::computeLocalToWorld(sphere->getParentalNodePaths()[0]);
+    osg::Vec3d welbowpos = elbowbb.center() * osg::computeLocalToWorld(elbowPointGeode->getParentalNodePaths()[0]);
+    osg::Vec3d wshoulderpos = shoulderbb.center() * osg::computeLocalToWorld(shoulderPointGeode->getParentalNodePaths()[0]);
+
+    cout<<"hand x: "<<whandpos.x()<<endl;
+    cout<<"hand y: "<<whandpos.y()<<endl;
+    cout<<"hand z: "<<whandpos.z()<<endl;
+
+    cout<<"elbow x: "<<welbowpos.x()<<endl;
+    cout<<"elbow y: "<<welbowpos.y()<<endl;
+    cout<<"elbow z: "<<welbowpos.z()<<endl;
+
+    cout<<"shoulder x: "<<wshoulderpos.x()<<endl;
+    cout<<"shoulder y: "<<wshoulderpos.y()<<endl;
+    cout<<"shoulder z: "<<wshoulderpos.z()<<endl;
+    }
+    ////
+
+
+
 
     //root->addChild(createAxis());
     root->addChild(createMeshCube());
@@ -744,6 +790,11 @@ int main()
 
         visor.frame();
 
+        /// for debuging this line is commented out
+        /// uncomment for real system
+
+   if (false) {
+
         //cout<<"send"<<endl;
         if (pauseGame) {
             subscriber.send("c", 2);
@@ -751,7 +802,11 @@ int main()
             subscriber.send("p", 2);
         }
         //cout<<"sent"<<endl;
+
+
         subscriber.recv(&state_msg);
+
+
         //cout<<"received"<<endl;
         string state_str(((char *)state_msg.data()));
         //cout<<"message: "<<state_str<<endl;
@@ -831,10 +886,15 @@ int main()
             shoulderQuat = shoulderQuatO;
             elbowQuat = elbowQuatO;
             //SolveArmInvKinematics(target, currentWristPos, shoulderQuat, elbowQuat, patUpperArm);
+            /// commented out for debuging
             SolveArmInvKinematics(target, currentWristPos, shoulderQuat, elbowQuat);
             patUpperArm->setAttitude(osg::Quat(shoulderQuat.x(),shoulderQuat.y(),shoulderQuat.z(),shoulderQuat.w()));
             patForeArm->setAttitude(osg::Quat(elbowQuat.x(),elbowQuat.y(),elbowQuat.z(),elbowQuat.w()));
 
+        }
+       }
+
+   if (false) {
             osg::BoundingBox handbb = sphere->getBoundingBox();
             osg::BoundingBox elbowbb = elbowPointGeode->getBoundingBox();
             osg::BoundingBox shoulderbb = shoulderPointGeode->getBoundingBox();
@@ -854,8 +914,8 @@ int main()
             cout<<"shoulder x: "<<wshoulderpos.x()<<endl;
             cout<<"shoulder y: "<<wshoulderpos.y()<<endl;
             cout<<"shoulder z: "<<wshoulderpos.z()<<endl;
+   }
 
-        }
     }
 
     return 0;
