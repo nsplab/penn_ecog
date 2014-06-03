@@ -393,32 +393,52 @@ private:
 float SolveArmInvKinematics(Eigen::Vector3f targetPos, Eigen::Vector3f& currentPos, Eigen::Quaternionf& shoulderQuat, Eigen::Quaternionf& elbowQuat) {
     float error = 1.0;
 
+    // assume the angles are all zero and the initial positions are given
+    // ge the delta angles and then add to the osg quats
+
+    // set axises of the rotation joints
     Eigen::Vector3f elbowAxisZ(0.0, 0.0, 1.0);
     Eigen::Vector3f shoulderAxisX(1.0, 0.0, 0.0);
     Eigen::Vector3f shoulderAxisY(0.0, 1.0, 0.0);
     Eigen::Vector3f shoulderAxisZ(0.0, 0.0, 1.0);
 
+
+    //
     /// find out what's the thing with the flipped sign in the elbow pos and wrist pos
-    Eigen::Vector3f handPos(1.50601, -0.23667, -0.30729);
-    Eigen::Vector3f shoulderPos(0.0, 0.0, -2.0);
-    Eigen::Vector3f elbowPos(-4.92282, -0.1, -2.0);
-    Eigen::Vector3f wristPos(-8.78673, -0.09678, 0.04826 - 2.0);
+//    Eigen::Vector3f handPos(1.50601, -0.23667, -0.30729);
+//    Eigen::Vector3f shoulderPos(0.0, 0.0, -2.0);
+//    Eigen::Vector3f elbowPos(-4.92282, -0.1, -2.0);
+//    Eigen::Vector3f wristPos(-8.78673, -0.09678, 0.04826 - 2.0);
 
-    Eigen::Vector3f currentShoulderAxisX = shoulderQuat._transformVector(shoulderAxisX);
-    Eigen::Vector3f currentShoulderAxisY = shoulderQuat._transformVector(shoulderAxisY);
-    Eigen::Vector3f currentShoulderAxisZ = shoulderQuat._transformVector(shoulderAxisZ);
-    Eigen::Vector3f currentElbowAxisZ = shoulderQuat._transformVector(elbowAxisZ);
+    Eigen::Vector3f shoulderPos(0.0, 0.0, -2.0); // accurate position
+    Eigen::Vector3f elbowPos(4.92282, 0.0999968, -2.0); // accurate position
+//    Eigen::Vector3f wristPos(8.72282, 0.206994, -1.96923); // accurate position
+    Eigen::Vector3f wristPos(8.72282, 0.0999968, -2.0); // test
 
-    Eigen::Vector3f currentElbowPos = shoulderQuat._transformVector(elbowPos);
-    Eigen::Vector3f currentWristPos = shoulderQuat._transformVector(wristPos);
-    currentWristPos -= currentElbowPos;
-    currentWristPos = elbowQuat._transformVector(currentWristPos);
-    currentWristPos += currentElbowPos;
+//    Eigen::Vector3f currentShoulderAxisX = shoulderQuat._transformVector(shoulderAxisX);
+//    Eigen::Vector3f currentShoulderAxisY = shoulderQuat._transformVector(shoulderAxisY);
+//    Eigen::Vector3f currentShoulderAxisZ = shoulderQuat._transformVector(shoulderAxisZ);
+//    Eigen::Vector3f currentElbowAxisZ = shoulderQuat._transformVector(elbowAxisZ);
+
+    Eigen::Vector3f currentShoulderAxisX = shoulderAxisX;
+    Eigen::Vector3f currentShoulderAxisY = shoulderAxisY;
+    Eigen::Vector3f currentShoulderAxisZ = shoulderAxisZ;
+    Eigen::Vector3f currentElbowAxisZ = elbowAxisZ;
+
+    Eigen::Vector3f currentElbowPos = elbowPos;//shoulderQuat._transformVector(elbowPos);
+    Eigen::Vector3f currentWristPos = wristPos;//shoulderQuat._transformVector(wristPos);
+
+    //currentWristPos -= currentElbowPos;
+    //currentWristPos = elbowQuat._transformVector(currentWristPos);
+    //currentWristPos += currentElbowPos;
 
 
     auto start = chrono::high_resolution_clock::now();
     // ik 2 iterate until error is small
-    while (error > 0.01) {
+    unsigned iter = 0;
+    while ((error > 0.001) ) {
+        iter += 1;
+        cout<<"\n**** iter: "<<iter<<endl;
 
         // ik 3 get current orientations and positions
 
@@ -437,30 +457,40 @@ float SolveArmInvKinematics(Eigen::Vector3f targetPos, Eigen::Vector3f& currentP
         // target - currect position
         Eigen::Vector3f displacement = targetPos - currentWristPos;
 
+        /// debug
+        cout<<"displacement: "<<displacement<<endl;
+        ///
+
+
         Eigen::Vector3f jjtd = jacobian * jacobian.transpose() * displacement;
 
-        float alpha = displacement.dot(jjtd) / jjtd.dot(jjtd) * 0.01;
+        float alpha = displacement.dot(jjtd) / jjtd.dot(jjtd) * 0.9;
         //cout<<"alpha "<<alpha<<endl;
 
         // ik 5 compute rotation updates
         Eigen::Vector4f deltaTheta = alpha * jacobian.transpose() * displacement;
+
+        ///debug
+        cout<<"deltaTheta: "<<deltaTheta<<endl;
+        ///
+
+
         //cout<<"deltaTheta "<<deltaTheta<<endl;
 
         // ik 5 update orientations
         Eigen::Quaternion<float> deltaShoulderQuat =
-                //Eigen::AngleAxis<float>(deltaTheta(0), currentShoulderAxisX) *
+                Eigen::AngleAxis<float>(deltaTheta(0), currentShoulderAxisX) *
                 Eigen::AngleAxis<float>(deltaTheta(1), currentShoulderAxisY) *
-                //Eigen::AngleAxis<float>(0.0, currentShoulderAxisZ);
                 Eigen::AngleAxis<float>(deltaTheta(2), currentShoulderAxisZ);
         shoulderQuat = deltaShoulderQuat * shoulderQuat;
 
         Eigen::Quaternion<float> deltaElbowQuat (Eigen::AngleAxis<float>(deltaTheta(3), currentElbowAxisZ));
         elbowQuat = deltaElbowQuat * elbowQuat;
 
-        currentShoulderAxisX = shoulderQuat._transformVector(shoulderAxisX);
-        currentShoulderAxisY = shoulderQuat._transformVector(shoulderAxisY);
-        currentShoulderAxisZ = shoulderQuat._transformVector(shoulderAxisZ);
-        currentElbowAxisZ = shoulderQuat._transformVector(elbowAxisZ);
+        currentShoulderAxisX = deltaShoulderQuat._transformVector(currentShoulderAxisX);
+        currentShoulderAxisY = deltaShoulderQuat._transformVector(currentShoulderAxisY);
+        currentShoulderAxisZ = deltaShoulderQuat._transformVector(currentShoulderAxisZ);
+        currentElbowAxisZ = deltaShoulderQuat._transformVector(currentElbowAxisZ);
         //cout<<"currentElbowAxisZ "<<currentElbowAxisZ<<endl;
         //cout<<"elbowQuat "<<elbowQuat.w()<<" "<<elbowQuat.x()<<" "<<elbowQuat.y()<<" "<<elbowQuat.z()<<endl;
 
@@ -468,29 +498,61 @@ float SolveArmInvKinematics(Eigen::Vector3f targetPos, Eigen::Vector3f& currentP
         // 1. move the shoulder to the origin, i.e., move the elbow according to that translation
         // 2. rotate the elbow joint position according to the shoulder rotation
         // 3. move back the shoulder to  its world coordinate, i.e, move the elbow according to that translation
-        elbowPos = elbowPos - shoulderPos;
-        currentElbowPos = shoulderQuat._transformVector(elbowPos);
-        elbowPos = elbowPos + shoulderPos;
+
+        Eigen::Vector3f oldElbowPos = currentElbowPos;
+
+        currentElbowPos = currentElbowPos - shoulderPos;
+        currentElbowPos = deltaShoulderQuat._transformVector(currentElbowPos);
+        currentElbowPos = currentElbowPos + shoulderPos;
+
+
+        // 7. move the elbow to the origin, i.e., move the wrist/hand according to that translation
+        // 8. rotate the  position wrist/hand according to the elbow rotation
+        // 9. move back the elbow to  its world coordinate, i.e, move the wrist/hand according to that translation
+
+        currentWristPos = currentWristPos - oldElbowPos;
+        currentWristPos = deltaElbowQuat._transformVector(currentWristPos);
+        currentWristPos = currentWristPos + currentElbowPos;
 
         // 4. move the shoulder to the origin, i.e., move the wrist/hand according to that translation
         // 5. rotate the  position wrist/hand according to the shoulder rotation
         // 6. move back the shoulder to  its world coordinate, i.e, move the wrist/hand according to that translation
-        wristPos = wristPos - shoulderPos;
-        currentWristPos = shoulderQuat._transformVector(wristPos);
+
+        Eigen::Vector3f oldWristPos = currentWristPos;
+
+        currentWristPos = oldWristPos - shoulderPos;
+//        currentWristPos = currentWristPos - shoulderPos;
+        currentWristPos = deltaShoulderQuat._transformVector(currentWristPos);
         currentWristPos = currentWristPos + shoulderPos;
 
         // 7. move the elbow to the origin, i.e., move the wrist/hand according to that translation
         // 8. rotate the  position wrist/hand according to the elbow rotation
         // 9. move back the elbow to  its world coordinate, i.e, move the wrist/hand according to that translation
 
-        currentWristPos = currentWristPos - currentElbowPos;
-        currentWristPos = elbowQuat._transformVector(currentWristPos);
-        currentWristPos = currentWristPos + currentElbowPos;
+//      currentWristPos = currentWristPos - oldElbowPos;
+//        currentWristPos = currentWristPos - currentElbowPos;
+//        currentWristPos = deltaElbowQuat._transformVector(currentWristPos);
+//        currentWristPos = currentWristPos + currentElbowPos;
 
 
         displacement = targetPos - currentWristPos;
+
+        ///debug
+        cout<<"targetPos: "<<targetPos<<endl;
+        cout<<"currentWristPos: "<<currentWristPos<<endl;
+        cout<<"currentElbowPos: "<<currentElbowPos<<endl;
+        cout<<"currentElbowPos - currentWristPos: "<<currentElbo<<endl;
+        cout<<"displacement: "<<displacement<<endl;
+        cout<<"currentElbowAxisZ: "<<currentElbowAxisZ<<endl;
+        cout<<"currentShoulderAxisX: "<<currentShoulderAxisX<<endl;
+        cout<<"currentShoulderAxisY: "<<currentShoulderAxisY<<endl;
+        cout<<"currentShoulderAxisZ: "<<currentShoulderAxisZ<<endl;
+        ///
+
         error = displacement.norm();
-        //cout<<"error "<<error<<endl;
+        cout<<"error: "<<error<<endl;
+
+
         //this_thread::sleep_for(chrono::milliseconds(500));
 
     }
@@ -532,25 +594,29 @@ int main()
 
 
     osg::ref_ptr<osg::ShapeDrawable> elbowPoint = new osg::ShapeDrawable;
-    elbowPoint->setShape( new osg::Sphere(osg::Vec3(0.0, 0.0, 0.0), 0.01f) );
+    elbowPoint->setShape( new osg::Sphere(osg::Vec3(0.0, 0.0, 0.0), 0.1f) );
     osg::ref_ptr<osg::Geode> elbowPointGeode = new osg::Geode;
     elbowPointGeode->addDrawable(elbowPoint.get());
     patForeArm->addChild(elbowPointGeode);
+    //root->addChild(elbowPointGeode);
 
     osg::ref_ptr<osg::ShapeDrawable> shoulderPoint = new osg::ShapeDrawable;
-    shoulderPoint->setShape( new osg::Sphere(osg::Vec3(0.0, 0.0, 0.0), 0.01f) );
+    shoulderPoint->setShape( new osg::Sphere(osg::Vec3(0.0, 0.0, 0.0), 0.1f) );
     osg::ref_ptr<osg::Geode> shoulderPointGeode = new osg::Geode;
     shoulderPointGeode->addDrawable(shoulderPoint.get());
     patUpperArm->addChild(shoulderPointGeode);
+    //root->addChild(shoulderPointGeode);
 
 
     patUpperArm->addChild(upperArm);
 
     osg::ref_ptr<osg::ShapeDrawable> sphereHand = new osg::ShapeDrawable;
-    sphereHand->setShape( new osg::Sphere(osg::Vec3(-3.8, -0.107, 0.03077), 0.4f) );
+    sphereHand->setShape( new osg::Sphere(osg::Vec3(-3.8, -0.107, 0.03077), 0.5f) );
+    //sphereHand->setShape( new osg::Sphere(osg::Vec3(3.8, 0.106998, -1.96923), 0.9f) );
     osg::ref_ptr<osg::Geode> sphere = new osg::Geode;
     sphere->addDrawable(sphereHand.get());
     patForeArm->addChild(sphere);
+    //root->addChild(sphere);
 
     patForeArm->addChild(foreArm);
     patUpperArm->addChild(patForeArm);
@@ -561,30 +627,7 @@ int main()
     //root->addChild(fxNode);
 
 
-    /// to debug
-    ///
-    {
-    osg::BoundingBox handbb = sphere->getBoundingBox();
-    osg::BoundingBox elbowbb = elbowPointGeode->getBoundingBox();
-    osg::BoundingBox shoulderbb = shoulderPointGeode->getBoundingBox();
 
-    osg::Vec3d whandpos = handbb.center() * osg::computeLocalToWorld(sphere->getParentalNodePaths()[0]);
-    osg::Vec3d welbowpos = elbowbb.center() * osg::computeLocalToWorld(elbowPointGeode->getParentalNodePaths()[0]);
-    osg::Vec3d wshoulderpos = shoulderbb.center() * osg::computeLocalToWorld(shoulderPointGeode->getParentalNodePaths()[0]);
-
-    cout<<"hand x: "<<whandpos.x()<<endl;
-    cout<<"hand y: "<<whandpos.y()<<endl;
-    cout<<"hand z: "<<whandpos.z()<<endl;
-
-    cout<<"elbow x: "<<welbowpos.x()<<endl;
-    cout<<"elbow y: "<<welbowpos.y()<<endl;
-    cout<<"elbow z: "<<welbowpos.z()<<endl;
-
-    cout<<"shoulder x: "<<wshoulderpos.x()<<endl;
-    cout<<"shoulder y: "<<wshoulderpos.y()<<endl;
-    cout<<"shoulder z: "<<wshoulderpos.z()<<endl;
-    }
-    ////
 
 
 
@@ -603,6 +646,8 @@ int main()
     visor.setCameraManipulator(new osgGA::TrackballManipulator);
     visor.getCamera()->setClearColor(osg::Vec4(0.9f,0.9f,0.9f,1.0f));
 
+    cout<<"camera repositioned"<<endl;
+
     // set initial position of the camera
     osg::Matrixd m(1, 0, 0, 0,
                    0, 1, 0, 0,
@@ -620,13 +665,13 @@ int main()
 
     patForeArm->setPosition(osg::Vec3d(elbowPos(0),elbowPos(1),elbowPos(2)));
 
-    Eigen::Vector3f target(5.0, 0.5, -2.0);
+    Eigen::Vector3f target(6.02282, 1.906994, -2.0);
 
     osg::ref_ptr<osg::ShapeDrawable> shape1 = new osg::ShapeDrawable;
     shape1->setShape( new osg::Box(osg::Vec3(target(0), target(1), target(2)), 0.5f) );
     osg::ref_ptr<osg::Geode> box = new osg::Geode;
     box->addDrawable(shape1.get());
-    //root->addChild(box);
+    root->addChild(box);
 
     osg::ref_ptr<osg::ShapeDrawable> shape2 = new osg::ShapeDrawable;
     shape2->setShape( new osg::Box(osg::Vec3(0, 0, 0), 0.5f) );
@@ -652,8 +697,8 @@ int main()
 
     patBox->setPosition(osg::Vec3d(currentWristPos(0),currentWristPos(1),currentWristPos(2)));
 
-    //patUpperArm->setAttitude(osg::Quat(shoulderQuat.x(),shoulderQuat.y(),shoulderQuat.z(),shoulderQuat.w()));
-    //patForeArm->setAttitude(osg::Quat(elbowQuat.x(),elbowQuat.y(),elbowQuat.z(),elbowQuat.w()));
+    patUpperArm->setAttitude(osg::Quat(shoulderQuat.x(),shoulderQuat.y(),shoulderQuat.z(),shoulderQuat.w()));
+    patForeArm->setAttitude(osg::Quat(elbowQuat.x(),elbowQuat.y(),elbowQuat.z(),elbowQuat.w()));
 
 
 
@@ -784,6 +829,38 @@ int main()
     camera->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF );
     root->addChild( camera );
 
+    cout<<"main loop"<<endl;
+
+    /// to debug
+    ///
+    {
+    osg::BoundingBox handbb = sphere->getBoundingBox();
+    osg::BoundingBox elbowbb = elbowPointGeode->getBoundingBox();
+    osg::BoundingBox shoulderbb = shoulderPointGeode->getBoundingBox();
+
+    osg::MatrixList worldMatrices = sphere->getWorldMatrices();
+    osg::Vec3d whandpos = handbb.center() * worldMatrices[0];
+    osg::Vec3d welbowpos = elbowbb.center() * osg::computeLocalToWorld(elbowPointGeode->getParentalNodePaths()[0]);
+    osg::Vec3d wshoulderpos = shoulderbb.center() * osg::computeLocalToWorld(shoulderPointGeode->getParentalNodePaths()[0]);
+
+    cout<<"hand x: "<<whandpos.x()<<endl;
+    cout<<"hand y: "<<whandpos.y()<<endl;
+    cout<<"hand z: "<<whandpos.z()<<endl;
+
+    cout<<"elbow x: "<<welbowpos.x()<<endl;
+    cout<<"elbow y: "<<welbowpos.y()<<endl;
+    cout<<"elbow z: "<<welbowpos.z()<<endl;
+
+    cout<<"shoulder x: "<<wshoulderpos.x()<<endl;
+    cout<<"shoulder y: "<<wshoulderpos.y()<<endl;
+    cout<<"shoulder z: "<<wshoulderpos.z()<<endl;
+    }
+
+    ////
+    ///
+    /// \brief score
+    ///
+    ///
     float score = 0;
     float prevScore = 0;
     while ( !visor.done() ){
