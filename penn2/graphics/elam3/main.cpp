@@ -399,9 +399,9 @@ int main()
             nextCube->setCenter(osg::Vec3(5.0 - nextBlockStart * timeScale - (nextBlockLen)/2.0 * timeScale, 2.5 + nextBlockX, -2.0));
             nextCube->setHalfLengths(osg::Vec3((nextBlockLen)/2.0 * timeScale,blockWidth/2.0, blockWidth/2.0));
 
-            target(0) = 5.0;
+            target(0) = 5.0 + handPos[2];
             target(1) = 2.5 + handPos[0];
-            target(2) = -2.0;
+            target(2) = -2.0 + handPos[1];
 
             //target(2) = 0.0;
 

@@ -782,6 +782,18 @@ def RecordBCI(logFile, logFileBackup):
         filterSec['filterType'] = 2
     filterSec['dataPath'] = dataPath
     filterSec['selectedSession'] = selectedSession
+    if workspace.get() == "1D-X":
+        filterSec['dimensions'] = 1
+        filterSec['worspace_axis'] = 1
+    if workspace.get() == "1D-Y":
+        filterSec['dimensions'] = 1
+        filterSec['worspace_axis'] = 2
+    if workspace.get() == "2D-XY":
+        filterSec['dimensions'] = 2
+        filterSec['worspace_axis'] = 4
+    if workspace.get() == "3D":
+        filterSec['dimensions'] = 3
+
     filterCfg.write()
 
     # update config file of supervisor

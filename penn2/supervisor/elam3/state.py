@@ -43,6 +43,7 @@ class GameState(object):
         self.workspaceRadius = workspaceRadius
 
 
+    # generate 1000 target bars prior to running the game
     def generateBlocks(self):
         #add their starting points in time to a list
         #add their lengths to list
@@ -50,6 +51,9 @@ class GameState(object):
         #add their position/altitude to a list
         startingTime = 10.0
         # blockThickness = config.workspaceRadius / 8.0
+
+        ## TODO: change this so the target bars are generated in N dimension and X axis
+        ## depending on the parameter that the launcher sets
         for x in range(0, 1000):
             self.startingTimes.append(startingTime)
             if (x % 2) == 0:
@@ -85,8 +89,13 @@ class GameState(object):
             svalue += (str(time_remained_from_cblock) + " " +
                        str(self.startingTimes[cBlock + 1] - self.accumTime) + " " +
                        str(self.lengths[cBlock + 1]) + " ")
+            ## TODO: depending onth e selected axis by launcher set the the other axises ot zero
+
+            ## TODO: zero velocity target bars fir 3d
+            ## also make for this the length short enough to be a square / show target position
             svalue += (str(self.positions[cBlock]) + " 0 0 " +
                        str(self.positions[cBlock + 1]) + " 0 0 ")
+
             svalue += (str(self.blockWidth) + " ")
             self.box_pos = np.zeros(3)
             self.box_pos[0] = self.positions[cBlock]

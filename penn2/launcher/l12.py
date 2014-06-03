@@ -623,7 +623,7 @@ class Launcher:
 
         self.TCombobox6 = ttk.Combobox (self.TLabelframe2)
         self.TCombobox6.place(relx=0.43,rely=0.37,relheight=0.17,relwidth=0.31)
-        self.value_list = ['1D','2D-xy','2D-xz',]
+        self.value_list = ['1D-X','1D-Y', '2D-XY', '3D']
         self.TCombobox6.configure(values=self.value_list)
         self.TCombobox6.configure(textvariable=l12_support.workspace)
         self.TCombobox6.configure(takefocus="")
