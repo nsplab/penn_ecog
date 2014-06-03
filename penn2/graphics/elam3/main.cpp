@@ -26,33 +26,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.*/
 #include <chrono>
 #include <thread>
 
-#include <osg/Switch>
-
-#include <osgDB/ReadFile>
-#include <osgViewer/Viewer>
-#include <osg/PositionAttitudeTransform>
-#include <osg/MatrixTransform>
-#include <osgDB/ReadFile>
-#include <osgGA/TrackballManipulator>
-#include <osg/Material>
-#include <osg/BlendFunc>
-#include <osg/Depth>
-#include <osg/NodeVisitor>
-#include <osg/ShapeDrawable>
-#include <osgFX/Effect>
-#include <osgFX/Cartoon>
-
-#include <osgText/Font>
-#include <osgText/Text>
-
-#include <osgParticle/ParticleSystemUpdater>
-#include <osgParticle/ModularEmitter>
-#include <osg/PointSprite>
-#include <osg/Point>
-
-//tmp
-#include <osg/ShapeDrawable>
-
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
 
@@ -60,539 +33,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.*/
 
 #include "utils.h"
 
+#include "inversekinematics.h"
+
 using namespace std;
 using namespace zmq;
 
 extern bool pauseGame;
-
-//Implement smoke particles when wrist intersects with blue bars
-osgParticle::ParticleSystem* createFireParticles(
-        osg::Group* parent ) {
-    osg::ref_ptr<osgParticle::ParticleSystem> ps =
-    new osgParticle::ParticleSystem;
-    ps->getDefaultParticleTemplate().setLifeTime( 1.5f );
-    ps->getDefaultParticleTemplate().setShape(
-    osgParticle::Particle::QUAD );
-    ps->getDefaultParticleTemplate().setSizeRange(
-    osgParticle::rangef(0.5f, 0.05f) );
-    ps->getDefaultParticleTemplate().setAlphaRange(
-    osgParticle::rangef(0.6f, 0.1f) );
-    ps->getDefaultParticleTemplate().setColorRange(
-    osgParticle::rangev4(osg::Vec4(0.1f,0.3f,0.4f,1.0f),
-    osg::Vec4(0.0f,0.1f,0.3f,0.5f)) );
-    ps->setDefaultAttributes("../smoke.rgb", true, false );
-
-    osg::ref_ptr<osgParticle::RandomRateCounter> rrc =
-    new osgParticle::RandomRateCounter;
-    rrc->setRateRange( 5, 20 );
-    osg::ref_ptr<osgParticle::RadialShooter> shooter =
-    new osgParticle::RadialShooter;
-    shooter->setThetaRange( -osg::PI_4/3.0, osg::PI_4/3.0 );
-    shooter->setPhiRange( -osg::PI_4/3.0, osg::PI_4/3.0 );
-    shooter->setInitialSpeedRange( 1.0f, 6.5f );
-
-    osg::ref_ptr<osgParticle::ModularEmitter> emitter =
-    new osgParticle::ModularEmitter;
-    emitter->setParticleSystem( ps.get() );
-    emitter->setCounter( rrc.get() );
-    emitter->setShooter( shooter.get() );
-    parent->addChild( emitter.get() );
-    return ps.get();
-}
-
-//Make borders around plot in top left that keeps track of performance
-osg::Geode* createPlotDecoration(float scaleX, float scaleY) {
-    osg::Vec3Array* vertices = new osg::Vec3Array();
-
-    osg::Geode*     geode    = new osg::Geode();
-    osg::Geometry*  geometry = new osg::Geometry();
-    osg::Vec4Array* colors   = new osg::Vec4Array();
-
-    vertices->push_back(osg::Vec3(0, 700-scaleY, 0.0f));
-    vertices->push_back(osg::Vec3(scaleX, 700-scaleY, 0.0f));
-    colors->push_back(osg::Vec4(0.0f, 0.0f, 0.0f, 1.0f));
-    colors->push_back(osg::Vec4(0.0f, 0.0f, 0.0f, 1.0f));
-
-    vertices->push_back(osg::Vec3(0, 700, 0.0f));
-    vertices->push_back(osg::Vec3(scaleX, 700, 0.0f));
-    colors->push_back(osg::Vec4(0.0f, 0.0f, 0.0f, 1.0f));
-    colors->push_back(osg::Vec4(0.0f, 0.0f, 0.0f, 1.0f));
-
-    vertices->push_back(osg::Vec3(scaleX, 700, 0.0f));
-    vertices->push_back(osg::Vec3(scaleX, 700-scaleY, 0.0f));
-    colors->push_back(osg::Vec4(0.0f, 0.0f, 0.0f, 1.0f));
-    colors->push_back(osg::Vec4(0.0f, 0.0f, 0.0f, 1.0f));
-
-    vertices->push_back(osg::Vec3(0, 700, 0.0f));
-    vertices->push_back(osg::Vec3(0, 700-scaleY, 0.0f));
-    colors->push_back(osg::Vec4(0.0f, 0.0f, 0.0f, 1.0f));
-    colors->push_back(osg::Vec4(0.0f, 0.0f, 0.0f, 1.0f));
-
-    vertices->push_back(osg::Vec3(0, 700-scaleY/2.0, 0.0f));
-    vertices->push_back(osg::Vec3(scaleX, 700-scaleY/2.0, 0.0f));
-    colors->push_back(osg::Vec4(0.5f, 0.5f, 0.5f, 1.0f));
-    colors->push_back(osg::Vec4(0.5f, 0.5f, 0.5f, 1.0f));
-
-    geometry->setVertexArray(vertices);
-    geometry->setColorArray(colors);
-    geometry->setColorBinding(osg::Geometry::BIND_PER_VERTEX);
-    geometry->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::LINES, 0, vertices->size()));
-    geometry->getOrCreateStateSet()->setMode(GL_LIGHTING, false);
-
-    geometry->getOrCreateStateSet()->setMode(GL_BLEND, osg::StateAttribute::ON);
-    geometry->getOrCreateStateSet()->setRenderBinDetails(13, "RenderBin");
-
-    osg::LineWidth* linewidth = new osg::LineWidth();
-    linewidth->setWidth(2.0f);
-
-    geode->addDrawable(geometry);
-
-    osg::Box* backBox = new osg::Box(osg::Vec3(scaleX/2.0,700-scaleY/2.0,0), scaleX+20, scaleY+20, 0);
-    osg::ShapeDrawable* backBoxDrawable = new osg::ShapeDrawable(backBox);
-    backBoxDrawable->setColor(osg::Vec4(0.9,0.9,0.9,1.0));
-    backBoxDrawable->getOrCreateStateSet()->setRenderBinDetails(13, "RenderBin");
-
-    geode->addDrawable(backBoxDrawable);
-
-    geode->getOrCreateStateSet()->setAttributeAndModes(linewidth, osg::StateAttribute::ON);
-
-
-    return geode;
-}
-
-//Function to plot performance in the top left corner of the screen
-osg::Geode* createPlot(float scaleX, float scaleY, unsigned numberOfPoints, osg::Vec3Array** plotArray) {
-    (*plotArray) = new osg::Vec3Array();
-
-    osg::Geode*     geode    = new osg::Geode();
-    osg::Geometry*  geometry = new osg::Geometry();
-    osg::Vec4Array* colors   = new osg::Vec4Array();
-
-    for (unsigned i=0; i<=numberOfPoints; i++) {
-        (*plotArray)->push_back(osg::Vec3(float(i)/numberOfPoints * scaleX, 700-scaleY, 0.0f));
-        //(*plotArray)->push_back(osg::Vec3(float(i+1)/numberOfPoints * scaleX, 700-scaleY, 0.0f));
-        colors->push_back(osg::Vec4(0.2f, 0.2f, 0.7f, 1.0f));
-        //colors->push_back(osg::Vec4(0.3f, 0.0f, 0.0f, 1.0f));
-    }
-
-    geometry->setVertexArray((*plotArray));
-    geometry->setColorArray(colors);
-    geometry->setColorBinding(osg::Geometry::BIND_PER_VERTEX);
-    geometry->addPrimitiveSet(new osg::DrawArrays(GL_LINE_STRIP, 0, (*plotArray)->size()));
-    geometry->getOrCreateStateSet()->setMode(GL_LIGHTING, false);
-    geometry->setUseDisplayList(false);
-
-    osg::LineWidth* linewidth = new osg::LineWidth();
-    linewidth->setWidth(2.0f);
-
-    geode->addDrawable(geometry);
-
-    geode->getOrCreateStateSet()->setAttributeAndModes(linewidth, osg::StateAttribute::ON);
-
-    return geode;
-}
-
-//create an object that can be rendered on the screen to display the joint axes
-//used for debugging, not called during regular operation
-osg::Geode* createAxis(float scale = 10.0) {
-    osg::Geode*     geode    = new osg::Geode();
-    osg::Geometry*  geometry = new osg::Geometry();
-    osg::Vec3Array* vertices = new osg::Vec3Array();
-    osg::Vec4Array* colors   = new osg::Vec4Array();
-
-    vertices->push_back(osg::Vec3(0.0f, 0.0f, 0.0f));
-    vertices->push_back(osg::Vec3(scale, 0.0f, 0.0f));
-    vertices->push_back(osg::Vec3(0.0f, 0.0f, 0.0f));
-    vertices->push_back(osg::Vec3(0.0f, scale, 0.0f));
-    vertices->push_back(osg::Vec3(0.0f, 0.0f, 0.0f));
-    vertices->push_back(osg::Vec3(0.0f, 0.0f, scale));
-
-    colors->push_back(osg::Vec4(1.0f, 0.0f, 0.0f, 1.0f));
-    colors->push_back(osg::Vec4(1.0f, 0.0f, 0.0f, 1.0f));
-    colors->push_back(osg::Vec4(0.0f, 1.0f, 0.0f, 1.0f));
-    colors->push_back(osg::Vec4(0.0f, 1.0f, 0.0f, 1.0f));
-    colors->push_back(osg::Vec4(0.5f, 0.5f, 1.0f, 1.0f));
-    colors->push_back(osg::Vec4(0.5f, 0.5f, 1.0f, 1.0f));
-
-    geometry->setVertexArray(vertices);
-    geometry->setColorArray(colors);
-    geometry->setColorBinding(osg::Geometry::BIND_PER_VERTEX);
-    geometry->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::LINES, 0, 6));
-    geometry->getOrCreateStateSet()->setMode(GL_LIGHTING, false);
-
-    geode->addDrawable(geometry);
-
-    return geode;
-}
-
-//create the grid line objects that define the walls of the 3d virtual environment
-//used only for visualization; does not actually interact with the virtual coordinates of the arm
-//there is no collision detection between the arm and these walls
-
-osg::Geode* createMeshCube(float scale = 5.0f, float depth = 5.0f)
-{
-    osg::Geode*     geode    = new osg::Geode();
-    osg::Geometry*  geometry = new osg::Geometry();
-    osg::Vec3Array* vertices = new osg::Vec3Array();
-    osg::Vec4Array* colors   = new osg::Vec4Array();
-    float r = 0.1;
-    float g = 0.1;
-    float b = 0.1;
-
-    unsigned density = 5;
-    unsigned depthDensity = density;
-
-    // west
-    /*for (unsigned i=0; i<=density; i++) {
-        vertices->push_back(osg::Vec3(0.0f, scale*float(i)/density, depth/2.0));
-        vertices->push_back(osg::Vec3(0.0f, scale*float(i)/density, -depth/2.0));
-        colors->push_back(osg::Vec4(r, g, b, 1.0f));
-        colors->push_back(osg::Vec4(r, g, b, 1.0f));
-    }
-
-    for (unsigned i=0; i<=depthDensity; i++) {
-        vertices->push_back(osg::Vec3(0.0f, 0.0f, -depth*float(i)/depthDensity+depth/2.0));
-        vertices->push_back(osg::Vec3(0.0f, scale, -depth*float(i)/depthDensity+depth/2.0));
-        colors->push_back(osg::Vec4(r, g, b, 1.0f));
-        colors->push_back(osg::Vec4(r, g, b, 1.0f));
-    }*/
-
-    // east
-    for (unsigned i=0; i<=density; i++) {
-        vertices->push_back(osg::Vec3(scale, scale*float(i)/density, depth/2.0));
-        vertices->push_back(osg::Vec3(scale, scale*float(i)/density, -depth/2.0));
-        colors->push_back(osg::Vec4(r, g, b, 1.0f));
-        colors->push_back(osg::Vec4(r, g, b, 1.0f));
-    }
-
-    for (unsigned i=0; i<=depthDensity; i++) {
-        vertices->push_back(osg::Vec3(scale, 0.0f, -depth*float(i)/depthDensity+depth/2.0));
-        vertices->push_back(osg::Vec3(scale, scale, -depth*float(i)/depthDensity+depth/2.0));
-        colors->push_back(osg::Vec4(r, g, b, 1.0f));
-        colors->push_back(osg::Vec4(r, g, b, 1.0f));
-    }
-
-    // south
-    for (unsigned i=0; i<=density; i++) {
-        vertices->push_back(osg::Vec3(scale*float(i)/density, 0.0f, depth/2.0));
-        vertices->push_back(osg::Vec3(scale*float(i)/density, 0.0f, -depth/2.0));
-        colors->push_back(osg::Vec4(r, g, b, 1.0f));
-        colors->push_back(osg::Vec4(r, g, b, 1.0f));
-    }
-
-    for (unsigned i=0; i<=depthDensity; i++) {
-        vertices->push_back(osg::Vec3(0.0f, 0.0f, -depth*float(i)/depthDensity+depth/2.0));
-        vertices->push_back(osg::Vec3(scale, 0.0f, -depth*float(i)/depthDensity+depth/2.0));
-        colors->push_back(osg::Vec4(r, g, b, 1.0f));
-        colors->push_back(osg::Vec4(r, g, b, 1.0f));
-    }
-
-
-    // north
-    for (unsigned i=0; i<=density; i++) {
-        vertices->push_back(osg::Vec3(scale*float(i)/density, scale, depth/2.0));
-        vertices->push_back(osg::Vec3(scale*float(i)/density, scale, -depth/2.0));
-        colors->push_back(osg::Vec4(r, g, b, 1.0f));
-        colors->push_back(osg::Vec4(r, g, b, 1.0f));
-    }
-
-    for (unsigned i=0; i<=depthDensity; i++) {
-        vertices->push_back(osg::Vec3(0.0f, scale, -depth*float(i)/depthDensity+depth/2.0));
-        vertices->push_back(osg::Vec3(scale, scale, -depth*float(i)/depthDensity+depth/2.0));
-        colors->push_back(osg::Vec4(r, g, b, 1.0f));
-        colors->push_back(osg::Vec4(r, g, b, 1.0f));
-    }
-
-    // bottom
-    for (unsigned i=0; i<=density; i++) {
-        // vertical
-        vertices->push_back(osg::Vec3(scale*float(i)/density, 0.0f, -depth/2.0));
-        vertices->push_back(osg::Vec3(scale*float(i)/density, scale, -depth/2.0));
-        colors->push_back(osg::Vec4(r, g, b, 1.0f));
-        colors->push_back(osg::Vec4(r, g, b, 1.0f));
-
-        // horizontal
-        vertices->push_back(osg::Vec3(0.0f, scale*float(i)/density, -depth/2.0));
-        vertices->push_back(osg::Vec3(scale, scale*float(i)/density, -depth/2.0));
-        colors->push_back(osg::Vec4(r, g, b, 1.0f));
-        colors->push_back(osg::Vec4(r, g, b, 1.0f));
-    }
-
-    geometry->setVertexArray(vertices);
-    geometry->setColorArray(colors);
-    geometry->setColorBinding(osg::Geometry::BIND_PER_VERTEX);
-    geometry->addPrimitiveSet(new osg::DrawArrays(osg::PrimitiveSet::LINES, 0, vertices->size()-1));
-    geometry->getOrCreateStateSet()->setMode(GL_LIGHTING, false);
-
-    osg::LineWidth* linewidth = new osg::LineWidth();
-    linewidth->setWidth(2.0f);
-
-    geode->addDrawable(geometry);
-
-    geode->getOrCreateStateSet()->setAttributeAndModes(linewidth, osg::StateAttribute::ON);
-
-
-    return geode;
-}
-
-//This class is used to implement semi-transparent objects in the graphics
-class TransparencyTechnique : public osgFX::Technique
-{
-public:
-    TransparencyTechnique() : osgFX::Technique() {}
-    virtual bool validate(osg::State& ss) const {
-        return true;
-    }
-protected:
-    virtual void define_passes() {
-        osg::ref_ptr<osg::StateSet> ss = new osg::StateSet;
-        ss->setAttributeAndModes( new osg::ColorMask(
-        false, false, false, false) );
-        ss->setAttributeAndModes( new osg::Depth(osg::Depth::LESS) );
-        addPass( ss.get() );
-
-        ss = new osg::StateSet;
-        ss->setAttributeAndModes( new osg::ColorMask(
-        true, true, true, true) );
-        ss->setAttributeAndModes( new osg::Depth(osg::Depth::EQUAL) );
-        addPass( ss.get() );
-    }
-};
-
-//This class is used to implement semi-transparent objects in the graphics; more realistic than built-in OpenGL transparency
-class TransparencyNode : public osgFX::Effect
-{
-public:
-    TransparencyNode() : osgFX::Effect() {}
-    TransparencyNode( const TransparencyNode& copy,
-                      const osg::CopyOp op=osg::CopyOp::SHALLOW_COPY )
-        : osgFX::Effect(copy, op) {}
-    META_Effect( osgFX, TransparencyNode, "TransparencyNode", "", "");
-protected:
-    virtual bool define_techniques() {
-        addTechnique(new TransparencyTechnique);
-        return true;
-    }
-};
-
-//This class is used to implement semi-transparent objects in the graphics; more realistic than built-in OpenGL transparency
-class MakeTransparent:public osg::NodeVisitor
-{
-public:
-    MakeTransparent(float alpha):osg::NodeVisitor(osg::NodeVisitor::TRAVERSE_ALL_CHILDREN), alpha_(alpha) {
-        setNodeMaskOverride(0xffffffff);
-        setTraversalMask(0xffffffff);
-    }
-    using osg::NodeVisitor::apply;
-    void apply(osg::Geode& geode) {
-        for (int i = 0; i< geode.getNumDrawables(); i++) {
-            osg::Drawable* dr = geode.getDrawable(i);
-            osg::StateSet* state = dr->getOrCreateStateSet();
-            osg::ref_ptr<osg::Material> mat = dynamic_cast<osg::Material*>(state->getAttribute(osg::StateAttribute::MATERIAL));
-            mat->setAlpha(osg::Material::FRONT_AND_BACK, alpha_);
-            state->setAttributeAndModes(mat.get(),
-                                        osg::StateAttribute::ON | osg::StateAttribute::OVERRIDE);
-            osg::BlendFunc* bf = new osg::BlendFunc(osg::BlendFunc::SRC_ALPHA,
-                                                    osg::BlendFunc::ONE_MINUS_SRC_ALPHA);
-            state->setAttributeAndModes(bf);
-            dr->getOrCreateStateSet()->setRenderingHint(osg::StateSet::TRANSPARENT_BIN);
-        }
-    }
-private:
-    float alpha_;
-};
-
-// solves the inverse kinematics problem
-// targetPos: the 3d position of the target position that hand/end-point should go there
-// currentPos:
-float SolveArmInvKinematics(Eigen::Vector3f targetPos, Eigen::Vector3f& currentPos, Eigen::Quaternionf& shoulderQuat, Eigen::Quaternionf& elbowQuat,
-                            osg::ref_ptr<osg::PositionAttitudeTransform> upperArm, osg::ref_ptr<osg::PositionAttitudeTransform> foreArm,
-                            osg::ref_ptr<osg::Geode> handGeode, osg::ref_ptr<osg::Geode> elbowGeode) {
-    float error = 1.0;
-
-    // assume the angles are all zero and the initial positions are given
-    // ge the delta angles and then add to the osg quats
-
-    // set axises of the rotation joints
-    Eigen::Vector3f elbowAxisZ(0.0, 0.0, 1.0);
-    Eigen::Vector3f shoulderAxisX(1.0, 0.0, 0.0);
-    Eigen::Vector3f shoulderAxisY(0.0, 1.0, 0.0);
-    Eigen::Vector3f shoulderAxisZ(0.0, 0.0, 1.0);
-
-
-    //
-    /// find out what's the thing with the flipped sign in the elbow pos and wrist pos
-//    Eigen::Vector3f handPos(1.50601, -0.23667, -0.30729);
-//    Eigen::Vector3f shoulderPos(0.0, 0.0, -2.0);
-//    Eigen::Vector3f elbowPos(-4.92282, -0.1, -2.0);
-//    Eigen::Vector3f wristPos(-8.78673, -0.09678, 0.04826 - 2.0);
-
-    Eigen::Vector3f shoulderPos(0.0, 0.0, -2.0); // accurate position
-    Eigen::Vector3f elbowPos(4.92282, 0.0999968, -2.0); // accurate position
-//    Eigen::Vector3f wristPos(8.72282, 0.206994, -1.96923); // accurate position
-    Eigen::Vector3f wristPos(8.72282, 0.0999968, -2.0); // test
-
-//    Eigen::Vector3f currentShoulderAxisX = shoulderQuat._transformVector(shoulderAxisX);
-//    Eigen::Vector3f currentShoulderAxisY = shoulderQuat._transformVector(shoulderAxisY);
-//    Eigen::Vector3f currentShoulderAxisZ = shoulderQuat._transformVector(shoulderAxisZ);
-//    Eigen::Vector3f currentElbowAxisZ = shoulderQuat._transformVector(elbowAxisZ);
-
-    Eigen::Vector3f currentShoulderAxisX = shoulderAxisX;
-    Eigen::Vector3f currentShoulderAxisY = shoulderAxisY;
-    Eigen::Vector3f currentShoulderAxisZ = shoulderAxisZ;
-    Eigen::Vector3f currentElbowAxisZ = elbowAxisZ;
-
-    Eigen::Vector3f currentElbowPos = elbowPos;//shoulderQuat._transformVector(elbowPos);
-    Eigen::Vector3f currentWristPos = wristPos;//shoulderQuat._transformVector(wristPos);
-
-    //currentWristPos -= currentElbowPos;
-    //currentWristPos = elbowQuat._transformVector(currentWristPos);
-    //currentWristPos += currentElbowPos;
-
-
-    auto start = chrono::high_resolution_clock::now();
-    // ik 2 iterate until error is small
-    unsigned iter = 0;
-    while ((error > 0.001) ) {
-        iter += 1;
-        cout<<"\n**** iter: "<<iter<<endl;
-
-        // ik 3 get current orientations and positions
-
-        // ik 4 compute jacobian
-        Eigen::Vector3f jacobCol1 = currentShoulderAxisX.cross(currentWristPos - shoulderPos);
-        Eigen::Vector3f jacobCol2 = currentShoulderAxisY.cross(currentWristPos - shoulderPos);
-        Eigen::Vector3f jacobCol3 = currentShoulderAxisZ.cross(currentWristPos - shoulderPos);
-        Eigen::Vector3f jacobCol4 = currentElbowAxisZ.cross(currentWristPos - currentElbowPos);
-
-        Eigen::Matrix<float, 3, 4> jacobian;
-        jacobian.col(0) = jacobCol1;
-        jacobian.col(1) = jacobCol2;
-        jacobian.col(2) = jacobCol3;
-        jacobian.col(3) = jacobCol4;
-
-        // target - currect position
-        Eigen::Vector3f displacement = targetPos - currentWristPos;
-
-        /// debug
-        cout<<"displacement: "<<displacement<<endl;
-        ///
-
-
-        Eigen::Vector3f jjtd = jacobian * jacobian.transpose() * displacement;
-
-        float alpha = displacement.dot(jjtd) / jjtd.dot(jjtd) * 0.9;
-        //cout<<"alpha "<<alpha<<endl;
-
-        // ik 5 compute rotation updates
-        Eigen::Vector4f deltaTheta = alpha * jacobian.transpose() * displacement;
-
-        ///debug
-        cout<<"deltaTheta: "<<deltaTheta<<endl;
-        ///
-
-
-        //cout<<"deltaTheta "<<deltaTheta<<endl;
-
-        // ik 5 update orientations
-        Eigen::Quaternion<float> deltaShoulderQuat =
-                Eigen::AngleAxis<float>(deltaTheta(0), currentShoulderAxisX) *
-                Eigen::AngleAxis<float>(deltaTheta(1), currentShoulderAxisY) *
-                Eigen::AngleAxis<float>(deltaTheta(2), currentShoulderAxisZ);
-        shoulderQuat = deltaShoulderQuat * shoulderQuat;
-
-        Eigen::Quaternion<float> deltaElbowQuat (Eigen::AngleAxis<float>(deltaTheta(3), currentElbowAxisZ));
-        elbowQuat = deltaElbowQuat * elbowQuat;
-
-        currentShoulderAxisX = deltaShoulderQuat._transformVector(currentShoulderAxisX);
-        currentShoulderAxisY = deltaShoulderQuat._transformVector(currentShoulderAxisY);
-        currentShoulderAxisZ = deltaShoulderQuat._transformVector(currentShoulderAxisZ);
-        currentElbowAxisZ = deltaShoulderQuat._transformVector(currentElbowAxisZ);
-        //cout<<"currentElbowAxisZ "<<currentElbowAxisZ<<endl;
-        //cout<<"elbowQuat "<<elbowQuat.w()<<" "<<elbowQuat.x()<<" "<<elbowQuat.y()<<" "<<elbowQuat.z()<<endl;
-
-        upperArm->setAttitude(osg::Quat(shoulderQuat.x(),shoulderQuat.y(),shoulderQuat.z(),shoulderQuat.w()));
-        foreArm->setAttitude(osg::Quat(elbowQuat.x(),elbowQuat.y(),elbowQuat.z(),elbowQuat.w()));
-
-        osg::Vec3d currentWristPosOsg = handGeode->getBoundingBox().center() * handGeode->getWorldMatrices()[0];
-        osg::Vec3d currentElbowPosOsg = elbowGeode->getBoundingBox().center() * elbowGeode->getWorldMatrices()[0];
-        for (unsigned t=0; t<3; t++) {
-            currentWristPos[t] = currentWristPosOsg[t];
-            currentElbowPos[t] = currentElbowPosOsg[t];
-        }
-
-        // compute the current position of the elbow given the rotation of the shoulder
-        // 1. move the shoulder to the origin, i.e., move the elbow according to that translation
-        // 2. rotate the elbow joint position according to the shoulder rotation
-        // 3. move back the shoulder to  its world coordinate, i.e, move the elbow according to that translation
-
-        if (false) {
-
-        Eigen::Vector3f oldElbowPos = currentElbowPos;
-
-        currentElbowPos = currentElbowPos - shoulderPos;
-        currentElbowPos = deltaShoulderQuat._transformVector(currentElbowPos);
-        currentElbowPos = currentElbowPos + shoulderPos;
-
-
-        // 7. move the elbow to the origin, i.e., move the wrist/hand according to that translation
-        // 8. rotate the  position wrist/hand according to the elbow rotation
-        // 9. move back the elbow to  its world coordinate, i.e, move the wrist/hand according to that translation
-
-        currentWristPos = currentWristPos - oldElbowPos;
-        currentWristPos = deltaElbowQuat._transformVector(currentWristPos);
-        currentWristPos = currentWristPos + currentElbowPos;
-
-        // 4. move the shoulder to the origin, i.e., move the wrist/hand according to that translation
-        // 5. rotate the  position wrist/hand according to the shoulder rotation
-        // 6. move back the shoulder to  its world coordinate, i.e, move the wrist/hand according to that translation
-
-        Eigen::Vector3f oldWristPos = currentWristPos;
-
-        currentWristPos = oldWristPos - shoulderPos;
-//        currentWristPos = currentWristPos - shoulderPos;
-        currentWristPos = deltaShoulderQuat._transformVector(currentWristPos);
-        currentWristPos = currentWristPos + shoulderPos;
-
-        // 7. move the elbow to the origin, i.e., move the wrist/hand according to that translation
-        // 8. rotate the  position wrist/hand according to the elbow rotation
-        // 9. move back the elbow to  its world coordinate, i.e, move the wrist/hand according to that translation
-
-//      currentWristPos = currentWristPos - oldElbowPos;
-//        currentWristPos = currentWristPos - currentElbowPos;
-//        currentWristPos = deltaElbowQuat._transformVector(currentWristPos);
-//        currentWristPos = currentWristPos + currentElbowPos;
-        }
-
-
-        displacement = targetPos - currentWristPos;
-
-        ///debug
-        cout<<"targetPos: "<<targetPos<<endl;
-        cout<<"currentWristPos: "<<currentWristPos<<endl;
-        cout<<"currentElbowPos: "<<currentElbowPos<<endl;
-        //cout<<"currentElbowPos - currentWristPos: "<<currentElbo<<endl;
-        cout<<"displacement: "<<displacement<<endl;
-        cout<<"currentElbowAxisZ: "<<currentElbowAxisZ<<endl;
-        cout<<"currentShoulderAxisX: "<<currentShoulderAxisX<<endl;
-        cout<<"currentShoulderAxisY: "<<currentShoulderAxisY<<endl;
-        cout<<"currentShoulderAxisZ: "<<currentShoulderAxisZ<<endl;
-        ///
-
-        error = displacement.norm();
-        cout<<"error: "<<error<<endl;
-
-
-        //this_thread::sleep_for(chrono::milliseconds(500));
-
-    }
-    auto end = chrono::high_resolution_clock::now();
-    cout<<chrono::duration_cast<chrono::nanoseconds>(end-start).count()<<"ns\n";
-
-    currentPos = currentWristPos;
-
-    return error;
-}
 
 
 int main()
@@ -639,29 +85,27 @@ int main()
 
 
     //code for debugging makes a small sphere at the position of the elbow
-    //osg::ref_ptr<osg::ShapeDrawable> elbowPoint = new osg::ShapeDrawable;
-    //elbowPoint->setShape( new osg::Sphere(osg::Vec3(0.0, 0.0, 0.0), 0.1f) );
-    //osg::ref_ptr<osg::Geode> elbowPointGeode = new osg::Geode;
-    //elbowPointGeode->addDrawable(elbowPoint.get());
-    //patForeArm->addChild(elbowPointGeode);
+    osg::ref_ptr<osg::ShapeDrawable> elbowPoint = new osg::ShapeDrawable;
+    elbowPoint->setShape( new osg::Sphere(osg::Vec3(0.0, 0.0, 0.0), 0.1f) );
+    osg::ref_ptr<osg::Geode> elbowPointGeode = new osg::Geode;
+    elbowPointGeode->addDrawable(elbowPoint.get());
+    patForeArm->addChild(elbowPointGeode);
 
     //code for debugging makes a small sphere at the position of the shoulder
-    //osg::ref_ptr<osg::ShapeDrawable> shoulderPoint = new osg::ShapeDrawable;
-    //shoulderPoint->setShape( new osg::Sphere(osg::Vec3(0.0, 0.0, 0.0), 0.1f) );
-    //osg::ref_ptr<osg::Geode> shoulderPointGeode = new osg::Geode;
-    //shoulderPointGeode->addDrawable(shoulderPoint.get());
-    //patUpperArm->addChild(shoulderPointGeode);
+    osg::ref_ptr<osg::ShapeDrawable> shoulderPoint = new osg::ShapeDrawable;
+    shoulderPoint->setShape( new osg::Sphere(osg::Vec3(0.0, 0.0, 0.0), 0.1f) );
+    osg::ref_ptr<osg::Geode> shoulderPointGeode = new osg::Geode;
+    shoulderPointGeode->addDrawable(shoulderPoint.get());
+    patUpperArm->addChild(shoulderPointGeode);
 
 
     patUpperArm->addChild(upperArm);
 
     osg::ref_ptr<osg::ShapeDrawable> sphereHand = new osg::ShapeDrawable;
     sphereHand->setShape( new osg::Sphere(osg::Vec3(-3.8, -0.107, 0.03077), 0.5f) );
-    //sphereHand->setShape( new osg::Sphere(osg::Vec3(3.8, 0.106998, -1.96923), 0.9f) );
     osg::ref_ptr<osg::Geode> sphere = new osg::Geode;
     sphere->addDrawable(sphereHand.get());
     patForeArm->addChild(sphere);
-    //root->addChild(sphere);
 
     patForeArm->addChild(foreArm);
     patUpperArm->addChild(patForeArm);
@@ -669,15 +113,7 @@ int main()
     osg::ref_ptr<TransparencyNode> fxNode = new TransparencyNode;
     fxNode->addChild(patUpperArm);
     cartoon->addChild(fxNode);
-    //root->addChild(fxNode);
 
-
-
-
-
-
-
-    //root->addChild(createAxis());
     root->addChild(createMeshCube());
 
     osg::DisplaySettings::instance()->setNumMultiSamples(8);
@@ -875,55 +311,16 @@ int main()
     camera->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF );
     root->addChild( camera );
 
-    cout<<"main loop"<<endl;
-
-    /// to debug
-    ///
-    {
-    osg::BoundingBox handbb = sphere->getBoundingBox();
-    osg::BoundingBox elbowbb = elbowPointGeode->getBoundingBox();
-    osg::BoundingBox shoulderbb = shoulderPointGeode->getBoundingBox();
-
-    osg::MatrixList worldMatrices = sphere->getWorldMatrices();
-    osg::Vec3d whandpos = handbb.center() * worldMatrices[0];
-    osg::Vec3d welbowpos = elbowbb.center() * osg::computeLocalToWorld(elbowPointGeode->getParentalNodePaths()[0]);
-    osg::Vec3d wshoulderpos = shoulderbb.center() * osg::computeLocalToWorld(shoulderPointGeode->getParentalNodePaths()[0]);
-
-    cout<<"hand x: "<<whandpos.x()<<endl;
-    cout<<"hand y: "<<whandpos.y()<<endl;
-    cout<<"hand z: "<<whandpos.z()<<endl;
-
-    cout<<"elbow x: "<<welbowpos.x()<<endl;
-    cout<<"elbow y: "<<welbowpos.y()<<endl;
-    cout<<"elbow z: "<<welbowpos.z()<<endl;
-
-    cout<<"shoulder x: "<<wshoulderpos.x()<<endl;
-    cout<<"shoulder y: "<<wshoulderpos.y()<<endl;
-    cout<<"shoulder z: "<<wshoulderpos.z()<<endl;
-    }
-
-
-
     SolveArmInvKinematics(target, currentWristPos, shoulderQuat, elbowQuat, patUpperArm, patForeArm,
                           sphere, elbowPointGeode);
 
-    ////
-    ///
-    /// \brief score
-    ///
-    ///
     float score = 0;
     float prevScore = 0;
     while ( !visor.done() ){
 
         visor.frame();
 
-        /// for debuging this line is commented out
-        /// uncomment for real system
-
-   if (false) {
-
-        //cout<<"send"<<endl;
+       //cout<<"send"<<endl;
         if (pauseGame) {
             subscriber.send("c", 2);
         } else {
@@ -953,6 +350,7 @@ int main()
         float scorePlot;
 
         float timeScale = 0.4;
+
 
         if (type == 'B') {
             //cout<<"B message: "<<state_str<<endl;
@@ -989,9 +387,6 @@ int main()
                 fireSwitch->setChildValue(parent.get(), false);
             }
 
-            //cout<<"******************"<<endl;
-            //cout<<"scorePlot: "<<scorePlot<<endl;
-
             if (scorePlot > -0.5) {
                 for (unsigned i=0; i<(plotArray->size()-1); i++){
                     (*plotArray)[i][1] = (*plotArray)[i+1][1];
@@ -1010,39 +405,12 @@ int main()
 
             //target(2) = 0.0;
 
-
             shoulderQuat = shoulderQuatO;
             elbowQuat = elbowQuatO;
-            //SolveArmInvKinematics(target, currentWristPos, shoulderQuat, elbowQuat, patUpperArm);
-            /// commented out for debuging
-            //SolveArmInvKinematics(target, currentWristPos, shoulderQuat, elbowQuat, patUpperArm, patForeArm);
-            patUpperArm->setAttitude(osg::Quat(shoulderQuat.x(),shoulderQuat.y(),shoulderQuat.z(),shoulderQuat.w()));
-            patForeArm->setAttitude(osg::Quat(elbowQuat.x(),elbowQuat.y(),elbowQuat.z(),elbowQuat.w()));
+            SolveArmInvKinematics(target, currentWristPos, shoulderQuat, elbowQuat, patUpperArm, patForeArm,
+                                  sphere, elbowPointGeode);
 
         }
-       }
-
-   if (false) {
-            osg::BoundingBox handbb = sphere->getBoundingBox();
-            osg::BoundingBox elbowbb = elbowPointGeode->getBoundingBox();
-            osg::BoundingBox shoulderbb = shoulderPointGeode->getBoundingBox();
-
-            osg::Vec3d whandpos = handbb.center() * osg::computeLocalToWorld(sphere->getParentalNodePaths()[0]);
-            osg::Vec3d welbowpos = elbowbb.center() * osg::computeLocalToWorld(elbowPointGeode->getParentalNodePaths()[0]);
-            osg::Vec3d wshoulderpos = shoulderbb.center() * osg::computeLocalToWorld(shoulderPointGeode->getParentalNodePaths()[0]);
-
-            cout<<"hand x: "<<whandpos.x()<<endl;
-            cout<<"hand y: "<<whandpos.y()<<endl;
-            cout<<"hand z: "<<whandpos.z()<<endl;
-
-            cout<<"elbow x: "<<welbowpos.x()<<endl;
-            cout<<"elbow y: "<<welbowpos.y()<<endl;
-            cout<<"elbow z: "<<welbowpos.z()<<endl;
-
-            cout<<"shoulder x: "<<wshoulderpos.x()<<endl;
-            cout<<"shoulder y: "<<wshoulderpos.y()<<endl;
-            cout<<"shoulder z: "<<wshoulderpos.z()<<endl;
-   }
 
     }
 

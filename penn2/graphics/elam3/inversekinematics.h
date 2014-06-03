@@ -8,19 +8,8 @@
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
 
-
-class InverseKinematics
-{
-public:
-    InverseKinematics();
-    float SolveArmInvKinematics(Eigen::Vector3f targetPos, Eigen::Vector3f& currentPos, Eigen::Quaternionf& shoulderQuat, Eigen::Quaternionf& elbowQuat, osg::ref_ptr<osg::PositionAttitudeTransform> patUpperArm);
-private:
-    osg::ref_ptr<osg::PositionAttitudeTransform> patUpperArm;
-    osg::ref_ptr<osg::PositionAttitudeTransform> patForeArm;
-    osg::ref_ptr<osg::ShapeDrawable> elbowPoint;
-    osg::ref_ptr<osg::Geode> elbowPointGeode;
-    osg::ref_ptr<osg::ShapeDrawable> shoulderPoint;
-    osg::ref_ptr<osg::Geode> shoulderPointGeode;
-};
+float SolveArmInvKinematics(Eigen::Vector3f targetPos, Eigen::Vector3f& currentPos, Eigen::Quaternionf& shoulderQuat, Eigen::Quaternionf& elbowQuat,
+                            osg::ref_ptr<osg::PositionAttitudeTransform> upperArm, osg::ref_ptr<osg::PositionAttitudeTransform> foreArm,
+                            osg::ref_ptr<osg::Geode> handGeode, osg::ref_ptr<osg::Geode> elbowGeode);
 
 #endif // INVERSEKINEMATICS_H
