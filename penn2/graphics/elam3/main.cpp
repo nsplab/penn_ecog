@@ -65,6 +65,7 @@ using namespace zmq;
 
 extern bool pauseGame;
 
+//Implement smoke particles when wrist intersects with blue bars
 osgParticle::ParticleSystem* createFireParticles(
         osg::Group* parent ) {
     osg::ref_ptr<osgParticle::ParticleSystem> ps =
@@ -99,6 +100,7 @@ osgParticle::ParticleSystem* createFireParticles(
     return ps.get();
 }
 
+//Make borders around plot in top left that keeps track of performance
 osg::Geode* createPlotDecoration(float scaleX, float scaleY) {
     osg::Vec3Array* vertices = new osg::Vec3Array();
 
@@ -158,6 +160,7 @@ osg::Geode* createPlotDecoration(float scaleX, float scaleY) {
     return geode;
 }
 
+//Function to plot performance in the top left corner of the screen
 osg::Geode* createPlot(float scaleX, float scaleY, unsigned numberOfPoints, osg::Vec3Array** plotArray) {
     (*plotArray) = new osg::Vec3Array();
 
@@ -189,6 +192,8 @@ osg::Geode* createPlot(float scaleX, float scaleY, unsigned numberOfPoints, osg:
     return geode;
 }
 
+//create an object that can be rendered on the screen to display the joint axes
+//used for debugging, not called during regular operation
 osg::Geode* createAxis(float scale = 10.0) {
     osg::Geode*     geode    = new osg::Geode();
     osg::Geometry*  geometry = new osg::Geometry();
@@ -219,6 +224,10 @@ osg::Geode* createAxis(float scale = 10.0) {
 
     return geode;
 }
+
+//create the grid line objects that define the walls of the 3d virtual environment
+//used only for visualization; does not actually interact with the virtual coordinates of the arm
+//there is no collision detection between the arm and these walls
 
 osg::Geode* createMeshCube(float scale = 5.0f, float depth = 5.0f)
 {
@@ -326,6 +335,7 @@ osg::Geode* createMeshCube(float scale = 5.0f, float depth = 5.0f)
     return geode;
 }
 
+//This class is used to implement semi-transparent objects in the graphics
 class TransparencyTechnique : public osgFX::Technique
 {
 public:
@@ -349,6 +359,7 @@ protected:
     }
 };
 
+//This class is used to implement semi-transparent objects in the graphics; more realistic than built-in OpenGL transparency
 class TransparencyNode : public osgFX::Effect
 {
 public:
@@ -364,6 +375,7 @@ protected:
     }
 };
 
+//This class is used to implement semi-transparent objects in the graphics; more realistic than built-in OpenGL transparency
 class MakeTransparent:public osg::NodeVisitor
 {
 public:
@@ -585,45 +597,60 @@ float SolveArmInvKinematics(Eigen::Vector3f targetPos, Eigen::Vector3f& currentP
 
 int main()
 {
-    // root of scene graph
+    ////////////////////////////////
+    // PREPARING GRAPHICS based on openscenegraph (osg)
+    // http://www.openscenegraph.org/index.php/download-section/code-repositories
+    // OSG Version 3.0.1, used with Ubuntu Linux 13.04
+    // 1. Create instances of all graphics objects defined above
+    // 2. Create instance of the arm object which also implements forward kinematics.
+    // 2. Render arm on screen.
+    ////////////////////////////////
+    
+    /* define variable root which is the main Group of scene graph, which organizes all
+     graphical elements on the screen into a group for example, rendering from a specific
+     camera angle can be executed on this root
+     */
     osg::ref_ptr<osg::Group> root = new osg::Group();
 
+    //create a cartoon node, set its properties; this will define the appearance of subsequent objects on the screen
     osg::ref_ptr<osgFX::Cartoon> cartoon = new osgFX::Cartoon;
     cartoon->setOutlineColor(osg::Vec4(0.0, 0.0, 0.0, 1.0f));
     cartoon->setOutlineLineWidth(2.0);
 
-    // load upper arm model
+    // load upper arm model, downloaded from http://www.blendswap.com/ and edit in Blender to extract only the arm of a robot
     osg::ref_ptr<osg::Node> upperArm = osgDB::readNodeFile("../upper_arm.3ds");
 
-    // load upper arm model
+    // load forearm model (we had excluded the .3ds hand model for now)
     osg::ref_ptr<osg::Node> foreArm = osgDB::readNodeFile("../fore_arm.3ds");
 
+    // declare an object that sets transparency and associate it with the upperArm and foreArm; this trick is needed to get proper transparency effects on the arm.
     MakeTransparent mkTransparent(0.6);
     upperArm->accept(mkTransparent);
     foreArm->accept(mkTransparent);
 
+    //make osg position and attitude nodes for rotation and translation related to the upper arm
     osg::ref_ptr<osg::PositionAttitudeTransform> patUpperArm = new osg::PositionAttitudeTransform();
     patUpperArm->setPosition(osg::Vec3(0,0,-2.0));
     patUpperArm->setAttitude(osg::Quat(0, osg::Vec3d(1,0,0)) * osg::Quat(0, osg::Vec3d(0,1,0)) * osg::Quat(3.141592, osg::Vec3d(0,0,1)));
-
+    //make osg position and attitude nodes for rotation and translation related to the forearm
     osg::ref_ptr<osg::PositionAttitudeTransform> patForeArm = new osg::PositionAttitudeTransform();
     patForeArm->setPosition(osg::Vec3(0,0,-2.0));
     patForeArm->setAttitude(osg::Quat(0, osg::Vec3d(1,0,0)) * osg::Quat(0, osg::Vec3d(0,1,0)) * osg::Quat(0, osg::Vec3d(0,0,1)));
 
 
-    osg::ref_ptr<osg::ShapeDrawable> elbowPoint = new osg::ShapeDrawable;
-    elbowPoint->setShape( new osg::Sphere(osg::Vec3(0.0, 0.0, 0.0), 0.1f) );
-    osg::ref_ptr<osg::Geode> elbowPointGeode = new osg::Geode;
-    elbowPointGeode->addDrawable(elbowPoint.get());
-    patForeArm->addChild(elbowPointGeode);
-    //root->addChild(elbowPointGeode);
+    //code for debugging makes a small sphere at the position of the elbow
+    //osg::ref_ptr<osg::ShapeDrawable> elbowPoint = new osg::ShapeDrawable;
+    //elbowPoint->setShape( new osg::Sphere(osg::Vec3(0.0, 0.0, 0.0), 0.1f) );
+    //osg::ref_ptr<osg::Geode> elbowPointGeode = new osg::Geode;
+    //elbowPointGeode->addDrawable(elbowPoint.get());
+    //patForeArm->addChild(elbowPointGeode);
 
-    osg::ref_ptr<osg::ShapeDrawable> shoulderPoint = new osg::ShapeDrawable;
-    shoulderPoint->setShape( new osg::Sphere(osg::Vec3(0.0, 0.0, 0.0), 0.1f) );
-    osg::ref_ptr<osg::Geode> shoulderPointGeode = new osg::Geode;
-    shoulderPointGeode->addDrawable(shoulderPoint.get());
-    patUpperArm->addChild(shoulderPointGeode);
-    //root->addChild(shoulderPointGeode);
+    //code for debugging makes a small sphere at the position of the shoulder
+    //osg::ref_ptr<osg::ShapeDrawable> shoulderPoint = new osg::ShapeDrawable;
+    //shoulderPoint->setShape( new osg::Sphere(osg::Vec3(0.0, 0.0, 0.0), 0.1f) );
+    //osg::ref_ptr<osg::Geode> shoulderPointGeode = new osg::Geode;
+    //shoulderPointGeode->addDrawable(shoulderPoint.get());
+    //patUpperArm->addChild(shoulderPointGeode);
 
 
     patUpperArm->addChild(upperArm);
@@ -678,6 +705,8 @@ int main()
 
     visor.getCameraManipulator()->setByMatrix(m);
 
+    
+    
     // ik 1 set initial positions and orientaions
     Eigen::Vector3f elbowPos(-4.92282, -0.1, 0.0);
 
