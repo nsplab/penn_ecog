@@ -390,7 +390,9 @@ private:
     float alpha_;
 };
 
-
+// solves the inverse kinematics problem
+// targetPos: the 3d position of the target position that hand/end-point should go there
+// currentPos:
 float SolveArmInvKinematics(Eigen::Vector3f targetPos, Eigen::Vector3f& currentPos, Eigen::Quaternionf& shoulderQuat, Eigen::Quaternionf& elbowQuat,
                             osg::ref_ptr<osg::PositionAttitudeTransform> upperArm, osg::ref_ptr<osg::PositionAttitudeTransform> foreArm,
                             osg::ref_ptr<osg::Geode> handGeode, osg::ref_ptr<osg::Geode> elbowGeode) {
