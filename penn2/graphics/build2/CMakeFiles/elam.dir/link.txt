@@ -1,1 +1,0 @@
-/usr/bin/c++   -std=c++0x    CMakeFiles/elam.dir/main.cpp.o CMakeFiles/elam.dir/utils.cpp.o  -o elam -rdynamic -lzmq -lOpenThreads -losg -losgDB -losgUtil -losgGA -losgViewer -losgText -losgGA -losgUtil -losgParticle -losgAnimation -losgViewer -losgText -losgParticle -losgAnimation 
