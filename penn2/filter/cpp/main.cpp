@@ -53,6 +53,12 @@ int main(int argc, char** argv) {
     ifile.print();*/                                              // ifile("string_to_look_for", default value) is syntax
                                                                 // loading values of these variables from 'filter.cfg' using the GetPot class instance 'ifile'.
     int dimensions = reader.GetInteger("filter", "dimensions", 3); //ifile("dimensions", 3);                    // workspace dimensions (1,2, or 3). search for the string "dimensions" in 'filter.cfg' and retrieve the value that it equals. If there is no such string, use the default value of 3
+    // the axis that should be used
+    // 1 -> x
+    // 2 -> y
+    // 4 -> xy
+    // the other axises are recommended to be set to zero by the filter
+    int dimensions = reader.GetInteger("filter", "workspace_axis", 1);
     int velocityParams = reader.GetInteger("filter", "velocityParams", 1);            // boolean variable determines if veloctity parameters will be used in the observation model
     int positionParams = reader.GetInteger("filter", "positionParams", 0);            // boolean variable determines if position parameters will be used in the observation model
     int affineParam = reader.GetInteger("filter", "affineParam", 1);                  // boolean variable determines if affine parameters will be used in the observation model
@@ -115,7 +121,7 @@ int main(int argc, char** argv) {
     // check what filter type has been requested
     switch (filterType) {
     case 0:
-        filterObj = new MovingAverageFilter(featureRate, dataPath);
+        filterObj = new MovingAverageFilter(featureRate, dataPath, dimensions);
         break;
     case 1:
     default:

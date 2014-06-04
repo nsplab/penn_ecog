@@ -106,7 +106,7 @@ int main(int argc, char** argv)
 
     bool record = false;
 
-    string filename("/media/ssd/system_specification/data_");
+    string filename("../../../data/data_");
 
     FILE* pFile = NULL;
 

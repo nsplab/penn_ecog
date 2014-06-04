@@ -784,13 +784,13 @@ def RecordBCI(logFile, logFileBackup):
     filterSec['selectedSession'] = selectedSession
     if workspace.get() == "1D-X":
         filterSec['dimensions'] = 1
-        filterSec['worspace_axis'] = 1
+        filterSec['workspace_axis'] = 1
     if workspace.get() == "1D-Y":
         filterSec['dimensions'] = 1
-        filterSec['worspace_axis'] = 2
+        filterSec['workspace_axis'] = 2
     if workspace.get() == "2D-XY":
         filterSec['dimensions'] = 2
-        filterSec['worspace_axis'] = 4
+        filterSec['workspace_axis'] = 4
     if workspace.get() == "3D":
         filterSec['dimensions'] = 3
 
