@@ -65,9 +65,12 @@ config.blockWidthPercent = float(secLog['BarWidth'])
 config.blockWidth = config.workspaceRadius * float(config.blockWidthPercent) / 100.0
 config.blockLengthTime = float(secLog['BarLength'])
 
+
 # create state objects
 gameState = GameState(config.workspaceRadius, config.blockWidth, config.blockLengthTime)
+# generate 1000 target blocks based on the given workspace dimension
 gameState.generateBlocks()
+# object used to send data to the filter module1practic
 filterState = FilterState()
 
 
