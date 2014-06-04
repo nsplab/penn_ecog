@@ -1,0 +1,1 @@
+When the Penn2 project runs the collected data files are created in this directory. An empty directory is added to the respository as the scripts and programs do not attempt to create this directory, if they do not find it, then they will crash.
