@@ -267,6 +267,13 @@ def LoadDriver():
         pSignal = Popen([r'../../imitator/build/imitator'],
                 cwd=r'../signal_acquisition/imitator/build/')
         time.sleep(0.1)
+    elif machineBeingUsed.get() == "Kinect":
+        if not (pSignal is None):
+            pSignal.send_signal(SIGINT)
+            pSignal = None
+        pSignal = Popen([r'../kinect/kinectv2.py'],
+                cwd=r'../signal_acquisition/kinect/')
+        time.sleep(0.1)
 
     streamingStatusTimer = threading.Timer(2.0, check_streaming_status)
     streamingStatusTimer.start()
@@ -469,8 +476,15 @@ def RunBCI():
             pFilter.send_signal(SIGINT)
             pFilter = None
 
-        pFilter = Popen([r'../../cpp/build/filter'],
-                cwd=r'../filter/cpp/build/')
+        if "Matlab" in algorithm.get():
+            print "Matlab filter"
+            # matlab -nosplash -nodesktop -nojvm -nodisplay -r "main"
+            pFilter = Popen([r'matlab', '-nosplash', '-nodesktop', '-nojvm', '-nodisplay',
+                            '-r', '"main"'], cwd=r'../filter/matlab/')
+        else:
+            print "C++ filter"
+            pFilter = Popen([r'../../cpp/build/filter'],
+                    cwd=r'../filter/cpp/build/')
         time.sleep(0.1)
 
         if not (pSupervisor is None):
@@ -553,8 +567,15 @@ def StartDemoBCI():
             pFilter.send_signal(SIGINT)
             pFilter = None
 
-        pFilter = Popen([r'../../cpp/build/filter'],
-                cwd=r'../filter/cpp/build/')
+        if "Matlab" in algorithm.get():
+            print "Matlab filter"
+            # matlab -nosplash -nodesktop -nojvm -nodisplay -r "main"
+            pFilter = Popen([r'matlab', '-nosplash', '-nodesktop', '-nojvm', '-nodisplay',
+                            '-r', '"main"'], cwd=r'../filter/matlab/')
+        else:
+            print "C++ filter"
+            pFilter = Popen([r'../../cpp/build/filter'],
+                    cwd=r'../filter/cpp/build/')
         time.sleep(0.1)
 
         if not (pSupervisor is None):
@@ -727,7 +748,8 @@ def RecordSqueeze(logFile, logFileBackup):
 def RecordBCI(logFile, logFileBackup):
     logText = ''
 
-    logText += 'Algorithm = ' + algorithm.get() + "# comment goes here\n"
+    logText += '# the type of filter that has been selected by the user \n'
+    logText += 'Algorithm = ' + algorithm.get() + "\n"
     logText += 'BciMovingaverageXChannels = ' + bciMovingaverageXChannels.get() + "\n"
     logText += 'BciMovingaverageXFrequencies = ' + bciMovingaverageXFrequencies.get() + "\n"
     logText += 'BciMovingaverageYChannels = ' + bciMovingaverageYChannels.get() + "\n"
@@ -740,7 +762,19 @@ def RecordBCI(logFile, logFileBackup):
     logText += 'PsdFeatureRate = ' + psdFeatureRate.get() + "\n"
     logText += 'PsdWindowLength = ' + psdWindowLength.get() + "\n"
     logText += 'Game = ' + game.get() + "\n"
-    logText += 'Workspace = ' + workspace.get() + "\n"
+    logText += 'workspace = ' + workspace.get() + "\n"
+    if workspace.get() == "1D-X":
+        logText += 'dimensions = 1' + "\n"
+        logText += 'workspace_axis = 1' + "\n"
+    if workspace.get() == "1D-Y":
+        logText += 'dimensions = 1' + "\n"
+        logText += 'workspace_axis = 2' + "\n"
+    if workspace.get() == "2D-XY":
+        logText += 'dimensions = 2' + "\n"
+        logText += 'workspace_axis = 4' + "\n"
+    if workspace.get() == "3D":
+        logText += 'dimensions = 3' + "\n"
+        logText += 'workspace_axis = 5' + "\n"
     logText += 'BarWidth = ' + barWidth.get() + "\n"
     logText += 'BarLength = ' + barLength.get() + "\n"
 
@@ -780,6 +814,14 @@ def RecordBCI(logFile, logFileBackup):
         filterSec['filterType'] = 1
     if algorithm.get() == 'Training JointRSE':
         filterSec['filterType'] = 2
+    if algorithm.get() == 'Matlab 1':
+        filterSec['filterType'] = 3
+    if algorithm.get() == 'Matlab 2':
+        filterSec['filterType'] = 4
+    if algorithm.get() == 'Matlab 3':
+        filterSec['filterType'] = 5
+    if algorithm.get() == 'Matlab 4':
+        filterSec['filterType'] = 6
     filterSec['dataPath'] = dataPath
     filterSec['selectedSession'] = selectedSession
     if workspace.get() == "1D-X":

@@ -64,7 +64,7 @@ secLog = lastLog['ExperimentLog']
 config.blockWidthPercent = float(secLog['BarWidth'])
 config.blockWidth = config.workspaceRadius * float(config.blockWidthPercent) / 100.0
 config.blockLengthTime = float(secLog['BarLength'])
-
+dimensions = float(secLog['BarLength']
 
 # create state objects
 gameState = GameState(config.workspaceRadius, config.blockWidth, config.blockLengthTime)

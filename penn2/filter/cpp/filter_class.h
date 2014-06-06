@@ -25,6 +25,9 @@ public:
 
   virtual void LoadParametersFromSession(std::string selectedSession) = 0;
 
+  void SetDimensions(int dim) {dim_ = dim;}
+  void SetActiveAxis(int axis) {axis_ = axis;}
+
   std::string getLastLine(std::ifstream& in);
 
   // auxiliary function to test the filter
@@ -45,6 +48,7 @@ protected:
   std::vector<float> target_;
   size_t featureTimestamp_;                                         //timestamping for each feature is based on a counter rather than system time. the size_t data type is an unsigned integer value.
   size_t dim_;
+  size_t axis_;
 private:
   static zmq::context_t context_;                                   //
   static zmq::socket_t supervisor_;                                 // zmq ipc channel for messages broadcast by the supervisor module

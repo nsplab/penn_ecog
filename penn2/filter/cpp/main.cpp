@@ -58,13 +58,13 @@ int main(int argc, char** argv) {
     // 2 -> y
     // 4 -> xy
     // the other axises are recommended to be set to zero by the filter
-    int dimensions = reader.GetInteger("filter", "workspace_axis", 1);
+    int activeAxis = reader.GetInteger("filter", "workspace_axis", 1);
     int velocityParams = reader.GetInteger("filter", "velocityParams", 1);            // boolean variable determines if veloctity parameters will be used in the observation model
     int positionParams = reader.GetInteger("filter", "positionParams", 0);            // boolean variable determines if position parameters will be used in the observation model
     int affineParam = reader.GetInteger("filter", "affineParam", 1);                  // boolean variable determines if affine parameters will be used in the observation model
 
                                                                 // general filter parameter choices
-    unsigned filterType = reader.GetInteger("filter", "filterType", 0);               // choosing the filter type. static = 0; adaptive = 1 (static means the ad hoc method used by mosalam; adaptive is Kevin's jointRSE code)
+    unsigned filterType = reader.GetInteger("filter", "filterType", 1);               // choosing the filter type. static = 0; adaptive = 1 (static means the ad hoc method used by mosalam; adaptive is Kevin's jointRSE code)
     int log = reader.GetInteger("filter", "log", 1);                                  // boolean variable determines whether debugging data will be logged for every time step, including innovation, prediction value, and update value (relevant to jointrse_filter.cpp)
     double maxTrialTime = reader.GetReal("filter", "maxTrialTime", 7.0);           // (in seconds) determines maximum time allowed for the user to complete the trial. (relevant to jointrse_filter.cpp)
                                                                 // choosing the state equation
@@ -121,7 +121,9 @@ int main(int argc, char** argv) {
     // check what filter type has been requested
     switch (filterType) {
     case 0:
-        filterObj = new MovingAverageFilter(featureRate, dataPath, dimensions);
+        filterObj = new MovingAverageFilter(featureRate, dataPath);
+        filterObj->SetDimensions(dimensions);
+        filterObj->SetActiveAxis(activeAxis);
         break;
     case 1:
     default:
@@ -143,6 +145,8 @@ int main(int argc, char** argv) {
                                         initialArmVelVar,                    // covariance of the initial velocity (used by the RSE; relevant to jointrse_filter.cpp)
                                         true,                                // ?? not sure... relates to length of history dependence in the observation model
                                         numLags);
+        filterObj->SetDimensions(dimensions);
+        filterObj->SetActiveAxis(activeAxis);
         break;
     }
 
