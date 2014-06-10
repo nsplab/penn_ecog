@@ -25,7 +25,18 @@ context_t context(2);
 
 void GenerateSignal() {
     socket_t publisher(context, ZMQ_PUB);
-    publisher.bind("ipc:///tmp/signal.pipe");
+
+    int hwm = 1;
+    publisher.setsockopt(ZMQ_SNDHWM, &hwm, sizeof(hwm));
+    int conflate = 1;
+    publisher.setsockopt(ZMQ_CONFLATE, &conflate, sizeof(conflate));
+
+    if (!direct)
+        publisher.bind("ipc:///tmp/signal.pipe");
+    else {
+        cout<<"bypass feature extractor"<<endl;
+        publisher.bind("ipc:///tmp/features.pipe");
+    }
 
     float xSignalAmp = 2.0f;
     float xSignalFrq = 80.0f; // Hz
@@ -87,6 +98,8 @@ void GenerateSignal() {
         //cout<<"v1 "<<v(1)<<endl;
         //cout<<"v2 "<<v(2)<<endl;
 
+
+
         sample(0) = cos(2.0*M_PI * float(i)/float(samplingRate) * xSignalFrq) * xSignalAmp * sqrt(dx+baselinePower);// + v(0) * noiseToSignalRatio);
         sample(1) = cos(2.0*M_PI * float(i)/float(samplingRate) * ySignalFrq) * ySignalAmp * sqrt(dy+baselinePower);// + v(1) * noiseToSignalRatio);
         sample(2) = cos(2.0*M_PI * float(i)/float(samplingRate) * zSignalFrq) * zSignalAmp * sqrt(dz+baselinePower);// + v(2) * noiseToSignalRatio);
@@ -95,6 +108,12 @@ void GenerateSignal() {
         //cout<<"signal: "<<signal<<endl;
         //cout<<"numberOfChannels "<<numberOfChannels<<endl;
         //cout<<"t: "<<timeStamp<<endl;
+
+        if (direct) {
+            signal(0) = xSignalAmp * sqrt(dx+baselinePower);
+            signal(1) = ySignalAmp * sqrt(dy+baselinePower);
+            signal(2) = zSignalAmp * sqrt(dz+baselinePower);
+        }
 
         //message_t zmqMessage(sizeof(float)*numberOfChannels+sizeof(size_t));
         message_t zmqMessage(sizeof(float)*numberOfChannels+sizeof(size_t));
@@ -110,6 +129,12 @@ void GenerateSignal() {
 
 int main(int argc, char** argv)
 {
+    cout<<"argc: "<<argc<<endl;
+    if (argc > 1) {
+
+        direct = true;
+    }
+
     thread broadcast(GenerateSignal);
 
     double timeBin = 0.1;
@@ -135,9 +160,6 @@ int main(int argc, char** argv)
     vector<float> handPos(3);
 
 
-    if (argc > 1) {
-        direct = true;
-    }
 
     arma::vec handState;
 

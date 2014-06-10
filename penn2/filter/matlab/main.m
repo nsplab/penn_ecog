@@ -108,7 +108,7 @@ while ~exit
     timeStamp = typecast(recvData(1:8),'uint64');
     % extract the features
     recvdFeatures = typecast(recvData(9:end),'single');
-    
+    recvdFeatures
     filter.currentFeatures = recvdFeatures;
     filter.currentTimeStamp = timeStamp;
     filter.RunFilter();
