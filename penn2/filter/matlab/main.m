@@ -89,7 +89,7 @@ dataPath = keysFilter{dataPathIdx, 4};
 featurePipe = zmq( 'subscribe', 'ipc', 'features.pipe' );
 
 % create a zmq publisher to send the commands to the supervisor module
-supervisorPipe = zmq( 'publish', 'ipc', 'supervisor.pipe' );
+supervisorPipe = zmq( 'request', 'ipc', 'supervisor.pipe' );
 
 %define an empty byte array that receives features from the featurePipe
 %sent by feature extractor
@@ -123,6 +123,13 @@ while ~exit
     % send features
     % send parameters
     % send parameters names
+    
+    supervisorData = uint8([num2str(timeStamp) ' ' num2str(0.1) ' ' num2str(0.0) ' ' num2str(0.0)])';
+    
+    nbytes = zmq( 'send', supervisorPipe, supervisorData );
+    
+    [recvData, hasMore] = zmq( 'receive', supervisorPipe );
+
     
     
 end

@@ -239,8 +239,8 @@ while run:
                     gameState.hand_pos[0] = config.workspaceRadius / 2
                 elif gameState.hand_pos[0] < -(config.workspaceRadius / 2):
                     gameState.hand_pos[0] = -config.workspaceRadius / 2
-                numFeatures = int(vec[4])
-                numParameters = int(vec[5])
+                #numFeatures = int(vec[4])
+                #numParameters = int(vec[5])
                 #print "numFeatures",numFeatures
                 #print "numParameters", numParameters
                 print timestamp
@@ -315,20 +315,20 @@ while run:
     f.write(' ')
 
 # 17
-    f.write(str(numFeatures))
-    f.write(' ')
+    #f.write(str(numFeatures))
+    #f.write(' ')
 
 # 18
-    f.write(str(numParameters))
-    f.write(' ')
+    #f.write(str(numParameters))
+    #f.write(' ')
 
 # 19
-    for nF in range(6, numFeatures + 6):
-        f.write(str(vec[nF]))
-        f.write(' ')
-    for nP in range(numFeatures + 6, numParameters + numFeatures + 6):
-        f.write(str(vec[nP]))
-        f.write(' ')
+    #for nF in range(6, numFeatures + 6):
+        #f.write(str(vec[nF]))
+        #f.write(' ')
+    #for nP in range(numFeatures + 6, numParameters + numFeatures + 6):
+        #f.write(str(vec[nP]))
+        #f.write(' ')
 
     f.write('\n')
 

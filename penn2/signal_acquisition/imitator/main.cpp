@@ -121,9 +121,13 @@ void GenerateSignal() {
         memcpy(static_cast<size_t*>(zmqMessage.data())+1, signal.data(), sizeof(float)*numberOfChannels);
         //memcpy(static_cast<size_t*>(zmqMessage.data())+1, tsignal.data(), sizeof(float)*60);
 
+        cout<<"signal: "<<signal<<endl;
         publisher.send(zmqMessage);
 
-        this_thread::sleep_for(chrono::microseconds(static_cast<int>(1.0/samplingRate * 1000000.0)));
+        if (!direct)
+            this_thread::sleep_for(chrono::microseconds(static_cast<int>(1.0/samplingRate * 1000000.0)));
+        else
+            this_thread::sleep_for(chrono::microseconds(static_cast<int>(100000.0)));
     }
 }
 

@@ -88,7 +88,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		
 		/* Connect to the socket */
 		mexPrintf("ZMQMEX: Binding to {%s}.\n", zmq_channel);
-		if( (sockets[socket_cnt]=zmq_socket(ctx, ZMQ_PUB))==NULL)
+		if( (sockets[socket_cnt]=zmq_socket(ctx, ZMQ_PUB))==NULL )
 			mexErrMsgTxt("Could not create socket!");
 		rc = zmq_bind( sockets[socket_cnt], zmq_channel );
 		if(rc!=0)
@@ -103,8 +103,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		out[0] = socket_cnt;
 		socket_cnt++;
 	}
-	/* Set up a subscriber */
-	else if( strcmp(command, "subscribe")==0 ){
+	/* Set up a subscriber or requester */
+	else if( (strcmp(command, "subscribe")==0) ||
+		(strcmp(command, "request")==0) ){
 
 		/* Check that we have enough socket spaces available */
 		if( socket_cnt==MAX_SOCKETS )
@@ -135,7 +136,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		
 		/* Bind to the socket */
 		mexPrintf("ZMQMEX: Connecting to {%s}.\n", zmq_channel);
-		if( (sockets[socket_cnt]=zmq_socket(ctx, ZMQ_SUB))==NULL)
+		if( strcmp(command, "subscribe")==0 )
+			sockets[socket_cnt]=zmq_socket(ctx, ZMQ_SUB);
+		else
+			sockets[socket_cnt]=zmq_socket(ctx, ZMQ_REQ);
+
+		if( sockets[socket_cnt]==NULL )
 			mexErrMsgTxt("Could not create socket!");
 		zmq_setsockopt( sockets[socket_cnt], ZMQ_SUBSCRIBE, "", 0 );
 		rc=zmq_connect( sockets[socket_cnt], zmq_channel );
