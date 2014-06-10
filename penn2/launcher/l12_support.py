@@ -267,11 +267,24 @@ def LoadDriver():
         pSignal = Popen([r'../../imitator/build/imitator'],
                 cwd=r'../signal_acquisition/imitator/build/')
         time.sleep(0.1)
+    elif machineBeingUsed.get() == "Imitator(direct)":
+        if not (pSignal is None):
+            pSignal.send_signal(SIGINT)
+            pSignal = None
+        pSignal = Popen([r'../../imitator/build/imitator', 'direct'],
+                cwd=r'../signal_acquisition/imitator/build/')
+        time.sleep(0.1)
     elif machineBeingUsed.get() == "Kinect":
         if not (pSignal is None):
             pSignal.send_signal(SIGINT)
             pSignal = None
         pSignal = Popen([r'../kinect/kinectv2.py'],
+                cwd=r'../signal_acquisition/kinect/')
+    elif machineBeingUsed.get() == "Kinect(direct)":
+        if not (pSignal is None):
+            pSignal.send_signal(SIGINT)
+            pSignal = None
+        pSignal = Popen([r'../kinect/kinectv2.py', 'direct'],
                 cwd=r'../signal_acquisition/kinect/')
         time.sleep(0.1)
 
@@ -559,9 +572,11 @@ def StartDemoBCI():
             pFeature.send_signal(SIGINT)
             pFeature = None
 
-        pFeature = Popen([r'../../feature_extract_cpp/build/feature_extract_cpp'],
-                cwd=r'../feature_extraction/feature_extract_cpp/build/')
-        time.sleep(0.1)
+        if not machineBeingUsed.get() == "Imitator(direct)":
+            if not machineBeingUsed.get() == "Kinect(direct)":
+                pFeature = Popen([r'../../feature_extract_cpp/build/feature_extract_cpp'],
+                        cwd=r'../feature_extraction/feature_extract_cpp/build/')
+                time.sleep(0.1)
 
         if not (pFilter is None):
             pFilter.send_signal(SIGINT)

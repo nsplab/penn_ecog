@@ -260,7 +260,7 @@ class Launcher:
         self.TCombobox1 = ttk.Combobox (self.TNotebook1_pg1)
         self.TCombobox1.place(relx=0.45,rely=0.07,relheight=0.04,relwidth=0.21)
         self.TCombobox1.bind("<<ComboboxSelected>>", l12_support.MachineChanged)
-        self.value_list = ['TDT','gHIamp','Imitator', 'Kinect']
+        self.value_list = ['TDT','gHIamp','Imitator','Imitator(direct)', 'Kinect', 'Kinect(direct)']
         self.TCombobox1.configure(values=self.value_list)
         self.TCombobox1.configure(textvariable=l12_support.machineBeingUsed)
         self.TCombobox1.configure(takefocus="")

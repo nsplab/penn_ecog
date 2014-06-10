@@ -19,6 +19,8 @@ float x=0, y=0, z=0;
 float prevx=0, prevy=0, prevz=0;
 float diffx=0.0, diffy=0.0, diffz=0.0;
 
+bool direct = false;
+
 context_t context(2);
 
 void GenerateSignal() {
@@ -106,7 +108,7 @@ void GenerateSignal() {
     }
 }
 
-int main()
+int main(int argc, char** argv)
 {
     thread broadcast(GenerateSignal);
 
@@ -131,6 +133,11 @@ int main()
 
     vector<float> target(3);
     vector<float> handPos(3);
+
+
+    if (argc > 1) {
+        direct = true;
+    }
 
     arma::vec handState;
 
