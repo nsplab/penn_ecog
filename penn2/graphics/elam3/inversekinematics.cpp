@@ -84,7 +84,7 @@ float SolveArmInvKinematics(Eigen::Vector3f targetPos, Eigen::Vector3f& currentP
 
         Eigen::Vector3f jjtd = jacobian * jacobian.transpose() * displacement;
 
-        float alpha = displacement.dot(jjtd) / jjtd.dot(jjtd) * 0.9;
+        float alpha = displacement.dot(jjtd) / jjtd.dot(jjtd) * 0.5;
         //cout<<"alpha "<<alpha<<endl;
 
         // ik 5 compute rotation updates

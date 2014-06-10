@@ -124,7 +124,14 @@ while ~exit
     % send parameters
     % send parameters names
     
-    supervisorData = uint8([num2str(timeStamp) ' ' num2str(0.1) ' ' num2str(0.0) ' ' num2str(0.0)])';
+    imitatorBaseline = 50;
+    imitatorAmplifier = 2;
+    
+    controlX = recvdFeatures(1) / imitatorAmplifier;
+    controlX = controlX^2;
+    controlX = controlX - imitatorBaseline;
+    
+    supervisorData = uint8([num2str(timeStamp) ' ' num2str(controlX) ' ' num2str(0.0) ' ' num2str(0.0)])';
     
     nbytes = zmq( 'send', supervisorPipe, supervisorData );
     
