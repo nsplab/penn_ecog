@@ -102,7 +102,9 @@ exit = false;
 %while the user hasn't asked the program to stop
 while ~exit
     % receive features from the feature extractor module
+    disp('receive');
     [recvData, hasMore] = zmq( 'receive', featurePipe );
+    disp('received');
     % extract the time stamp from the first 8 bytes and typcast it into a
     % 64 bit integer which contains the time stamp
     timeStamp = typecast(recvData(1:8),'uint64');
@@ -114,16 +116,6 @@ while ~exit
     filter.RunFilter();
     filter.LogParameters(dataPath, filterName)
     
-    % send commands to the supervisor module
-    %data1 = uint8('hello world!')';
-    % send time stamp
-    %num2str()
-    % send number of features 
-    % send number of parameters
-    % send features
-    % send parameters
-    % send parameters names
-    
     imitatorBaseline = 50;
     imitatorAmplifier = 2;
     
@@ -131,11 +123,21 @@ while ~exit
     controlX = controlX^2;
     controlX = controlX - imitatorBaseline;
     
-    supervisorData = uint8([num2str(timeStamp) ' ' num2str(controlX) ' ' num2str(0.0) ' ' num2str(0.0)])';
+    controlY = recvdFeatures(2) / imitatorAmplifier;
+    controlY = controlY^2;
+    controlY = controlY - imitatorBaseline;
+
+    controlZ = recvdFeatures(3) / imitatorAmplifier;
+    controlZ = controlZ^2;
+    controlZ = controlZ - imitatorBaseline;
+
+    supervisorData = uint8([num2str(timeStamp) ' ' num2str(controlX) ' ' num2str(controlY) ' ' num2str(controlZ)])';
     
     nbytes = zmq( 'send', supervisorPipe, supervisorData );
     
     [recvData, hasMore] = zmq( 'receive', supervisorPipe );
+    
+    % extract from recvData: score, score/min
 
     
     

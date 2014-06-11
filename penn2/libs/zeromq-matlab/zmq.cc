@@ -144,6 +144,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		if( sockets[socket_cnt]==NULL )
 			mexErrMsgTxt("Could not create socket!");
 		zmq_setsockopt( sockets[socket_cnt], ZMQ_SUBSCRIBE, "", 0 );
+		int conflate = 1;
+		zmq_setsockopt( sockets[socket_cnt], ZMQ_CONFLATE, &conflate, sizeof(conflate) );
 		rc=zmq_connect( sockets[socket_cnt], zmq_channel );
 		if(rc!=0)
 			mexErrMsgTxt("Could not connect to socket!");

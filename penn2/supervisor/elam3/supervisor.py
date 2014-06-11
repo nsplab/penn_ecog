@@ -64,12 +64,13 @@ secLog = lastLog['ExperimentLog']
 config.blockWidthPercent = float(secLog['BarWidth'])
 config.blockWidth = config.workspaceRadius * float(config.blockWidthPercent) / 100.0
 config.blockLengthTime = float(secLog['BarLength'])
-dimensions = float(secLog['BarLength'])
+dimensions = int(secLog['dimensions'])
+workspace_axis = int(secLog['workspace_axis'])
 
 # create state objects
 gameState = GameState(config.workspaceRadius, config.blockWidth, config.blockLengthTime)
 # generate 1000 target blocks based on the given workspace dimension
-gameState.generateBlocks()
+gameState.generateBlocks(workspace_axis)
 # object used to send data to the filter module1practic
 filterState = FilterState()
 
@@ -203,9 +204,10 @@ while run:
 
     #gsocket.send(gameState.serialize())
     print 'sent'
-    sb = gameState.serializeBlocks() + gameState.serialize()
+    sb = gameState.serializeBlocks(workspace_axis) + gameState.serialize()
     print 'sb: ', sb
     gsocket.send(sb)
+    print 'gsocket.send(sb)'
 
     if gameState.scorePlot > -0.5:
         scorePerMin = gameState.scorePlot
@@ -214,6 +216,7 @@ while run:
     numParameters = 0
     vec = None
     if not gameState.pause:
+        print 'before ssocket.recv()'
         vec_str = ssocket.recv()
         print '++++++++++++++++++++++++++++++++++++++'
         print '++++++++++++++++++++++++++++++++++++++'

@@ -42,9 +42,8 @@ class GameState(object):
         self.blockWidth = blockWidth
         self.workspaceRadius = workspaceRadius
 
-
     # generate 1000 target bars prior to running the game
-    def generateBlocks(self):
+    def generateBlocks(self, workspace_axis):
         #add their starting points in time to a list
         #add their lengths to list
         #add their thicknest to a list
@@ -56,18 +55,27 @@ class GameState(object):
         ## depending on the parameter that the launcher sets
         for x in range(0, 1000):
             self.startingTimes.append(startingTime)
-            if (x % 2) == 0:
-                startingTime += config.restLengthTime
-                self.positions.append(-0.5 * self.workspaceRadius)
-                self.lengths.append(config.restLengthTime)
-            else:
-                startingTime += self.blockLengthTime
+            #if (x % 2) == 0:
+                #startingTime += self.blockLengthTime
+                #self.positions.append(-0.5 * self.workspaceRadius)
+                #self.lengths.append(self.blockLengthTime)
+            #else:
+            startingTime += self.blockLengthTime
+            if workspace_axis == 1:
                 self.positions.append(random.uniform(
                                       -self.workspaceRadius / 2.0 + self.blockWidth,
                                       self.workspaceRadius / 2.0))
-                self.lengths.append(self.blockLengthTime)
+            if workspace_axis == 2:
+                self.positions.append(random.uniform(
+                                      self.blockWidth,
+                                      self.workspaceRadius))
+            if workspace_axis == 4:
+                self.positions.append(random.uniform(
+                                      -self.workspaceRadius / 2.0 + self.blockWidth,
+                                      self.workspaceRadius / 2.0))
+            self.lengths.append(self.blockLengthTime)
 
-    def serializeBlocks(self):
+    def serializeBlocks(self, workspace_axis):
         # based on current time advance among the blocks?
         svalue = "B "
         cBlock = -1
@@ -93,18 +101,27 @@ class GameState(object):
 
             ## TODO: zero velocity target bars fir 3d
             ## also make for this the length short enough to be a square / show target position
-            svalue += (str(self.positions[cBlock]) + " 0 0 " +
-                       str(self.positions[cBlock + 1]) + " 0 0 ")
+            self.box_pos = np.zeros(3)
+            if workspace_axis == 1:
+                self.box_pos[0] = self.positions[cBlock]
+                svalue += (str(self.positions[cBlock]) + " 0 0 " +
+                           str(self.positions[cBlock + 1]) + " 0 0 ")
+            if workspace_axis == 2:
+                self.box_pos[1] = self.positions[cBlock]
+                svalue += str(-self.workspaceRadius / 2.0) + " " + (str(self.positions[cBlock]) + " 0 " +
+                          str(-self.workspaceRadius / 2.0) + " " + str(self.positions[cBlock + 1]) + " 0 ")
 
             svalue += (str(self.blockWidth) + " ")
-            self.box_pos = np.zeros(3)
-            self.box_pos[0] = self.positions[cBlock]
         else:
             svalue += ("0 " +
                        str(self.startingTimes[cBlock + 1] - self.accumTime) + " " +
                        str(self.lengths[cBlock + 1]))
-            svalue += (" " + str(-self.workspaceRadius / 2.0) + " 0 5 " +
-                       str(self.positions[cBlock + 1]) + " 0 0 ")
+            if workspace_axis == 1:
+                svalue += (" " + str(-self.workspaceRadius / 2.0) + " 0 5 " +
+                           str(self.positions[cBlock + 1]) + " 0 0 ")
+            if workspace_axis == 2:
+                svalue += (" " + str(-self.workspaceRadius / 2.0) + " 0 5 " +
+                           str(-self.workspaceRadius / 2.0) + " " + str(self.positions[cBlock + 1]) + " 0 ")
             svalue += (str(self.blockWidth) + " ")
             self.box_pos = np.zeros(3)
             self.box_pos[2] = 15

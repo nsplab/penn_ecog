@@ -148,13 +148,13 @@ int main()
 
     patForeArm->setPosition(osg::Vec3d(elbowPos(0),elbowPos(1),elbowPos(2)));
 
-    Eigen::Vector3f target(6.02282, 1.906994, 1.5);
+    Eigen::Vector3d target(6.02282, 1.906994, 1.5);
 
     osg::ref_ptr<osg::ShapeDrawable> shape1 = new osg::ShapeDrawable;
     shape1->setShape( new osg::Box(osg::Vec3(target(0), target(1), target(2)), 0.7f) );
     osg::ref_ptr<osg::Geode> box = new osg::Geode;
     box->addDrawable(shape1.get());
-    root->addChild(box);
+    //root->addChild(box);
 
     osg::ref_ptr<osg::ShapeDrawable> shape2 = new osg::ShapeDrawable;
     shape2->setShape( new osg::Box(osg::Vec3(0, 0, 0), 0.5f) );
@@ -174,7 +174,7 @@ int main()
     Eigen::Quaternion<float> elbowQuat = elbowQuatO;
 
     // ikf
-    Eigen::Vector3f currentWristPos;
+    Eigen::Vector3d currentWristPos;
     //SolveArmInvKinematics(target, currentWristPos, shoulderQuat, elbowQuat, patUpperArm);
 
     patBox->setPosition(osg::Vec3d(currentWristPos(0),currentWristPos(1),currentWristPos(2)));
@@ -320,13 +320,13 @@ int main()
 
         visor.frame();
 
-       //cout<<"send"<<endl;
+       cout<<"send"<<endl;
         if (pauseGame) {
             subscriber.send("c", 2);
         } else {
             subscriber.send("p", 2);
         }
-        //cout<<"sent"<<endl;
+        cout<<"sent"<<endl;
 
 
         subscriber.recv(&state_msg);
@@ -382,7 +382,7 @@ int main()
                 fireSwitch->setChildValue(parent.get(), true);
                 prevScore = score;
                 parent->setMatrix(osg::Matrix::rotate(osg::PI_2, osg::Y_AXIS)
-                                  * osg::Matrix::translate(4.4, 2.5 + currentBlockX, -2.0));
+                                  * osg::Matrix::translate(4.4, 2.5 + currentBlockX, -2.0 + currentBlockY));
             } else {
                 fireSwitch->setChildValue(parent.get(), false);
             }
@@ -394,9 +394,9 @@ int main()
                 (*plotArray)[plotArray->size()-1][1] = 700 + scaleY*(scorePlot-1.0);
             }
 
-            currentCube->setCenter(osg::Vec3(5.0 - (currentBlockLen)/2.0 * timeScale, 2.5 + currentBlockX, -2.0));
+            currentCube->setCenter(osg::Vec3(5.0 - (currentBlockLen)/2.0 * timeScale, 2.5 + currentBlockX, -2.0  + currentBlockY));
             currentCube->setHalfLengths(osg::Vec3((currentBlockLen)/2.0 * timeScale,blockWidth/2.0, blockWidth/2.0));
-            nextCube->setCenter(osg::Vec3(5.0 - nextBlockStart * timeScale - (nextBlockLen)/2.0 * timeScale, 2.5 + nextBlockX, -2.0));
+            nextCube->setCenter(osg::Vec3(5.0 - nextBlockStart * timeScale - (nextBlockLen)/2.0 * timeScale, 2.5 + nextBlockX, -2.0 + nextBlockY));
             nextCube->setHalfLengths(osg::Vec3((nextBlockLen)/2.0 * timeScale,blockWidth/2.0, blockWidth/2.0));
 
             target(0) = 5.0 + handPos[2];
@@ -405,11 +405,10 @@ int main()
 
             //target(2) = 0.0;
 
-            shoulderQuat = shoulderQuatO;
-            elbowQuat = elbowQuatO;
-            SolveArmInvKinematics(target, currentWristPos, shoulderQuat, elbowQuat, patUpperArm, patForeArm,
+            //shoulderQuat = shoulderQuatO;
+            //elbowQuat = elbowQuatO;
+            SolveArmInvKinematics((Eigen::Vector3d&)target, (Eigen::Vector3d&)currentWristPos, shoulderQuat, elbowQuat, patUpperArm, patForeArm,
                                   sphere, elbowPointGeode);
-
         }
 
     }

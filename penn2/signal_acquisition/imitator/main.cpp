@@ -19,7 +19,12 @@ float x=0, y=0, z=0;
 float prevx=0, prevy=0, prevz=0;
 float diffx=0.0, diffy=0.0, diffz=0.0;
 
+//launcher calls the main function below to set direct = true or false based on user preference
+// direct = true runs a mode where output of the imitator is the actual intended velocity, rather than
+// direct = false runs a mode in which the imitator outputs sin waves at set frequencies (one for each of 3 features, roughly in the 80-90 Hz range)
 bool direct = false;
+
+
 
 context_t context(2);
 
@@ -124,10 +129,12 @@ void GenerateSignal() {
         cout<<"signal: "<<signal<<endl;
         publisher.send(zmqMessage);
 
-        if (!direct)
+        if (!direct) {
             this_thread::sleep_for(chrono::microseconds(static_cast<int>(1.0/samplingRate * 1000000.0)));
-        else
+        } else {
+            // direct mode imitator: introduce a delay between features issued by the imitator in order to avoid flooding the receiving filter with features.
             this_thread::sleep_for(chrono::microseconds(static_cast<int>(100000.0)));
+        }
     }
 }
 
@@ -173,10 +180,14 @@ int main(int argc, char** argv)
 
         message_t zmq_message(sendMsg.length());
         memcpy((char *) zmq_message.data(), sendMsg.c_str(), sendMsg.length());
+        cout<<"before supervisor.send"<<endl;
         supervisor.send(zmq_message);
+        cout<<"after supervisor.send"<<endl;
 
         message_t supervisor_msg;
+        cout<<"before supervisor.recv"<<endl;
         supervisor.recv(&supervisor_msg);
+        cout<<"after supervisor.recv"<<endl;
 
         string recvMsg;
         recvMsg.resize(supervisor_msg.size(),'\0');
@@ -238,7 +249,11 @@ int main(int argc, char** argv)
 
         // time-invariant control policy
         diffx = (target[0] - handPos[0]) / 10.0;
+        diffy = (target[1] - handPos[1]) / 10.0;
+        diffz = (target[2] - handPos[2]) / 10.0;
         cout<<"diffx "<<diffx<<endl;
+        cout<<"diffy "<<diffy<<endl;
+        cout<<"diffz "<<diffz<<endl;
 
         this_thread::sleep_for(chrono::microseconds(static_cast<int>(timeBin * 1000000.0)));
     }
