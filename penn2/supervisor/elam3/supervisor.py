@@ -68,7 +68,7 @@ dimensions = int(secLog['dimensions'])
 workspace_axis = int(secLog['workspace_axis'])
 
 # create state objects
-gameState = GameState(config.workspaceRadius, config.blockWidth, config.blockLengthTime)
+gameState = GameState(config.workspaceRadius, config.blockWidthPercent, config.blockLengthTime)
 # generate 1000 target blocks based on the given workspace dimension
 gameState.generateBlocks(workspace_axis)
 # object used to send data to the filter module1practic

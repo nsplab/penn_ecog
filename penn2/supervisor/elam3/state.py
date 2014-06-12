@@ -125,15 +125,20 @@ class GameState(object):
             self.box_pos = np.zeros(3)
             if workspace_axis == 1:
                 self.box_pos[0] = self.positions[cBlock]
+                self.box_pos[1] = 0.0
+                self.box_pos[2] = 0.0
                 svalue += (str(self.positions[cBlock]) + " 0 0 " +
                            str(self.positions[cBlock + 1]) + " 0 0 ")
             if workspace_axis == 2:
+                self.box_pos[0] = 1.0
                 self.box_pos[1] = self.positions[cBlock]
+                self.box_pos[2] = 0.0
                 svalue += ("1 " + str(self.positions[cBlock]) + " 0 " +
                           "1 " + str(self.positions[cBlock + 1]) + " 0 ")
             if workspace_axis == 4:
                 self.box_pos[0] = self.positions[cBlock][0]
                 self.box_pos[1] = self.positions[cBlock][1]
+                self.box_pos[2] = 0.0
                 svalue += (str(self.positions[cBlock][0]) + " " + str(self.positions[cBlock][1]) + " 0 " +
                           str(self.positions[cBlock + 1][0]) + " " + str(self.positions[cBlock + 1][1]) + " 0 ")
 
@@ -164,8 +169,13 @@ class GameState(object):
                                         (self.box_pos[2] - self.hand_pos[2]) *
                                         (self.box_pos[2] - self.hand_pos[2]))
 
+        print "********************************"
+        print "********************************"
+        print "distanceHandToBlock: ", distanceHandToBlock
+        print "********************************"
+
         if not self.pause:
-            if distanceHandToBlock < config.scoreDistanceThreshold:
+            if distanceHandToBlock < (self.blockWidth / 100.0):
                 if cBlock > -1:
                     if self.scoreRefTime > 0.0:
                         self.score += config.scoreIncrement * (time.time() - self.scoreRefTime)

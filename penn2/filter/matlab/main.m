@@ -103,6 +103,13 @@ exit = false;
 while ~exit
     % receive features from the feature extractor module
     disp('receive');
+    % wait up to 1 seconds, if there is no data coming in then stop the
+    % filter
+    idx = zmq('poll',1000000);
+    if(numel(idx)==0)
+        exit = true;
+        break
+    end
     [recvData, hasMore] = zmq( 'receive', featurePipe );
     disp('received');
     % extract the time stamp from the first 8 bytes and typcast it into a

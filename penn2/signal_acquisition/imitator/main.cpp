@@ -24,6 +24,11 @@ float diffx=0.0, diffy=0.0, diffz=0.0;
 // direct = false runs a mode in which the imitator outputs sin waves at set frequencies (one for each of 3 features, roughly in the 80-90 Hz range)
 bool direct = false;
 
+float sign(float par) {
+    if (par < 0.0f)
+        return -1;
+    return +1;
+}
 
 
 context_t context(2);
@@ -126,7 +131,7 @@ void GenerateSignal() {
         memcpy(static_cast<size_t*>(zmqMessage.data())+1, signal.data(), sizeof(float)*numberOfChannels);
         //memcpy(static_cast<size_t*>(zmqMessage.data())+1, tsignal.data(), sizeof(float)*60);
 
-        cout<<"signal: "<<signal<<endl;
+        //cout<<"signal: "<<signal<<endl;
         publisher.send(zmqMessage);
 
         if (!direct) {
@@ -175,6 +180,12 @@ int main(int argc, char** argv)
     arma::vec handState;
 
     int timeStep = 0;
+
+    // storing the old velocity values and limit the acceleration in the controler
+    float diffxOld, diffyOld, diffzOld;
+
+    // threshold on acceleration
+    float accThreshold = 0.2;
 
     for (;;)   {
 
@@ -246,11 +257,37 @@ int main(int argc, char** argv)
         cout<<"currentTrial: "<<currentTrial<<endl;
         */ // RSE control
 
+        // storing oild velocity values to compute the acceleration
+        diffxOld = diffx;
+        diffyOld = diffy;
+        diffzOld = diffz;
 
         // time-invariant control policy
         diffx = (target[0] - handPos[0]) / 10.0;
         diffy = (target[1] - handPos[1]) / 10.0;
         diffz = (target[2] - handPos[2]) / 10.0;
+
+        float accX, accY, accZ;
+        accX = diffx - diffxOld;
+        accY = diffy - diffyOld;
+        accZ = diffz - diffzOld;
+
+
+        if (fabs(accX) > accThreshold) {
+            accX = accThreshold * sign(accX);
+            diffx = diffxOld + accX;
+        }
+        if (fabs(accY) > accThreshold) {
+            accY = accThreshold * sign(accY);
+            diffy = diffyOld + accY;
+        }
+        if (fabs(accZ) > accThreshold) {
+            accZ = accThreshold * sign(accZ);
+            diffz = diffzOld + accZ;
+        }
+
+
+
         cout<<"diffx "<<diffx<<endl;
         cout<<"diffy "<<diffy<<endl;
         cout<<"diffz "<<diffz<<endl;

@@ -399,6 +399,9 @@ int main()
             ss>>score;
             ss>>scorePlot;
 
+            cout<<"*************************"<<endl;
+            cout<<"blockWidth "<<blockWidth<<endl;
+
             cout << "currentBlockX "<<currentBlockX<<endl;
             currentBlockX = 4.5 + currentBlockX * -4.0;
             currentBlockY = -2.0 + currentBlockY * 4.5;
@@ -432,9 +435,9 @@ int main()
             }
 
             currentCube->setCenter(osg::Vec3(5.0 - (currentBlockLen)/2.0 * timeScale, currentBlockX, currentBlockY));
-            currentCube->setHalfLengths(osg::Vec3((currentBlockLen)/2.0 * timeScale,blockWidth/2.0, blockWidth/2.0));
+            currentCube->setHalfLengths(osg::Vec3((currentBlockLen)/2.0 * timeScale,blockWidth*0.025, blockWidth*0.025));
             nextCube->setCenter(osg::Vec3(5.0 - nextBlockStart * timeScale - (nextBlockLen)/2.0 * timeScale, nextBlockX, nextBlockY));
-            nextCube->setHalfLengths(osg::Vec3((nextBlockLen)/2.0 * timeScale,blockWidth/2.0, blockWidth/2.0));
+            nextCube->setHalfLengths(osg::Vec3((nextBlockLen)/2.0 * timeScale,blockWidth*0.025, blockWidth*0.025));
 
 
             cout<<"handPos[0] "<<handPos[0]<<endl;
