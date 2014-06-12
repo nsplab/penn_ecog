@@ -11,7 +11,7 @@ using namespace std;
 double SolveArmInvKinematics(Eigen::Vector3d targetPos, Eigen::Vector3d& currentPos, Eigen::Quaternionf& shoulderQuat, Eigen::Quaternionf& elbowQuat,
                             osg::ref_ptr<osg::PositionAttitudeTransform> upperArm, osg::ref_ptr<osg::PositionAttitudeTransform> foreArm,
                             osg::ref_ptr<osg::Geode> handGeode, osg::ref_ptr<osg::Geode> elbowGeode) {
-    double error = 1.0;
+
 
     // assume the angles are all zero and the initial positions are given
     // ge the delta angles and then add to the osg quats
@@ -52,12 +52,14 @@ double SolveArmInvKinematics(Eigen::Vector3d targetPos, Eigen::Vector3d& current
     //currentWristPos = elbowQuat._transformVector(currentWristPos);
     //currentWristPos += currentElbowPos;
 
+    Eigen::Vector3d displacement = targetPos - currentWristPos;
+    double error = displacement.norm();
 
     auto start = chrono::high_resolution_clock::now();
     // ik 2 iterate until error is small
     unsigned iter = 0;
     cout<<"before the loop"<<endl;
-    while ((error > 0.01) && (iter<5000) ) {
+    while ((error > 0.05) && (iter<1000) ) {
         iter += 1;
 //        cout<<"\n**** iter: "<<iter<<endl;
 
@@ -170,6 +172,8 @@ double SolveArmInvKinematics(Eigen::Vector3d targetPos, Eigen::Vector3d& current
 
 
         displacement = targetPos - currentWristPos;
+        cout<<"targetPos: "<<targetPos<<endl;
+        cout<<"currentWristPos: "<<currentWristPos<<endl;
 
         ///debug
 //        cout<<"targetPos: "<<targetPos<<endl;

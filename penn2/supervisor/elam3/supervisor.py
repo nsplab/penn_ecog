@@ -230,18 +230,29 @@ while run:
             if config.trackingMode:
                 timestamp = long(vec[0])
                 gameState.hand_pos[0] = float(vec[1])
-                if config.dimension > 1:
-                    gameState.hand_pos[1] = float(vec[2])
+                gameState.hand_pos[1] = float(vec[2])
+                gameState.hand_pos[2] = float(vec[3])
+                #if dimensions > 1:
+                #    gameState.hand_pos[1] = float(vec[2])
                     #gameState.hand_pos[2] = float(vec[3])
             else:
                 timestamp = long(vec[0])
                 gameState.hand_pos[0] += float(vec[1])
                 gameState.hand_pos[1] += float(vec[2])
                 gameState.hand_pos[2] += float(vec[3])
-                if gameState.hand_pos[0] > (config.workspaceRadius / 2):
-                    gameState.hand_pos[0] = config.workspaceRadius / 2
-                elif gameState.hand_pos[0] < -(config.workspaceRadius / 2):
-                    gameState.hand_pos[0] = -config.workspaceRadius / 2
+                # make sure hand stays in the workspace
+                if gameState.hand_pos[0] > 1.0:
+                    gameState.hand_pos[0] = 1.0
+                if gameState.hand_pos[1] > 1.0:
+                    gameState.hand_pos[1] = 1.0
+                if gameState.hand_pos[2] > 1.0:
+                    gameState.hand_pos[2] = 1.0
+                if gameState.hand_pos[0] < 0.0:
+                    gameState.hand_pos[0] = 0.0
+                if gameState.hand_pos[1] < 0.0:
+                    gameState.hand_pos[1] = 0.0
+                if gameState.hand_pos[2] < 0.0:
+                    gameState.hand_pos[2] = 0.0
                 #numFeatures = int(vec[4])
                 #numParameters = int(vec[5])
                 #print "numFeatures",numFeatures

@@ -5,6 +5,27 @@ import math
 
 import config
 
+#####################################################################
+## In the supervisor the origin is at the back left bottom of the working space
+## box. This is also communicated to the other modules. In the
+## graphics module (elam3) the coordinates are shifted and the bottom
+## right corner of the box (corner closer to the screen), but this is
+## internal to elam3 and does NOT affect the other modules.
+## For all the modules, except elam3,
+##
+##
+##              Y ^
+##                |
+##                |
+##                |__________> x
+##               /
+##              /
+##             /
+##         Z  v
+##
+#####################################################################
+
+
 # 0: training, 1: test
 # used to tell the filter module the type of the current trial
 triainingTestSeq = np.array([0, 0, 0, 0, 0, 0])
@@ -16,7 +37,7 @@ class GameState(object):
                  hand_pos=np.zeros(3),
                  box_pos=np.zeros(3), score=0, level=1, sublevel=1):
         self.hand_pos = hand_pos
-        self.hand_pos[0] = -workspaceRadius / 2.0
+        self.hand_pos[0] = 0.5
         self.box_pos = box_pos
         self.score = score
         self.level = level
@@ -63,16 +84,15 @@ class GameState(object):
             startingTime += self.blockLengthTime
             if workspace_axis == 1:
                 self.positions.append(random.uniform(
-                                      -self.workspaceRadius / 2.0 + self.blockWidth,
-                                      self.workspaceRadius / 2.0))
+                                      0.0,
+                                      1.0))
             if workspace_axis == 2:
                 self.positions.append(random.uniform(
-                                      self.blockWidth,
-                                      self.workspaceRadius))
+                                      0.0,
+                                      1.0))
             if workspace_axis == 4:
-                self.positions.append(random.uniform(
-                                      -self.workspaceRadius / 2.0 + self.blockWidth,
-                                      self.workspaceRadius / 2.0))
+                self.positions.append([random.uniform(0.0, 1.0), random.uniform(0.0, 1.0)])
+
             self.lengths.append(self.blockLengthTime)
 
     def serializeBlocks(self, workspace_axis):
@@ -80,6 +100,7 @@ class GameState(object):
         svalue = "B "
         cBlock = -1
         elapsed_time = time.time() - self.start_time
+
         self.start_time = time.time()
         if not self.pause:
             self.accumTime += elapsed_time
@@ -108,8 +129,13 @@ class GameState(object):
                            str(self.positions[cBlock + 1]) + " 0 0 ")
             if workspace_axis == 2:
                 self.box_pos[1] = self.positions[cBlock]
-                svalue += str(-self.workspaceRadius / 2.0) + " " + (str(self.positions[cBlock]) + " 0 " +
-                          str(-self.workspaceRadius / 2.0) + " " + str(self.positions[cBlock + 1]) + " 0 ")
+                svalue += ("1 " + str(self.positions[cBlock]) + " 0 " +
+                          "1 " + str(self.positions[cBlock + 1]) + " 0 ")
+            if workspace_axis == 4:
+                self.box_pos[0] = self.positions[cBlock][0]
+                self.box_pos[1] = self.positions[cBlock][1]
+                svalue += (str(self.positions[cBlock][0]) + " " + str(self.positions[cBlock][1]) + " 0 " +
+                          str(self.positions[cBlock + 1][0]) + " " + str(self.positions[cBlock + 1][1]) + " 0 ")
 
             svalue += (str(self.blockWidth) + " ")
         else:
@@ -117,11 +143,15 @@ class GameState(object):
                        str(self.startingTimes[cBlock + 1] - self.accumTime) + " " +
                        str(self.lengths[cBlock + 1]))
             if workspace_axis == 1:
-                svalue += (" " + str(-self.workspaceRadius / 2.0) + " 0 5 " +
+                svalue += (" 1 0 0 " +
                            str(self.positions[cBlock + 1]) + " 0 0 ")
             if workspace_axis == 2:
-                svalue += (" " + str(-self.workspaceRadius / 2.0) + " 0 5 " +
-                           str(-self.workspaceRadius / 2.0) + " " + str(self.positions[cBlock + 1]) + " 0 ")
+                svalue += (" 1 0 0 " +
+                           " 1 " + str(self.positions[cBlock + 1]) + " 0 ")
+            if workspace_axis == 4:
+                svalue += (" 1 0 0 " +
+                          str(self.positions[cBlock + 1][0]) + " " + str(self.positions[cBlock + 1][1]) + " 0 ")
+
             svalue += (str(self.blockWidth) + " ")
             self.box_pos = np.zeros(3)
             self.box_pos[2] = 15
@@ -185,7 +215,7 @@ class GameState(object):
             if config.jumpetoStart:
                 if (self.trial % 2) == 0:
                     self.hand_pos = np.zeros(3)
-                    self.hand_pos[0] = -self.workspaceRadius / 2.0
+                    self.hand_pos[0] = 0.5
 
         # advance the trial number, sublevel number, and the level number
         if ret:

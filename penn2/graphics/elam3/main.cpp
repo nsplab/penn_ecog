@@ -21,6 +21,30 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.*/
 
+// coordinate systems:
+// + the padding is added by elam3
+//#####################################################################
+//## the coordinate system in the supervisor:
+//##
+//##              Y ^ [0,1,0]
+//##                |
+//##                |
+//##                |__________> X [1, 0, 0]
+//##               /
+//##              /
+//##             /
+//##         Z  v [0, 0, 1]
+//##
+//## the coordinate system in the graphics module:
+//##
+//##
+//##        [0,0,W/2] Z ^   ^ X [W, 0, 0]
+//##                    |  /
+//##                    | /
+//## [0, W, 0] Y <______|/
+//##
+//##
+//#####################################################################
 #include <iostream>
 #include <string>
 #include <chrono>
@@ -148,10 +172,10 @@ int main()
 
     patForeArm->setPosition(osg::Vec3d(elbowPos(0),elbowPos(1),elbowPos(2)));
 
-    Eigen::Vector3d target(6.02282, 1.906994, 1.5);
+    Eigen::Vector3d IKtarget(0, 0, 0);
 
     osg::ref_ptr<osg::ShapeDrawable> shape1 = new osg::ShapeDrawable;
-    shape1->setShape( new osg::Box(osg::Vec3(target(0), target(1), target(2)), 0.7f) );
+    shape1->setShape( new osg::Box(osg::Vec3(IKtarget(0), IKtarget(1), IKtarget(2)), 0.7f) );
     osg::ref_ptr<osg::Geode> box = new osg::Geode;
     box->addDrawable(shape1.get());
     //root->addChild(box);
@@ -311,7 +335,7 @@ int main()
     camera->getOrCreateStateSet()->setMode(GL_LIGHTING, osg::StateAttribute::OFF );
     root->addChild( camera );
 
-    SolveArmInvKinematics(target, currentWristPos, shoulderQuat, elbowQuat, patUpperArm, patForeArm,
+    SolveArmInvKinematics(IKtarget, currentWristPos, shoulderQuat, elbowQuat, patUpperArm, patForeArm,
                           sphere, elbowPointGeode);
 
     float score = 0;
@@ -329,7 +353,9 @@ int main()
         cout<<"sent"<<endl;
 
 
+        cout<<"before subscriber.recv"<<endl;
         subscriber.recv(&state_msg);
+        cout<<"after subscriber.recv"<<endl;
 
 
         //cout<<"received"<<endl;
@@ -353,7 +379,7 @@ int main()
 
 
         if (type == 'B') {
-            //cout<<"B message: "<<state_str<<endl;
+            cout<<"B message: "<<state_str<<endl;
             ss>>currentBlockLen;
             ss>>nextBlockStart;
             ss>>nextBlockLen;
@@ -373,6 +399,17 @@ int main()
             ss>>score;
             ss>>scorePlot;
 
+            cout << "currentBlockX "<<currentBlockX<<endl;
+            currentBlockX = 4.5 + currentBlockX * -4.0;
+            currentBlockY = -2.0 + currentBlockY * 4.5;
+            currentBlockZ = 4.5 + currentBlockZ * -4.0;
+            cout << "currentBlockX "<<currentBlockX<<endl;
+
+            nextBlockX = 4.5 + nextBlockX * -4.0;
+            nextBlockY = -2.0 + nextBlockY * 4.5;
+            nextBlockZ = 4.5 + nextBlockZ * -4.0;
+
+            cout<<"nextBlockX "<<nextBlockX<<endl;
 
             if (scorePlot > -0.5) {
                 scoreText->setText(string("Score: ") + to_string((float)scorePlot).substr(0, 4));
@@ -382,7 +419,7 @@ int main()
                 fireSwitch->setChildValue(parent.get(), true);
                 prevScore = score;
                 parent->setMatrix(osg::Matrix::rotate(osg::PI_2, osg::Y_AXIS)
-                                  * osg::Matrix::translate(4.4, 2.5 + currentBlockX, -2.0 + currentBlockY));
+                                  * osg::Matrix::translate(currentBlockZ, currentBlockX, currentBlockY));
             } else {
                 fireSwitch->setChildValue(parent.get(), false);
             }
@@ -394,21 +431,41 @@ int main()
                 (*plotArray)[plotArray->size()-1][1] = 700 + scaleY*(scorePlot-1.0);
             }
 
-            currentCube->setCenter(osg::Vec3(5.0 - (currentBlockLen)/2.0 * timeScale, 2.5 + currentBlockX, -2.0  + currentBlockY));
+            currentCube->setCenter(osg::Vec3(5.0 - (currentBlockLen)/2.0 * timeScale, currentBlockX, currentBlockY));
             currentCube->setHalfLengths(osg::Vec3((currentBlockLen)/2.0 * timeScale,blockWidth/2.0, blockWidth/2.0));
-            nextCube->setCenter(osg::Vec3(5.0 - nextBlockStart * timeScale - (nextBlockLen)/2.0 * timeScale, 2.5 + nextBlockX, -2.0 + nextBlockY));
+            nextCube->setCenter(osg::Vec3(5.0 - nextBlockStart * timeScale - (nextBlockLen)/2.0 * timeScale, nextBlockX, nextBlockY));
             nextCube->setHalfLengths(osg::Vec3((nextBlockLen)/2.0 * timeScale,blockWidth/2.0, blockWidth/2.0));
 
-            target(0) = 5.0 + handPos[2];
-            target(1) = 2.5 + handPos[0];
-            target(2) = -2.0 + handPos[1];
+
+            cout<<"handPos[0] "<<handPos[0]<<endl;
+            cout<<"handPos[1] "<<handPos[1]<<endl;
+            cout<<"handPos[2] "<<handPos[2]<<endl;
+
+            handPos[0] =  4.5 + handPos[0] * -4.0;
+            handPos[1] = -2.0 + handPos[1] * 4.5;
+            handPos[2] =  4.5 + handPos[2] * -4.0;
+
+            cout<<"handPos[0] "<<handPos[0]<<endl;
+            cout<<"handPos[1] "<<handPos[1]<<endl;
+            cout<<"handPos[2] "<<handPos[2]<<endl;
+
+            IKtarget(0) = handPos[2];
+            IKtarget(1) = handPos[0];
+            IKtarget(2) = handPos[1];
+
 
             //target(2) = 0.0;
 
             //shoulderQuat = shoulderQuatO;
             //elbowQuat = elbowQuatO;
-            SolveArmInvKinematics((Eigen::Vector3d&)target, (Eigen::Vector3d&)currentWristPos, shoulderQuat, elbowQuat, patUpperArm, patForeArm,
+            cout<<"solve IK"<<endl;
+            float error = SolveArmInvKinematics((Eigen::Vector3d&)IKtarget, (Eigen::Vector3d&)currentWristPos, shoulderQuat, elbowQuat, patUpperArm, patForeArm,
                                   sphere, elbowPointGeode);
+            if (isnan(error)) {
+                return 1;
+            }
+            cout<<"IK error: "<<error<<endl;
+            cout<<"solved IK"<<endl;
         }
 
     }
