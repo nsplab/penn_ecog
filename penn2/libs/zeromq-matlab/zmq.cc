@@ -14,14 +14,14 @@
 /* Do not exceed 255 since indexed by uint8_t */
 #define MAX_SOCKETS 10
 
-char *command, *protocol, *channel;
+char *command, *protocol, *channel, *add_poll_cmd;
 double* port_ptr;
 /* Channel name */
 char zmq_channel[200];
 void * ctx;
 void * sockets[MAX_SOCKETS];
 zmq_pollitem_t poll_items [MAX_SOCKETS];
-uint8_t socket_cnt = 0, socket_id;
+uint8_t socket_cnt = 0, socket_id, poll_cnt = 0;
 int result, rc;
 static int initialized = 0;
 mwSize ret_sz[]={1};
@@ -29,11 +29,15 @@ char* recv_buffer;
 
 /* Cleaning up the data */
 void cleanup( void ){
-	free( recv_buffer );
+	if (recv_buffer != 0)
+		free( recv_buffer );
+		recv_buffer = 0;
 	mexPrintf("ZMQMEX: closing sockets and context.\n");
 	for(int i=0;i<socket_cnt;i++)
 		zmq_close( sockets[i] );
 	zmq_term( ctx );
+	initialized = 0;
+	socket_cnt = 0;
 }
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
@@ -93,7 +97,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		rc = zmq_bind( sockets[socket_cnt], zmq_channel );
 		if(rc!=0)
 			mexErrMsgTxt("Could not bind to socket!");
-		poll_items[socket_cnt].socket = sockets[socket_cnt];
+		/* poll_items[socket_cnt].socket = sockets[socket_cnt]; */
 		/* poll_items[socket_cnt].events = ZMQ_POLLOUT; */
 		
 		/* MATLAB specific return of the socket ID */
@@ -116,7 +120,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 			mexErrMsgTxt("Bad protocol string.");
 		if( nrhs<3 || !(channel=mxArrayToString(prhs[2])) )
 			mexErrMsgTxt("Bad channel string.");
-		
+		int add_to_poll = 0;	
+		if( nrhs>3 && (add_poll_cmd=mxArrayToString(prhs[3])) ) {
+			if( strcmp(add_poll_cmd, "add_to_poll")==0 ){
+				add_to_poll = 1;
+			}
+		}
+
 		/* Protocol specific channel formation */
 	  if( strcmp(protocol, "ipc")==0 ){
 			sprintf(zmq_channel, "ipc:///tmp/%s", channel );
@@ -151,8 +161,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 			mexErrMsgTxt("Could not connect to socket!");
 
 		/* Add the connected socket to the poll items */
-		poll_items[socket_cnt].socket = sockets[socket_cnt];
-		poll_items[socket_cnt].events = ZMQ_POLLIN;
+		if (add_to_poll) {
+			poll_items[poll_cnt].socket = sockets[socket_cnt];
+			poll_items[poll_cnt].events = ZMQ_POLLIN;
+			poll_cnt++;
+		}
 
 		/* MATLAB specific return of the socket ID */
 		ret_sz[0] = 1;
@@ -241,7 +254,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 			mytimeout = (long)(timeout_ptr[0]);
 		}
 		/* Get the number of objects that have data */
-		rc = zmq_poll (poll_items, socket_cnt, mytimeout);
+		rc = zmq_poll (poll_items, poll_cnt, mytimeout);
 		if(rc<0)
 			mexErrMsgTxt("Poll error!");
 
@@ -253,7 +266,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		mxArray* idx_array_ptr = mxCreateNumericArray(1,ret_sz,mxUINT8_CLASS,mxREAL);
 		uint8_t* idx = (uint8_t*)mxGetData(idx_array_ptr);
 		int r = 0;
-		for(int i=0;i<socket_cnt;i++)
+		for(int i=0;i<poll_cnt;i++)
 			if(poll_items[i].revents)
 				idx[r++] = i;
 		plhs[0] = idx_array_ptr;
@@ -278,6 +291,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		uint8_t* out = (uint8_t*)mxGetData(plhs[0]);
 		out[0] = socket_cnt;
 		socket_cnt++;
+	}
+	/* free up the allocated resources */
+	else if(strcasecmp(command, "cleanup") == 0){
+		cleanup();
 	}
 	else
 		mexErrMsgTxt("Unrecognized command.");

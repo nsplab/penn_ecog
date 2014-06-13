@@ -86,7 +86,7 @@ dataPath = keysFilter{dataPathIdx, 4};
 % penn2/libs/zeromq-matlab/zmq.mexa64, which is based on the source code
 %zmq.cc in that same directory, compiled with the Makefile in that
 %directory
-featurePipe = zmq( 'subscribe', 'ipc', 'features.pipe' );
+featurePipe = zmq( 'subscribe', 'ipc', 'features.pipe', 'add_to_poll' );
 
 % create a zmq publisher to send the commands to the supervisor module
 supervisorPipe = zmq( 'request', 'ipc', 'supervisor.pipe' );
@@ -106,6 +106,7 @@ while ~exit
     % wait up to 1 seconds, if there is no data coming in then stop the
     % filter
     idx = zmq('poll',1000000);
+    idx
     if(numel(idx)==0)
         exit = true;
         break
@@ -145,7 +146,7 @@ while ~exit
     [recvData, hasMore] = zmq( 'receive', supervisorPipe );
     
     % extract from recvData: score, score/min
-
-    
-    
 end
+
+zmq( 'cleanup');
+
