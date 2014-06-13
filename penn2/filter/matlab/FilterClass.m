@@ -36,6 +36,7 @@ classdef FilterClass < handle
         handZ = 0;
         numberOfFilterParameters = 0;
         intialTime = '';
+        demoMode = 0;
     end
     methods
         % class constructor

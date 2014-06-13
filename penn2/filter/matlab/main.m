@@ -60,6 +60,13 @@ end
 dataPathIdx = find(strcmp('datapath', keysFilter(:,3)));
 dataPath = keysFilter{dataPathIdx, 4};
 
+
+% get the value of the demo state from the config file
+demoModeIdx = find(strcmp('DemoMode', keysFilter(:,3)));
+demoMode = keysFilter{demoModeIdx, 4};
+% set the demo flag of the filter
+filter.demoMode = demoMode;
+
 % current target postion
 % current target radius
 % current hand position in virtual environment
