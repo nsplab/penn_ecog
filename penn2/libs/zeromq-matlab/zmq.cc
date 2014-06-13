@@ -14,14 +14,14 @@
 /* Do not exceed 255 since indexed by uint8_t */
 #define MAX_SOCKETS 10
 
-char *command, *protocol, *channel, *add_poll_cmd;
+char *command, *protocol, *channel;
 double* port_ptr;
 /* Channel name */
 char zmq_channel[200];
 void * ctx;
 void * sockets[MAX_SOCKETS];
 zmq_pollitem_t poll_items [MAX_SOCKETS];
-uint8_t socket_cnt = 0, socket_id, poll_cnt = 0;
+uint8_t socket_cnt = 0, socket_id;
 int result, rc;
 static int initialized = 0;
 mwSize ret_sz[]={1};
@@ -97,7 +97,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		rc = zmq_bind( sockets[socket_cnt], zmq_channel );
 		if(rc!=0)
 			mexErrMsgTxt("Could not bind to socket!");
-		/* poll_items[socket_cnt].socket = sockets[socket_cnt]; */
+		poll_items[socket_cnt].socket = sockets[socket_cnt];
 		/* poll_items[socket_cnt].events = ZMQ_POLLOUT; */
 		
 		/* MATLAB specific return of the socket ID */
@@ -120,13 +120,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 			mexErrMsgTxt("Bad protocol string.");
 		if( nrhs<3 || !(channel=mxArrayToString(prhs[2])) )
 			mexErrMsgTxt("Bad channel string.");
-		int add_to_poll = 0;	
-		if( nrhs>3 && (add_poll_cmd=mxArrayToString(prhs[3])) ) {
-			if( strcmp(add_poll_cmd, "add_to_poll")==0 ){
-				add_to_poll = 1;
-			}
-		}
-
+		
 		/* Protocol specific channel formation */
 	  if( strcmp(protocol, "ipc")==0 ){
 			sprintf(zmq_channel, "ipc:///tmp/%s", channel );
@@ -161,11 +155,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 			mexErrMsgTxt("Could not connect to socket!");
 
 		/* Add the connected socket to the poll items */
-		if (add_to_poll) {
-			poll_items[poll_cnt].socket = sockets[socket_cnt];
-			poll_items[poll_cnt].events = ZMQ_POLLIN;
-			poll_cnt++;
-		}
+		poll_items[socket_cnt].socket = sockets[socket_cnt];
+		poll_items[socket_cnt].events = ZMQ_POLLIN;
 
 		/* MATLAB specific return of the socket ID */
 		ret_sz[0] = 1;
@@ -221,30 +212,45 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		}
 
 		/* Blocking Receive */
-		int nbytes = zmq_recv(sockets[socket_id], recv_buffer, BUFLEN, 0);
+		/* int nbytes = zmq_recv(sockets[socket_id], recv_buffer, BUFLEN, 0); 8/
 		/* Non-blocking Receive */
-		/*zmq_recv(sockets[socket], recv_buffer, BUFLEN, ZMQ_DONTWAIT);*/
-		if(nbytes==-1)
-			mexErrMsgTxt("Did not receive anything from ZMQ");
-		
-		/* Check if multipart */
+		//mexPrintf("ZMQMEX: trying to receive data.\n");
+		int nbytes = zmq_recv(sockets[socket_id], recv_buffer, BUFLEN, ZMQ_DONTWAIT);
+		//mexPrintf("ZMQMEX: nbytes: %d.\n", nbytes);
 		int has_more;
 		size_t has_more_size = sizeof(has_more);
-		rc = zmq_getsockopt( sockets[socket_id], ZMQ_RCVMORE, 
-			&has_more, &has_more_size );
-		if( rc!=0 )
-			mexErrMsgTxt("Bad ZMQ_RCVMORE call!");
+		has_more = 5;
+		if(nbytes==-1) {
+			//mexErrMsgTxt("Did not receive anything from ZMQ");
+			//mexPrintf("ZMQMEX: no data available.\n");
+			nbytes = 1;
+			has_more = 5;
+		} else if (nbytes > 0) {
+		
+			/* Check if multipart */
+			rc = zmq_getsockopt( sockets[socket_id], ZMQ_RCVMORE, 
+				&has_more, &has_more_size );
+			if( rc!=0 )
+				mexErrMsgTxt("Bad ZMQ_RCVMORE call!");
+		}
 		
 		/* Output the data to MATLAB */
 		ret_sz[0] = nbytes;
 		plhs[0] = mxCreateNumericArray(1,ret_sz,mxUINT8_CLASS,mxREAL);
 		void* start = mxGetData( plhs[0] );
-		memcpy(start,recv_buffer,nbytes);
+		if (nbytes > 1) {
+			memcpy(start,recv_buffer,nbytes);
+		} else {
+			int garbage = 0;
+			memcpy(start,&garbage,nbytes);
+		}
 		/* has_more variable */
-		ret_sz[0] = 1;
+		ret_sz[0] = has_more_size;
 		plhs[1] = mxCreateNumericArray(1,ret_sz,mxUINT8_CLASS,mxREAL);
-		uint8_t* out = (uint8_t*)mxGetData(plhs[1]);
-		out[0] = (uint8_t)has_more;
+		start = mxGetData( plhs[1] );
+		memcpy(start,&has_more,has_more_size);
+		//uint8_t* out = (uint8_t*)mxGetData(plhs[1]);
+		//out[0] = (uint8_t)has_more;
 	}
 	/* Poll for data at a specified interval.  Default interval: indefinite */
 	else if (strcasecmp(command, "poll") == 0){
@@ -254,7 +260,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 			mytimeout = (long)(timeout_ptr[0]);
 		}
 		/* Get the number of objects that have data */
-		rc = zmq_poll (poll_items, poll_cnt, mytimeout);
+		rc = zmq_poll (poll_items, socket_cnt, mytimeout);
 		if(rc<0)
 			mexErrMsgTxt("Poll error!");
 
@@ -266,7 +272,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		mxArray* idx_array_ptr = mxCreateNumericArray(1,ret_sz,mxUINT8_CLASS,mxREAL);
 		uint8_t* idx = (uint8_t*)mxGetData(idx_array_ptr);
 		int r = 0;
-		for(int i=0;i<poll_cnt;i++)
+		for(int i=0;i<socket_cnt;i++)
 			if(poll_items[i].revents)
 				idx[r++] = i;
 		plhs[0] = idx_array_ptr;

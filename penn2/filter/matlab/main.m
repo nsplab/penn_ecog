@@ -86,7 +86,7 @@ dataPath = keysFilter{dataPathIdx, 4};
 % penn2/libs/zeromq-matlab/zmq.mexa64, which is based on the source code
 %zmq.cc in that same directory, compiled with the Makefile in that
 %directory
-featurePipe = zmq( 'subscribe', 'ipc', 'features.pipe', 'add_to_poll' );
+featurePipe = zmq( 'subscribe', 'ipc', 'features.pipe' );
 
 % create a zmq publisher to send the commands to the supervisor module
 supervisorPipe = zmq( 'request', 'ipc', 'supervisor.pipe' );
@@ -105,13 +105,21 @@ while ~exit
     disp('receive');
     % wait up to 1 seconds, if there is no data coming in then stop the
     % filter
-    idx = zmq('poll',1000000);
-    idx
-    if(numel(idx)==0)
-        exit = true;
-        break
+    
+    waitForData = true;
+    tic
+    while waitForData
+        [recvData, hasMore] = zmq( 'receive', featurePipe );
+        if hasMore == 0
+            waitForData = false;
+        end
+        if toc > 1.0
+            disp('no darta from feature_extractor');
+            exit = true;
+            break;
+        end
     end
-    [recvData, hasMore] = zmq( 'receive', featurePipe );
+    
     disp('received');
     % extract the time stamp from the first 8 bytes and typcast it into a
     % 64 bit integer which contains the time stamp
@@ -141,9 +149,29 @@ while ~exit
 
     supervisorData = uint8([num2str(timeStamp) ' ' num2str(controlX) ' ' num2str(controlY) ' ' num2str(controlZ)])';
     
+    disp('going to send to supervisor');
     nbytes = zmq( 'send', supervisorPipe, supervisorData );
+    disp('sent to supervisor');
     
-    [recvData, hasMore] = zmq( 'receive', supervisorPipe );
+    disp('receive from supervisor');
+    
+    waitForData = true;
+        
+    tic
+    while waitForData
+        [recvData, hasMore] = zmq( 'receive', supervisorPipe );
+        recvData
+        if hasMore == 0
+            waitForData = false;
+        end
+        if toc > 1.0
+            disp('no darta from supervisor');
+            exit = true;
+            break;
+        end
+    end
+    
+    disp('received from supervisor');
     
     % extract from recvData: score, score/min
 end

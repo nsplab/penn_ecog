@@ -53,6 +53,7 @@ class GameState(object):
         self.currentBlock = -1
         self.start_time = time.time()
         self.pause = True
+        self.prevPause = True
         self.accumTime = 0.0
         self.scoreRefTime = 0
         self.scoreCurTime = 0
@@ -249,8 +250,12 @@ class FilterState(object):
         self.trial = trial
         self.attending = attending
         self.mode = triainingTestSeq[0]
+        self.paused = False
 
     def serialize(self):
+        if self.paused:
+            svalue = "paused"
+            return svalue
         svalue = (str(self.target_pos[0]) + " " +
                   str(self.target_pos[1]) + " " +
                   str(self.target_pos[2]) + " ")

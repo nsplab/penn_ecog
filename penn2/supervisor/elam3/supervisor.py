@@ -197,10 +197,17 @@ while run:
     print 'recv gsocket'
     gvec = gsocket.recv()
     print 'recvd: ', gvec
+    gameState.prevPause = gameState.pause
     if gvec[0] == "p":
         gameState.pause = True
+        filterState.pause = True
+        if gameState.prevPause == False:
+            vec_str = ssocket.recv()
+            ssocket.send(filterState.serialize())
     elif gvec[0] == "c":
         gameState.pause = False
+        filterState.pause = False
+
 
     #gsocket.send(gameState.serialize())
     print 'sent'
