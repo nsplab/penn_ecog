@@ -109,7 +109,6 @@ void GenerateSignal() {
         //cout<<"v2 "<<v(2)<<endl;
 
 
-
         sample(0) = cos(2.0*M_PI * float(i)/float(samplingRate) * xSignalFrq) * xSignalAmp * sqrt(dx+baselinePower);// + v(0) * noiseToSignalRatio);
         sample(1) = cos(2.0*M_PI * float(i)/float(samplingRate) * ySignalFrq) * ySignalAmp * sqrt(dy+baselinePower);// + v(1) * noiseToSignalRatio);
         sample(2) = cos(2.0*M_PI * float(i)/float(samplingRate) * zSignalFrq) * zSignalAmp * sqrt(dz+baselinePower);// + v(2) * noiseToSignalRatio);
@@ -165,7 +164,7 @@ int main(int argc, char** argv)
     RSEMatrixStruct rseParams;// = rseComputer.returnAnswer();
 
     socket_t supervisor(context, ZMQ_REQ);
-    supervisor.connect("ipc:///tmp/supervisor.pipe");
+    supervisor.connect("ipc:///tmp/imitator.pipe");
 
     unsigned prevTrial = -1;
     unsigned currentTrial = -1;

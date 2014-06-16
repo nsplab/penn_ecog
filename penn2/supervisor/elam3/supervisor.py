@@ -40,7 +40,6 @@ ssocket.bind("ipc:///tmp/supervisor.pipe")
 
 # socket to publish state to graphics modules
 gsocket = context.socket(zmq.REP)
-#gsocket.setsockopt(zmq.HWM, 1)
 gsocket.bind("ipc:///tmp/graphics.pipe")
 
 # parameters
@@ -66,6 +65,18 @@ config.blockWidth = config.workspaceRadius * float(config.blockWidthPercent) / 1
 config.blockLengthTime = float(secLog['BarLength'])
 dimensions = int(secLog['dimensions'])
 workspace_axis = int(secLog['workspace_axis'])
+machineBeingUsed = secLog['MachineBeingUsed']
+imitatorIsPresent = False
+if "Imitator" in machineBeingUsed:
+    imitatorIsPresent = True
+
+
+if imitatorIsPresent:
+    # socket to publish state to the imitator module
+    isocket = context.socket(zmq.REP)
+    isocket.bind("ipc:///tmp/imitator.pipe")
+
+
 
 # create state objects
 gameState = GameState(config.workspaceRadius, config.blockWidthPercent, config.blockLengthTime)
@@ -201,9 +212,10 @@ while run:
     if gvec[0] == "p":
         gameState.pause = True
         filterState.pause = True
-        if gameState.prevPause == False:
+        '''if gameState.prevPause == False:
             vec_str = ssocket.recv()
             ssocket.send(filterState.serialize())
+        '''
     elif gvec[0] == "c":
         gameState.pause = False
         filterState.pause = False
