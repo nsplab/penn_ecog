@@ -160,9 +160,9 @@ int main()
         iss>>x>>y>>z;
         //cout<<"x:"<<x<<"\ty:"<<y<<"\tz:"<<z<<endl;
 
-        diffx = x - prevx;
-        diffy = y - prevy;
-        diffz = z - prevz;
+        diffx = (x - prevx)/640.0f * 4.0;
+        diffy = -(y - prevy)/480.0f * 4.0;
+        diffz = 0.0f;//z - prevz;
 
         //cout<<"dx:"<<diffx<<"\tdy:"<<diffy<<"\tdz:"<<diffz<<endl;
 
