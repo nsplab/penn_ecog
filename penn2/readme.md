@@ -49,7 +49,8 @@ The Graphics module receives the state of the game from "ipc:///tmp/graphics.pip
 
 How to compile and run
 --------------
-The required external libraries: (important: you always want to add the dev versions of these packages, because it includes header files needed for compiling)
+The required external libraries: (important: you always want to add the dev versions of these packages, because it includes header files needed for compiling):
+
 1. ZMQ
 2. Visual Python for the python graphics module
 3. Openscenegraph for the C++ graphics module
