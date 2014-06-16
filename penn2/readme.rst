@@ -65,7 +65,15 @@ The required external libraries: (important: you always want to add the dev vers
 		to install, use this command: sudo pip install configobj (you probably can't install synaptic package manager for this)
 		note that pip (python-pip) is the Python installing program, used to distribute packages in Python
 
-To compile C++ modules use cmake, create a build subdirectory and in that directory run:
-cmake ../
-make
-and then binary file is built. To run the modules, the order does not matter, go to each module's directory and run the binary or pyython script. 
+To compile C++ modules use cmake, create a build subdirectory and in that directory run and then binary file is built.
+For example,
+
+::
+
+  cd penn2/feature_extraction/feature_extract_cpp/
+  mkdir build
+  cd build
+  cmake ../
+  make
+
+To run the modules, the order does not matter, go to each module's directory and run the binary or pyython script. 
