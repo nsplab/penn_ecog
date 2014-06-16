@@ -33,11 +33,11 @@ Vector3f DepthToWorld(int x, int y, int depthValue)
     static const double cx_d = 3.3930780975300314e+02;
     static const double cy_d = 2.4273913761751615e+02;
 
-    Vec3f result;
+    Vector3f result;
     const double depth = RawDepthToMeters(depthValue);
-    result.x = float((x - cx_d) * depth * fx_d);
-    result.y = float((y - cy_d) * depth * fy_d);
-    result.z = float(depth);
+    result[0] = float((x - cx_d) * depth * fx_d);
+    result[1]= float((y - cy_d) * depth * fy_d);
+    result[2] = float(depth);
     return result;
 }
 
