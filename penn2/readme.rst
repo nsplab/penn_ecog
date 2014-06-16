@@ -51,7 +51,7 @@ How to compile and run
 --------------
 The required external libraries: (important: you always want to add the dev versions of these packages, because it includes header files needed for compiling):
 
-1. ZMQ
+1. ZMQ Version 4.0.4 (http://download.zeromq.org/zeromq-4.0.4.tar.gz, https://github.com/zeromq/cppzmq)
 2. Visual Python for the python graphics module
 3. Openscenegraph for the C++ graphics module
 4. openkinect and its python wrapper
@@ -59,11 +59,12 @@ The required external libraries: (important: you always want to add the dev vers
 6. IT++
 7. Boost:  in Synaptic Package Manager, the exact name is libboost-math-dev (we have been using the most stable version, whatever version that is).
 8. Armadillo - for linear algebra in matlab-like syntax
-9. FLTK - used for making the popup window that lets you update the filter parameters while the game is running (FLTK is for creating GUIs)
+9. FLTK - used for making the popup window that lets you update the filter parameters while the game is running (FLTK is for creating GUIs) (libfltk1.3-dev 1.3.2-4)
 10. install python-pip - Python installing program. needed to complete the ConfigObj installation. Use the Synaptic program to download.
 11. ConfigObj - python library used by penn2/launcher/elam3.py in order to edit config files while keeping comment lines intact.
 		to install, use this command: sudo pip install configobj (you probably can't install synaptic package manager for this)
 		note that pip (python-pip) is the Python installing program, used to distribute packages in Python
+12. SDL [for cardgame] libsdl1.2-dev and sdl-mixer1.2
 
 To compile C++ modules use cmake, create a build subdirectory and in that directory run and then binary file is built.
 For example,
