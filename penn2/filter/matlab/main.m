@@ -18,6 +18,9 @@
 %   parameter values
 %   parameter names
 
+% Path for zmq MATLAB wrapper
+addpath('../../libs/zeromq-matlab/')
+
 % read the main log file created by the launcher
 % this is based on the INI file standard. the matlab function inifile
 % reads the INI format, downloaded on 6/5/14 from http://www.mathworks.com/matlabcentral/fileexchange/2976-inifile/content/inifile.zip
