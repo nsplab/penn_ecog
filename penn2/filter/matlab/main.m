@@ -18,11 +18,11 @@
 %   parameter values
 %   parameter names
 
-% Get rid of any remaining zmq sockets
-zmq( 'cleanup');
-
 % Path for zmq MATLAB wrapper
 addpath('../../libs/zeromq-matlab/')
+
+% Get rid of any remaining zmq sockets
+zmq( 'cleanup');
 
 % read the main log file created by the launcher
 % this is based on the INI file standard. the matlab function inifile
