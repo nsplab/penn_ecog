@@ -18,6 +18,9 @@
 %   parameter values
 %   parameter names
 
+% Get rid of any remaining zmq sockets
+zmq( 'cleanup');
+
 % Path for zmq MATLAB wrapper
 addpath('../../libs/zeromq-matlab/')
 
@@ -124,12 +127,15 @@ while ~exit
             waitForData = false;
         end
         if toc > 1.0
-            disp('no darta from feature_extractor');
+            disp('no data from feature_extractor');
             exit = true;
             break;
         end
     end
-    
+    if exit
+        break;
+    end
+
     disp('received');
     % extract the time stamp from the first 8 bytes and typcast it into a
     % 64 bit integer which contains the time stamp
@@ -175,7 +181,7 @@ while ~exit
             waitForData = false;
         end
         if toc > 1.0
-            disp('no darta from supervisor');
+            disp('no data from supervisor');
             exit = true;
             break;
         end
