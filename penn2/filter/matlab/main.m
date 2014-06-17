@@ -21,6 +21,9 @@
 % Path for zmq MATLAB wrapper
 addpath('../../libs/zeromq-matlab/')
 
+% Get rid of any remaining zmq sockets
+zmq( 'cleanup');
+
 % read the main log file created by the launcher
 % this is based on the INI file standard. the matlab function inifile
 % reads the INI format, downloaded on 6/5/14 from http://www.mathworks.com/matlabcentral/fileexchange/2976-inifile/content/inifile.zip
@@ -124,12 +127,15 @@ while ~exit
             waitForData = false;
         end
         if toc > 1.0
-            disp('no darta from feature_extractor');
+            disp('no data from feature_extractor');
             exit = true;
             break;
         end
     end
-    
+    if exit
+        break;
+    end
+
     disp('received');
     % extract the time stamp from the first 8 bytes and typcast it into a
     % 64 bit integer which contains the time stamp
@@ -175,7 +181,7 @@ while ~exit
             waitForData = false;
         end
         if toc > 1.0
-            disp('no darta from supervisor');
+            disp('no data from supervisor');
             exit = true;
             break;
         end

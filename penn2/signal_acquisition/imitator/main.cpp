@@ -164,7 +164,7 @@ int main(int argc, char** argv)
     RSEMatrixStruct rseParams;// = rseComputer.returnAnswer();
 
     socket_t supervisor(context, ZMQ_REQ);
-    supervisor.connect("ipc:///tmp/imitator.pipe");
+    supervisor.connect("ipc:///tmp/supervisor.pipe");
 
     unsigned prevTrial = -1;
     unsigned currentTrial = -1;

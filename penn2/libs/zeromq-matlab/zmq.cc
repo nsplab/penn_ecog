@@ -212,7 +212,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 		}
 
 		/* Blocking Receive */
-		/* int nbytes = zmq_recv(sockets[socket_id], recv_buffer, BUFLEN, 0); 8/
+		/* int nbytes = zmq_recv(sockets[socket_id], recv_buffer, BUFLEN, 0); */
 		/* Non-blocking Receive */
 		//mexPrintf("ZMQMEX: trying to receive data.\n");
 		int nbytes = zmq_recv(sockets[socket_id], recv_buffer, BUFLEN, ZMQ_DONTWAIT);
