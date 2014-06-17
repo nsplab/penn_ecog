@@ -605,8 +605,8 @@ def StartDemoBCI():
         if "Matlab" in algorithm.get():
             print "Matlab filter"
             # matlab -nosplash -nodesktop -nojvm -nodisplay -r "main"
-            pFilter = Popen([r'matlab13', '-nosplash', '-nodesktop', '-nojvm', '-nodisplay',
-                            '-r', '"main"'], cwd=r'../filter/matlab/')
+            #pFilter = Popen([r'matlab13', '-nosplash', '-nodesktop', '-nojvm', '-nodisplay',
+            #                '-r', '"main"'], cwd=r'../filter/matlab/')
         else:
             print "C++ filter"
             pFilter = Popen([r'../../cpp/build/filter'],

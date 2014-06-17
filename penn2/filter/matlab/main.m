@@ -126,7 +126,7 @@ while ~exit
         if hasMore == 0
             waitForData = false;
         end
-        if toc > 1.0
+        if toc > 15.0
             disp('no data from feature_extractor');
             exit = true;
             break;
@@ -180,7 +180,7 @@ while ~exit
         if hasMore == 0
             waitForData = false;
         end
-        if toc > 1.0
+        if toc > 15.0
             disp('no data from supervisor');
             exit = true;
             break;
