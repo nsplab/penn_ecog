@@ -42,14 +42,14 @@ Visual studio 2008 is installed on the Windows7 virtual environment
 ghiamp_record:
   - program that receives data from the gtech and uses ZMQ to broadcast the signal
   - Code for this program was modified from the gHIampDemo.cpp program, in the originally provided Windows SDK (sent by email to Mosalam)
-  - This code is located in C:\Users\nsplab\Desktop\gHIampCAPI\C++ Projects\gHIampDemo\gHIampDemo.sln - “solution file” contains the Visual Studio project for the GHIampDemo
+  - This code is located in C:\\Users\\nsplab\\Desktop\\gHIampCAPI\\C++ Projects\\gHIampDemo\\gHIampDemo.sln - “solution file” contains the Visual Studio project for the GHIampDemo
   - Double click on this file to open this collection of code.
   - To record: Double click on ghiamp_record - 
 
 Important sampling parameters set in gHIampDemo:
 ------------------------------------------------
 
-C:\Users\nsplab\Desktop\gHIampCAPI\Doc\gHIampCAPI.pdf:
+C:\\Users\\nsplab\\Desktop\\gHIampCAPI\\Doc\\gHIampCAPI.pdf:
   - this is the manual for the gHIamp API
   - It doesn’t discuss the demo program, but it does describe each function separately, including these critical parameters:
 
