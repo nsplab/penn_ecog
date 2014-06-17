@@ -55,16 +55,18 @@ def check_streaming_status():
         try:
             msg = statusSocket.recv(zmq.DONTWAIT)
             print "msg ", msg
+
+            if msg == "1":
+                Label31.configure(background="#30ff30")
+                streamingState.set("Streaming from data acquisitoin system")
+                isStreaming = True
+            else:
+                Label31.configure(background="#ff3030")
+                streamingState.set("Not streaming from data acquisitoin system")
+                isStreaming = False
+
         except:
             pass
-        if msg == "1":
-            Label31.configure(background="#30ff30")
-            streamingState.set("Streaming from data acquisitoin system")
-            isStreaming = True
-        else:
-            Label31.configure(background="#ff3030")
-            streamingState.set("Not streaming from data acquisitoin system")
-            isStreaming = False
 
         streamingStatusTimer = threading.Timer(2.0, check_streaming_status)
         streamingStatusTimer.start()
@@ -220,7 +222,7 @@ def set_Tk_var():
     psdFeatureRate.set(secLog['PsdFeatureRate'])
     psdWindowLength.set(secLog['PsdWindowLength'])
     game.set(secLog['Game'])
-    workspace.set(secLog['Workspace'])
+    workspace.set(secLog['workspace'])
     barWidth.set(secLog['BarWidth'])
     barLength.set(secLog['BarLength'])
 
@@ -556,9 +558,11 @@ def CalibrateBCI():
 
 def StartDemoBCI():
 
-        if not isStreaming:
-            tkMessageBox.showinfo("Data missing", 'Data not streaming. For TDT, make sure it\'s on Preview and check that data cables are connected. Finally, you may need to restart one or more computers')
-            return
+        # TDT specific code
+        # make sure the data is being streamed, otherwise don't run the bci task
+        #if not isStreaming:
+        #    tkMessageBox.showinfo("Data missing", 'Data not streaming. For TDT, make sure it\'s on Preview and check that data cables are connected. Finally, you may need to restart one or more computers')
+        #    return
 
 
         global pFeature, pFilter, pSupervisor, pGraphics
@@ -578,21 +582,6 @@ def StartDemoBCI():
                         cwd=r'../feature_extraction/feature_extract_cpp/build/')
                 time.sleep(0.1)
 
-        if not (pFilter is None):
-            pFilter.send_signal(SIGINT)
-            pFilter = None
-
-        if "Matlab" in algorithm.get():
-            print "Matlab filter"
-            # matlab -nosplash -nodesktop -nojvm -nodisplay -r "main"
-            pFilter = Popen([r'matlab', '-nosplash', '-nodesktop', '-nojvm', '-nodisplay',
-                            '-r', '"main"'], cwd=r'../filter/matlab/')
-        else:
-            print "C++ filter"
-            pFilter = Popen([r'../../cpp/build/filter'],
-                    cwd=r'../filter/cpp/build/')
-        time.sleep(0.1)
-
         if not (pSupervisor is None):
             pSupervisor.send_signal(SIGINT)
             pSupervisor = None
@@ -607,6 +596,21 @@ def StartDemoBCI():
 
         pGraphics = Popen([r'../../elam3/build/elam3'],
                 cwd=r'../graphics/elam3/build/')
+        time.sleep(0.1)
+
+        if not (pFilter is None):
+            pFilter.send_signal(SIGINT)
+            pFilter = None
+
+        if "Matlab" in algorithm.get():
+            print "Matlab filter"
+            # matlab -nosplash -nodesktop -nojvm -nodisplay -r "main"
+            pFilter = Popen([r'matlab13', '-nosplash', '-nodesktop', '-nojvm', '-nodisplay',
+                            '-r', '"main"'], cwd=r'../filter/matlab/')
+        else:
+            print "C++ filter"
+            pFilter = Popen([r'../../cpp/build/filter'],
+                    cwd=r'../filter/cpp/build/')
         time.sleep(0.1)
 
 def StopBCITask():
