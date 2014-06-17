@@ -33,6 +33,7 @@ float sign(float par) {
 
 context_t context(2);
 
+bool quit = false;
 void GenerateSignal() {
     socket_t publisher(context, ZMQ_PUB);
 
@@ -71,8 +72,7 @@ void GenerateSignal() {
     //Matrix<float, Dynamic, Dynamic> tsignal(60,1); // output signal
     Vector3f sample; // synthetic signal based on x,y,z from kinect
 
-    bool exit = false;
-    for (size_t timeStamp=0; !exit; timeStamp++) {
+    for (size_t timeStamp=0; !quit; timeStamp++) {
 
         size_t i = timeStamp % samplingRate;
         float dx = diffx;
@@ -145,8 +145,7 @@ void GenerateSignal() {
 int main(int argc, char** argv)
 {
     cout<<"argc: "<<argc<<endl;
-    if (argc > 1) {
-
+    if (argc == 2) {
         direct = true;
     }
 
@@ -292,6 +291,12 @@ int main(int argc, char** argv)
         cout<<"diffz "<<diffz<<endl;
 
         this_thread::sleep_for(chrono::microseconds(static_cast<int>(timeBin * 1000000.0)));
+        fprintf(stderr, "argc: %d > 2?\n", argc);
+        if (argc > 2) {
+            quit = true;
+            broadcast.join();
+            return 0;
+        }
     }
 
     return 0;

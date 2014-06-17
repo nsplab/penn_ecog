@@ -65,7 +65,7 @@ using namespace zmq;
 extern bool pauseGame;
 
 
-int main()
+int main(int argc, char *argv[])
 {
     ////////////////////////////////
     // PREPARING GRAPHICS based on openscenegraph (osg)
@@ -73,7 +73,7 @@ int main()
     // OSG Version 3.0.1, used with Ubuntu Linux 13.04
     // 1. Create instances of all graphics objects defined above
     // 2. Create instance of the arm object which also implements forward kinematics.
-    // 2. Render arm on screen.
+    // 3. Render arm on screen.
     ////////////////////////////////
     
     /* define variable root which is the main Group of scene graph, which organizes all
@@ -140,12 +140,13 @@ int main()
 
     root->addChild(createMeshCube());
 
-    osg::DisplaySettings::instance()->setNumMultiSamples(8);
+    //osg::DisplaySettings::instance()->setNumMultiSamples(8); // TODO: causes segfault for bryan (6/17)
     osgViewer::Viewer visor;
     visor.setSceneData(root);
     visor.setUpViewInWindow(0,0,1000,1000,0);
     osgViewer::Viewer::Windows windows;
     visor.getWindows(windows);
+    //visor.realize();
     windows[0]->setWindowName("3D Env");
 
     visor.setCameraManipulator(new osgGA::TrackballManipulator);
@@ -346,9 +347,9 @@ int main()
 
        cout<<"send"<<endl;
         if (pauseGame) {
-            subscriber.send("c", 2);
-        } else {
             subscriber.send("p", 2);
+        } else {
+            subscriber.send("c", 2);
         }
         cout<<"sent"<<endl;
 
@@ -469,6 +470,10 @@ int main()
             }
             cout<<"IK error: "<<error<<endl;
             cout<<"solved IK"<<endl;
+        }
+        fprintf(stderr, "argc: %d != 1?\n", argc);
+        if (argc != 1) {
+            break;
         }
 
     }

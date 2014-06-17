@@ -289,6 +289,12 @@ while run:
 
     print 'filterState.trial ', filterState.trial
 
+    # hack to allow supervisor to quit
+    print('len(sys.argv):')
+    print(len(sys.argv))
+    if (len(sys.argv) > 2):
+        break
+
     # if the game is paused do not write the log file
     if gameState.pause:
         continue
@@ -369,5 +375,6 @@ while run:
     #gameState.hand_pos[1] = -(float(vec[1]) - 240) / 26.0
     #gameState.hand_pos[2] = -(float(vec[1]) - 12) / 3.0
 
-trialTimeoutThread.cancel()
+#trialTimeoutThread.cancel()
 f.close()
+

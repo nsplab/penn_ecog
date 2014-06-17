@@ -27,4 +27,4 @@ readme.md -this current file
 
 
 
-
+TODO: problem with font for graphics
