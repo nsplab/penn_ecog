@@ -1,13 +1,13 @@
 [ExperimentLog]
-Time = 2014/06/01 07:51:07
+Time = 2014/06/17 13:47:21
 Task = Demo BCI
 Age = 66
 Gender = Male
-SubjectNumber = 7
+SubjectNumber = 8
 HandDominance = Right-handed
 GridOnLeftHemisphere = 1
 GridOnRighttHemisphere = 
-MachineBeingUsed = TDT
+MachineBeingUsed = Imitator(direct)
 SamplingRate = 9600
 EcogChannels = 6
 ForceSensorChannel = 7
@@ -15,7 +15,8 @@ EmgChannels = 8
 SynchronizingPulseChannel = 9
 TotalNumberOfChannels = 12
 SensorInHand = Right Hand
-Algorithm = Running Average# comment goes here
+# the type of filter that has been selected by the user 
+Algorithm = Matlab 1
 BciMovingaverageXChannels = 1
 BciMovingaverageXFrequencies = 15-30
 BciMovingaverageYChannels = 4
@@ -28,6 +29,8 @@ PsdWindowType = Rectangle
 PsdFeatureRate = 11
 PsdWindowLength = 500
 Game = BCI Hero
-Workspace = 1D
+workspace = 1D-X
+dimensions = 1
+workspace_axis = 1
 BarWidth = 10
-BarLength = 10
+BarLength = 3
