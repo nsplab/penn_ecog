@@ -255,7 +255,7 @@ def LoadDriver():
         time.sleep(0.1)
     elif machineBeingUsed.get() == "TDT":
         call(["killall", "PO8eBroadcast"])
-        call(["../signal_acquisition/tdt/loaddriver.sh"])
+        call(["../signal_acquisition/tdt/loaddriver.py"])
         if not (pSignal is None):
             pSignal.send_signal(SIGINT)
             pSignal = None

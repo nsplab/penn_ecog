@@ -1,4 +1,3 @@
-#!/bin/sh
 cpufreq-set -r -g performance
 insmod ./Plx9054.ko
 ./mkDevs
