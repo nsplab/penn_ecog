@@ -3,7 +3,7 @@
 MAJOR=`grep Plx9054 /proc/devices | sed 's/ Plx9054//'`
 
 echo Plx9054 found with major $MAJOR
-mkdir /dev/plx
+mkdir -p /dev/plx
 mknod /dev/plx/Plx9054 c $MAJOR 255
 mknod /dev/plx/Plx9054-0 c $MAJOR 0
 mknod /dev/plx/Plx9054-1 c $MAJOR 1
