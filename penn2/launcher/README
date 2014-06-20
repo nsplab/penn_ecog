@@ -1,0 +1,1 @@
+Add BoadcastStatus to to signal acquisition modules that are missing it (signalstream.pipe)

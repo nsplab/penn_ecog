@@ -1,0 +1,17 @@
+config/supervisor_config.cfg
+config/feature_extract_signal.cfg
+config/signal_tdt.cfg
+config/feature_extract_config.cfg
+config/signal_gtec.cfg
+config/penn.cfg
+config/penn.cfg~
+config/graphics.cfg
+config/filter.cfg
+graphics/elam2/elam2.cfg
+graphics/cardgame/cardgame.cfg
+feature_extraction/feature_extract_cpp/build/cde-package/cde-root/home/bryanhe/penn_ecog/penn2/config/feature_extract_config.cfg
+feature_extraction/feature_extract_cpp/kinect_signal.cfg
+data/filter_settings.cfg
+launcher/tdt.cfg
+filter/cpp/filter.cfg
+
