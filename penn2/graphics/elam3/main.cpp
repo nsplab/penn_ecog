@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
     patUpperArm->addChild(upperArm);
 
     osg::ref_ptr<osg::ShapeDrawable> sphereHand = new osg::ShapeDrawable;
-    sphereHand->setShape( new osg::Sphere(osg::Vec3(-3.8, -0.107, 0.03077), 0.5f) );
+    sphereHand->setShape( new osg::Sphere(osg::Vec3(-3.2, -0.107, 0.03077), 0.5f) );
     osg::ref_ptr<osg::Geode> sphere = new osg::Geode;
     sphere->addDrawable(sphereHand.get());
     patForeArm->addChild(sphere);
@@ -136,11 +136,12 @@ int main(int argc, char *argv[])
 
     osg::ref_ptr<TransparencyNode> fxNode = new TransparencyNode;
     fxNode->addChild(patUpperArm);
-    cartoon->addChild(fxNode);
+    //cartoon->addChild(fxNode);
+    root->addChild(fxNode);
 
     root->addChild(createMeshCube());
 
-    //osg::DisplaySettings::instance()->setNumMultiSamples(8); // TODO: causes segfault for bryan (6/17)
+    osg::DisplaySettings::instance()->setNumMultiSamples(4); // TODO: causes segfault for bryan (6/17)
     osgViewer::Viewer visor;
     visor.setSceneData(root);
     visor.setUpViewInWindow(0,0,1000,1000,0);
@@ -226,7 +227,8 @@ int main(int argc, char *argv[])
     osg::Geode* basicShapesGeode = new osg::Geode();
     basicShapesGeode->addDrawable(currentCubeDrawable);
     //root->addChild(basicShapesGeode);
-    cartoon->addChild(basicShapesGeode);
+    //cartoon->addChild(basicShapesGeode); // TODO: could make more compatible by using root->addChild(basicShapesGeode) instead
+    root->addChild(basicShapesGeode);
 
 
     osg::Box* nextCube = new osg::Box(osg::Vec3(2.5,0.5,-2.0), 5, 0.5, 0.5);
@@ -238,8 +240,9 @@ int main(int argc, char *argv[])
     osg::Geode* nextShapesGeode = new osg::Geode();
     nextShapesGeode->addDrawable(nextCubeDrawable);
     //root->addChild(nextShapesGeode);
-    cartoon->addChild(nextShapesGeode);
-    root->addChild(cartoon);
+    //cartoon->addChild(nextShapesGeode);
+    root->addChild(nextShapesGeode);
+    //root->addChild(cartoon);
 
     GuiKeyboardEventHandler* guiEventHandler = new GuiKeyboardEventHandler();
     visor.addEventHandler(guiEventHandler);
@@ -266,7 +269,7 @@ int main(int argc, char *argv[])
 
     //fireSwitch->setAllChildrenOff();
 
-    osg::ref_ptr<osgText::Font> g_font = osgText::readFontFile("../Ubuntu-B.ttf");
+    osg::ref_ptr<osgText::Font> g_font = osgText::readFontFile("Ubuntu-B.ttf");
 
     osg::ref_ptr<osg::Geode> textGeode = new osg::Geode;
     osg::ref_ptr<osgText::Text> scoreText = createText(
