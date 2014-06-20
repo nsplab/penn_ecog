@@ -255,7 +255,7 @@ def LoadDriver():
         time.sleep(0.1)
     elif machineBeingUsed.get() == "TDT":
         call(["killall", "PO8eBroadcast"])
-        call(["/home/user/Desktop/loaddriver.py"])
+        call(["../signal_acquisition/tdt/loaddriver.sh"])
         if not (pSignal is None):
             pSignal.send_signal(SIGINT)
             pSignal = None
@@ -296,7 +296,7 @@ def LoadDriver():
 def RunDemoSqueeze():
         if not isStreaming:
             tkMessageBox.showinfo("Data missing", 'Data not streaming. For TDT, make sure it\'s on Preview and check that data cables are connected. Finally, you may need to restart one or more computers')
-            return
+            #return
 
         UpdateDemoMode('0')
         global pSqueeze
@@ -310,7 +310,7 @@ def RunSqueeze():
 
         if not isStreaming:
             tkMessageBox.showinfo("Data missing", 'Data not streaming. For TDT, make sure it\'s on Preview and check that data cables are connected. Finally, you may need to restart one or more computers')
-            return
+            #return
 
         UpdateDemoMode('1')
         Record("Squeeze")
@@ -441,7 +441,7 @@ def RunBCI():
 
         if not isStreaming:
             tkMessageBox.showinfo("Data missing", 'Data not streaming. For TDT, make sure it\'s on Preview and check that data cables are connected. Finally, you may need to restart one or more computers')
-            return
+            #return
 
         global pFeature, pFilter, pSupervisor, pGraphics, selectedSession
         UpdateDemoMode('0')
@@ -523,7 +523,7 @@ def CalibrateBCI():
 
         if not isStreaming:
             tkMessageBox.showinfo("Data missing", 'Data not streaming. For TDT, make sure it\'s on Preview and check that data cables are connected. Finally, you may need to restart one or more computers')
-            return
+            #return
 
 
         answer = tkMessageBox.askokcancel("Calibrate",
