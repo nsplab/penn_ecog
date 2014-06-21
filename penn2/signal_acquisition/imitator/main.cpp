@@ -142,6 +142,55 @@ void GenerateSignal() {
     }
 }
 
+bool dataBeingStreamed = false;
+
+void BroadcastStatus() {
+
+    context_t context(1);     //number of threads used by ZMQ
+    socket_t publisher(context, ZMQ_PUB); //socket used to broadcast data
+    int hwm = 1;        //hwm - high water mark - determines buffer size for
+    //data passed through ZMQ. hwm = 1 makes the ZMQ buffer
+    //size = 1. This means that if no module has accessed a
+    //value written through ZMQ, new values will be dropped
+    //until any module reads the value
+    publisher.setsockopt(ZMQ_SNDHWM, &hwm, sizeof(hwm));
+    int conflate = 1;
+    publisher.setsockopt(ZMQ_CONFLATE, &conflate, sizeof(conflate));
+    publisher.bind("ipc:///tmp/signalstream.pipe"); //gives address of data that other modules can reference
+
+    chrono::time_point<chrono::system_clock> lastReceiveTime;
+    lastReceiveTime = chrono::system_clock::now();
+
+    char status = '0';
+    publisher.send(&status, sizeof(char));
+
+    while (!quit) {
+        if (dataBeingStreamed) {
+            lastReceiveTime = chrono::system_clock::now();
+        }
+
+        if ((dataBeingStreamed) && (status == '0')) {
+            status = '1';
+            cout<<"published status 1"<<endl;
+
+        } else {
+            std::chrono::duration<double> elapsed_seconds = chrono::system_clock::now()-lastReceiveTime;
+            if ((status == '1') && (elapsed_seconds.count()>3.0)) {
+                status = '0';
+                cout<<"published status 0"<<endl;
+            }
+        }
+
+        publisher.send(&status, sizeof(char));
+    }
+
+    publisher.close();
+    context.close();
+
+}
+
+// TODO: signal to exit gracefully
+
 int main(int argc, char** argv)
 {
     cout<<"argc: "<<argc<<endl;
@@ -185,6 +234,10 @@ int main(int argc, char** argv)
     // threshold on acceleration
     float accThreshold = 0.2;
 
+    thread broadcastThread(BroadcastStatus);
+
+
+    dataBeingStreamed = true;
     for (;;)   {
 
         message_t zmq_message(sendMsg.length());
