@@ -3,13 +3,13 @@ MEX=mex -O -I/usr/local/include -L/usr/local/lib
 MEXEXT=$(shell mexext)
 PWD=$(shell pwd)
 
-TARGETS=zmq
-.PHONY: all clean $(TARGETS)
+TARGETS=zmq.mexa64
+.PHONY: all clean
 	
 all: $(TARGETS)
 
-zmq:	
-	$(MEX) $@.cc -lzmq
+zmq.mexa64:	zmq.cc
+	$(MEX) $(basename $@).cc -lzmq
 
 test:
 	@echo "Testing matlab scripts!"
