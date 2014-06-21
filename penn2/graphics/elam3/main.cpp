@@ -269,7 +269,7 @@ int main(int argc, char *argv[])
 
     //fireSwitch->setAllChildrenOff();
 
-    osg::ref_ptr<osgText::Font> g_font = osgText::readFontFile("Ubuntu-B.ttf");
+    osg::ref_ptr<osgText::Font> g_font = osgText::readFontFile("../Ubuntu-B.ttf");
 
     osg::ref_ptr<osg::Geode> textGeode = new osg::Geode;
     osg::ref_ptr<osgText::Text> scoreText = createText(
