@@ -58,11 +58,11 @@ def check_streaming_status():
 
             if msg == "1":
                 Label31.configure(background="#30ff30")
-                streamingState.set("Streaming from data acquisitoin system")
+                streamingState.set("Streaming from data acquisition system")
                 isStreaming = True
             else:
                 Label31.configure(background="#ff3030")
-                streamingState.set("Not streaming from data acquisitoin system")
+                streamingState.set("Not streaming from data acquisition system")
                 isStreaming = False
 
         except:
@@ -171,7 +171,7 @@ def set_Tk_var():
 
     global streamingState
     streamingState = StringVar()
-    streamingState.set("Not streaming from data acquisitoin system")
+    streamingState.set("Not streaming from data acquisition system")
 
     global recordingState
     recordingState = StringVar()
