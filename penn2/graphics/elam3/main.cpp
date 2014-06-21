@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
     patUpperArm->addChild(upperArm);
 
     osg::ref_ptr<osg::ShapeDrawable> sphereHand = new osg::ShapeDrawable;
-    sphereHand->setShape( new osg::Sphere(osg::Vec3(-3.2, -0.107, 0.03077), 0.5f) );
+    sphereHand->setShape( new osg::Sphere(osg::Vec3(-3.8, -0.107, 0.03077), 0.5f) );
     osg::ref_ptr<osg::Geode> sphere = new osg::Geode;
     sphere->addDrawable(sphereHand.get());
     patForeArm->addChild(sphere);
