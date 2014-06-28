@@ -5,6 +5,11 @@
 
 using namespace std;
 
+double angle(Eigen::Vector3d a, Eigen::Vector3d b)
+{
+  return acos(a.dot(b) / sqrt(a.dot(a) * b.dot(b)));
+}
+
 // solves the inverse kinematics problem
 // targetPos: the 3d position of the target position that hand/end-point should go there
 // currentPos:
@@ -32,8 +37,8 @@ double SolveArmInvKinematics(Eigen::Vector3d targetPos, Eigen::Vector3d& current
 
     Eigen::Vector3d shoulderPos(0.0, 0.0, -2.0); // accurate position
     Eigen::Vector3d elbowPos(4.92282, 0.0999968, -2.0); // accurate position
-//    Eigen::Vector3d wristPos(8.72282, 0.206994, -1.96923); // accurate position
-    Eigen::Vector3d wristPos(8.72282, 0.0999968, -2.0); // test
+    Eigen::Vector3d wristPos(7.72282, 1.0999968, -2.0); // test
+
 
 //    Eigen::Vector3d currentShoulderAxisX = shoulderQuat._transformVector(shoulderAxisX);
 //    Eigen::Vector3d currentShoulderAxisY = shoulderQuat._transformVector(shoulderAxisY);
@@ -85,9 +90,9 @@ double SolveArmInvKinematics(Eigen::Vector3d targetPos, Eigen::Vector3d& current
         ///
 
 
-        //Eigen::Vector3d jjtd = jacobian * jacobian.transpose() * displacement;
+        Eigen::Vector3d jjtd = jacobian * jacobian.transpose() * displacement;
 
-        //double alpha = displacement.dot(jjtd) / jjtd.dot(jjtd) * 0.5;
+        double alpha = displacement.dot(jjtd) / jjtd.dot(jjtd) * 0.5;
         //cout<<"alpha "<<alpha<<endl;
 
         // ik 5 compute rotation updates
@@ -95,10 +100,21 @@ double SolveArmInvKinematics(Eigen::Vector3d targetPos, Eigen::Vector3d& current
         //Eigen::Vector4d deltaTheta = alpha * jacobian.transpose() * displacement; // Section 3
         //Eigen::Vector4d deltaTheta = jacobian.transpose() * (jacobian * jacobian.transpose()).inverse() * displacement; // eq 9
         //Eigen::Vector4d deltaTheta = (jacobian.transpose() * jacobian + 1 * Eigen::Matrix<double, 4, 4>::Identity()).inverse() * jacobian.transpose() * displacement; // eq 10
-        Eigen::Vector4d deltaTheta = jacobian.transpose() * (jacobian * jacobian.transpose() + 1 * Eigen::Matrix<double, 3, 3>::Identity()).inverse() * displacement; // eq 11
+        Eigen::Vector4d deltaTheta = alpha * jacobian.transpose() * (jacobian * jacobian.transpose() + 1 * Eigen::Matrix<double, 3, 3>::Identity()).inverse() * displacement; // eq 11
+
+        double elbowAngle = angle((currentWristPos - shoulderPos), (currentWristPos - currentElbowPos));
+        cerr << "angle: " << elbowAngle << endl;
+        //Eigen::Vector4d dCost(0.0, 0.0, 0.0, 0.0);
+        //deltaTheta += dCost;
+        //deltaTheta(3) = 0.5-angle((currentWristPos - shoulderPos), (currentWristPos - currentElbowPos));
+        //deltaTheta(0) = 0.5-angle((currentWristPos - shoulderPos), (currentWristPos - currentElbowPos));
+        //exit(0);
 
         ///debug
-        //cout<<"deltaTheta: "<<deltaTheta<<endl;
+        cout<<"deltaTheta: "<<deltaTheta<<endl;
+        //static Eigen::Vector4d theta = Eigen::Vector4d::Zero();
+        //theta += deltaTheta;
+        //cerr<<"theta: "<<theta<<endl;
         ///
 
 
@@ -110,6 +126,7 @@ double SolveArmInvKinematics(Eigen::Vector3d targetPos, Eigen::Vector3d& current
                 Eigen::AngleAxis<double>(deltaTheta(1), currentShoulderAxisY) *
                 Eigen::AngleAxis<double>(deltaTheta(2), currentShoulderAxisZ);
         shoulderQuat = deltaShoulderQuat.cast<float>() * shoulderQuat;
+        //cout << "shoulderQuat: " << shoulderQuat << "\n";
 
         Eigen::Quaternion<double> deltaElbowQuat (Eigen::AngleAxis<double>(deltaTheta(3), currentElbowAxisZ));
         elbowQuat = deltaElbowQuat.cast<float>() * elbowQuat;
@@ -118,11 +135,28 @@ double SolveArmInvKinematics(Eigen::Vector3d targetPos, Eigen::Vector3d& current
         currentShoulderAxisY = deltaShoulderQuat._transformVector(currentShoulderAxisY);
         currentShoulderAxisZ = deltaShoulderQuat._transformVector(currentShoulderAxisZ);
         currentElbowAxisZ = deltaShoulderQuat._transformVector(currentElbowAxisZ);
-        //cout<<"currentElbowAxisZ "<<currentElbowAxisZ<<endl;
+        cout<<"currentShoulderAxisX "<<currentShoulderAxisX<<endl;
+        cout<<"currentShoulderAxisY "<<currentShoulderAxisY<<endl;
+        cout<<"currentShoulderAxisZ "<<currentShoulderAxisZ<<endl;
         //cout<<"elbowQuat "<<elbowQuat.w()<<" "<<elbowQuat.x()<<" "<<elbowQuat.y()<<" "<<elbowQuat.z()<<endl;
 
         upperArm->setAttitude(osg::Quat(shoulderQuat.x(),shoulderQuat.y(),shoulderQuat.z(),shoulderQuat.w()));
         foreArm->setAttitude(osg::Quat(elbowQuat.x(),elbowQuat.y(),elbowQuat.z(),elbowQuat.w()));
+        static double a = 0;
+        a+=0.0001;
+        cerr << a << "\n";
+        //upperArm->setAttitude(osg::Quat(1, 0, 0, 0));
+        //foreArm->setAttitude(osg::Quat(1, 0, 0, 0));
+        cerr << "shoulderQuat(x, y, z, w):\n"
+             << "\t" << shoulderQuat.x() << "\n"
+             << "\t" << shoulderQuat.y() << "\n"
+             << "\t" << shoulderQuat.z() << "\n"
+             << "\t" << shoulderQuat.w() << "\n";
+        cerr << "elbowQuat(x, y, z, w):\n"
+             << "\t" << elbowQuat.x() << "\n"
+             << "\t" << elbowQuat.y() << "\n"
+             << "\t" << elbowQuat.z() << "\n"
+             << "\t" << elbowQuat.w() << "\n";
 
         osg::Vec3d currentWristPosOsg = handGeode->getBoundingBox().center() * handGeode->getWorldMatrices()[0];
         osg::Vec3d currentElbowPosOsg = elbowGeode->getBoundingBox().center() * elbowGeode->getWorldMatrices()[0];
@@ -130,6 +164,8 @@ double SolveArmInvKinematics(Eigen::Vector3d targetPos, Eigen::Vector3d& current
             currentWristPos[t] = currentWristPosOsg[t];
             currentElbowPos[t] = currentElbowPosOsg[t];
         }
+        cerr << "currentElbowPos:\n" << currentElbowPos << endl;
+        cerr << "currentWristPos:\n" << currentWristPos << endl;
 
         // compute the current position of the elbow given the rotation of the shoulder
         // 1. move the shoulder to the origin, i.e., move the elbow according to that translation
