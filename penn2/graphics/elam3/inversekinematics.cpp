@@ -91,7 +91,9 @@ double SolveArmInvKinematics(Eigen::Vector3d targetPos, Eigen::Vector3d& current
         //cout<<"alpha "<<alpha<<endl;
 
         // ik 5 compute rotation updates
-        Eigen::Vector4d deltaTheta = alpha * jacobian.transpose() * displacement;
+        //Eigen::Vector4d deltaTheta = alpha * jacobian.transpose() * displacement;
+        //Eigen::Vector4d deltaTheta = alpha * jacobian.transpose() * (jacobian * jacobian.transpose()).inverse() * displacement;
+        Eigen::Vector4d deltaTheta = alpha * jacobian.transpose() * (jacobian * jacobian.transpose() + 1 * Eigen::Matrix<double, 3, 3>::Identity()).inverse() * displacement;
 
         ///debug
         //cout<<"deltaTheta: "<<deltaTheta<<endl;
