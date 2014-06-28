@@ -101,7 +101,7 @@ int main(int argc, char *argv[])
     //make osg position and attitude nodes for rotation and translation related to the upper arm
     osg::ref_ptr<osg::PositionAttitudeTransform> patUpperArm = new osg::PositionAttitudeTransform();
     patUpperArm->setPosition(osg::Vec3(0,0,-2.0));
-    patUpperArm->setAttitude(osg::Quat(0, osg::Vec3d(1,0,0)) * osg::Quat(0, osg::Vec3d(0,1,0)) * osg::Quat(3.141592, osg::Vec3d(0,0,1)));
+    patUpperArm->setAttitude(osg::Quat(0, osg::Vec3d(1,0,0)) * osg::Quat(0, osg::Vec3d(0,1,0)) * osg::Quat(M_PI, osg::Vec3d(0,0,1)));
     //make osg position and attitude nodes for rotation and translation related to the forearm
     osg::ref_ptr<osg::PositionAttitudeTransform> patForeArm = new osg::PositionAttitudeTransform();
     patForeArm->setPosition(osg::Vec3(0,0,-2.0));
@@ -160,9 +160,9 @@ int main(int argc, char *argv[])
                    0, 1, 0, 0,
                    0, 0, 1, 0,
                    0.0, 0.0, 0.0, 1);
-    m = m.rotate(3.141592/2.0, 1,0,0) * m;
-    m = m.rotate(-3.141592/2.0, 0,1,0) * m;
-    m = m.rotate(-3.141592/6.0, 1,0,0) * m;
+    m = m.rotate(M_PI/2.0, 1,0,0) * m;
+    m = m.rotate(-M_PI/2.0, 0,1,0) * m;
+    m = m.rotate(-M_PI/6.0, 1,0,0) * m;
     m = m.translate(-2.5,1.0,11.5) * m;
 
     visor.getCameraManipulator()->setByMatrix(m);
