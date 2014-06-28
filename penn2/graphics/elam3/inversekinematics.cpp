@@ -85,15 +85,17 @@ double SolveArmInvKinematics(Eigen::Vector3d targetPos, Eigen::Vector3d& current
         ///
 
 
-        Eigen::Vector3d jjtd = jacobian * jacobian.transpose() * displacement;
+        //Eigen::Vector3d jjtd = jacobian * jacobian.transpose() * displacement;
 
-        double alpha = displacement.dot(jjtd) / jjtd.dot(jjtd) * 0.5;
+        //double alpha = displacement.dot(jjtd) / jjtd.dot(jjtd) * 0.5;
         //cout<<"alpha "<<alpha<<endl;
 
         // ik 5 compute rotation updates
-        //Eigen::Vector4d deltaTheta = alpha * jacobian.transpose() * displacement;
-        //Eigen::Vector4d deltaTheta = alpha * jacobian.transpose() * (jacobian * jacobian.transpose()).inverse() * displacement;
-        Eigen::Vector4d deltaTheta = alpha * jacobian.transpose() * (jacobian * jacobian.transpose() + 1 * Eigen::Matrix<double, 3, 3>::Identity()).inverse() * displacement;
+        // http://math.ucsd.edu/~sbuss/ResearchWeb/ikmethods/iksurvey.pdf
+        //Eigen::Vector4d deltaTheta = alpha * jacobian.transpose() * displacement; // Section 3
+        //Eigen::Vector4d deltaTheta = jacobian.transpose() * (jacobian * jacobian.transpose()).inverse() * displacement; // eq 9
+        //Eigen::Vector4d deltaTheta = (jacobian.transpose() * jacobian + 1 * Eigen::Matrix<double, 4, 4>::Identity()).inverse() * jacobian.transpose() * displacement; // eq 10
+        Eigen::Vector4d deltaTheta = jacobian.transpose() * (jacobian * jacobian.transpose() + 1 * Eigen::Matrix<double, 3, 3>::Identity()).inverse() * displacement; // eq 11
 
         ///debug
         //cout<<"deltaTheta: "<<deltaTheta<<endl;
