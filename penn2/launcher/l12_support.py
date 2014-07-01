@@ -483,9 +483,11 @@ def RunBCI():
             pFeature.send_signal(SIGINT)
             pFeature = None
 
-        pFeature = Popen([r'../../feature_extract_cpp/build/feature_extract_cpp'],
-                cwd=r'../feature_extraction/feature_extract_cpp/build/')
-        time.sleep(0.1)
+        if not machineBeingUsed.get() == "Imitator(direct)":
+            if not machineBeingUsed.get() == "Kinect(direct)":
+                pFeature = Popen([r'../../feature_extract_cpp/build/feature_extract_cpp'],
+                        cwd=r'../feature_extraction/feature_extract_cpp/build/')
+                time.sleep(0.1)
 
         if not (pFilter is None):
             pFilter.send_signal(SIGINT)
