@@ -237,7 +237,7 @@ pFeature = None                                                   # pFeature - f
 pFilter = None                                                    # pFilter - filter module
 pSupervisor = None                                                # pSupervisor - supervisor module
 pGraphics = None                                                  # pGraphics - graphics module
-pSqueez = None                                                    # pSqueez - squeeze task module
+pSqueeze = None                                                   # pSqueeze - squeeze task module
 pSignal = None                                                    # pgTec - gtec module
 quitLauncher = False
 
@@ -326,7 +326,11 @@ def RunSqueeze():
 
 def StopSqueezeTask():
     global pSqueeze
-    pSqueeze.send_signal(SIGINT)
+    if not (pFilter is None):
+        pSqueeze.send_signal(SIGINT)
+    else:
+        tkMessageBox.showinfo("Squeeze Task Not Running", 'The squeeze task is not currently running.')
+        return
 
     #try:
         # stop tdt recording
@@ -620,21 +624,31 @@ def StopBCITask():
         print ('l12_support.StopBCITask')
         sys.stdout.flush()
 
+        isRunning = False
+
         if not (pGraphics is None):
             pGraphics.send_signal(SIGINT)
             pGraphics = None
+            isRunning = True
 
         if not (pSupervisor is None):
             pSupervisor.send_signal(SIGINT)
             pSupervisor = None
+            isRunning = True
 
         if not (pFilter is None):
             pFilter.send_signal(SIGINT)
             pFilter = None
+            isRunning = True
 
         if not (pFeature is None):
             pFeature.send_signal(SIGINT)
             pFeature = None
+            isRunning = True
+
+        if not isRunning:
+            tkMessageBox.showinfo("BCI Task Not Running", 'The BCI task is not currently running.')
+            return
 
 
 def MachineChanged(event):
