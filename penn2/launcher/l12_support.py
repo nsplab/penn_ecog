@@ -296,7 +296,7 @@ def LoadDriver():
 def RunDemoSqueeze():
         if not isStreaming:
             tkMessageBox.showinfo("Data missing", 'Data not streaming. For TDT, make sure it\'s on Preview and check that data cables are connected. Finally, you may need to restart one or more computers')
-            #return
+            return
 
         UpdateDemoMode('0')
         global pSqueeze
@@ -310,7 +310,7 @@ def RunSqueeze():
 
         if not isStreaming:
             tkMessageBox.showinfo("Data missing", 'Data not streaming. For TDT, make sure it\'s on Preview and check that data cables are connected. Finally, you may need to restart one or more computers')
-            #return
+            return
 
         UpdateDemoMode('1')
         Record("Squeeze")
@@ -441,7 +441,7 @@ def RunBCI():
 
         if not isStreaming:
             tkMessageBox.showinfo("Data missing", 'Data not streaming. For TDT, make sure it\'s on Preview and check that data cables are connected. Finally, you may need to restart one or more computers')
-            #return
+            return
 
         global pFeature, pFilter, pSupervisor, pGraphics, selectedSession
         UpdateDemoMode('0')
