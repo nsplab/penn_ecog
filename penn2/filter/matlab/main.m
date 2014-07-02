@@ -143,27 +143,17 @@ while ~exit
     % extract the features
     recvdFeatures = typecast(recvData(9:end),'single');
     recvdFeatures
-    filter.currentFeatures = recvdFeatures;
+    %filter.currentFeatures = recvdFeatures;
     filter.currentTimeStamp = timeStamp;
-    filter.RunFilter();
+    control = filter.RunFilter(recvdFeatures);
     filter.LogParameters(dataPath, filterName)
-    
-    imitatorBaseline = 50;
-    imitatorAmplifier = 2;
-    
-    controlX = recvdFeatures(1) / imitatorAmplifier;
-    controlX = controlX^2;
-    controlX = controlX - imitatorBaseline;
-    
-    controlY = recvdFeatures(2) / imitatorAmplifier;
-    controlY = controlY^2;
-    controlY = controlY - imitatorBaseline;
 
-    controlZ = recvdFeatures(3) / imitatorAmplifier;
-    controlZ = controlZ^2;
-    controlZ = controlZ - imitatorBaseline;
+    supervisorData = uint8([num2str(timeStamp) ' ' num2str(control, '%f')]);
 
-    supervisorData = uint8([num2str(timeStamp) ' ' num2str(controlX) ' ' num2str(controlY) ' ' num2str(controlZ)])';
+    %controlX = control(1);
+    %controlY = control(2);
+    %controlZ = control(3);
+    %supervisorData = uint8([num2str(timeStamp) ' ' num2str(controlX) ' ' num2str(controlY) ' ' num2str(controlZ)]);
     
     disp('going to send to supervisor');
     nbytes = zmq( 'send', supervisorPipe, supervisorData );

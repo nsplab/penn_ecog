@@ -1,5 +1,7 @@
 classdef Filter1 < FilterClass
     properties
+        imitatorBaseline = 50;
+        imitatorAmplifier = 2;
     end
         methods
         % class constructor
@@ -10,10 +12,27 @@ classdef Filter1 < FilterClass
         end
         % function that is called every iteration when new
         % feature values are received from the feature extractor
-        function filter=RunFilter(filter)
+        function [ control ] = RunFilter(filter, recvdFeatures)
             filter.speed = filter.speed + 1;
-             filter.parameterValues{1,1} = filter.speed;
-             filter.parameterValues{1,2} = filter.speed + 1;
+            filter.parameterValues{1,1} = filter.speed;
+            filter.parameterValues{1,2} = filter.speed + 1;
+
+            %control = (recvdFeatures / filter.imitatorAmplifier) .^ 2 - filter.imitatorBaseline;
+
+            controlX = recvdFeatures(1) / filter.imitatorAmplifier;
+            controlX = controlX^2;
+            controlX = controlX - filter.imitatorBaseline;
+            
+            controlY = recvdFeatures(2) / filter.imitatorAmplifier;
+            controlY = controlY^2;
+            controlY = controlY - filter.imitatorBaseline;
+            
+            controlZ = recvdFeatures(3) / filter.imitatorAmplifier;
+            controlZ = controlZ^2;
+            controlZ = controlZ - filter.imitatorBaseline;
+
+            control = [ controlX controlY controlZ ];
+
         end
     end
 end
