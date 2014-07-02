@@ -73,11 +73,11 @@ classdef FilterClass < handle
                 filter.parameterNames(end+1) = {'hand_x'};
                 filter.parameterNames(end+1) = {'hand_y'};
                 filter.parameterNames(end+1) = {'hand_z'};
+                filter.initialTime = datestr(now,'mm_dd_yyyy_HH:MM');
                 
                 for i=1:length(filter.currentFeatures),
                     columnName = sprintf('feature_%i', i);
                     filter.parameterNames(end+1) = {columnName};
-                    filter.initialTime = datestr(now,'mm_dd_yyyy_HH:MM');
                 end
                 
                 filter.ssave.('parameter_names') = filter.parameterNames;
