@@ -84,24 +84,24 @@ classdef FilterClass < handle
             else
                 filter.opt = {'-append'};
             end
-                filter.parameterValues{1,filter.numberOfFilterParameters+1} = filter.currentScore;
-                filter.parameterValues{1,filter.numberOfFilterParameters+2} = filter.currentTimeStamp;
-                filter.parameterValues{1,filter.numberOfFilterParameters+3} = filter.epochSeconds;
-                filter.parameterValues{1,filter.numberOfFilterParameters+4} = filter.isAtTarget;
-                filter.parameterValues{1,filter.numberOfFilterParameters+5} = filter.targetX;
-                filter.parameterValues{1,filter.numberOfFilterParameters+6} = filter.targetY;
-                filter.parameterValues{1,filter.numberOfFilterParameters+7} = filter.targetZ;
-                filter.parameterValues{1,filter.numberOfFilterParameters+8} = filter.handX;
-                filter.parameterValues{1,filter.numberOfFilterParameters+9} = filter.handY;
-                filter.parameterValues{1,filter.numberOfFilterParameters+10} = filter.handZ;
-                for i=1:length(filter.currentFeatures),
-                    filter.parameterValues{1,filter.numberOfFilterParameters+10+i} = filter.currentFeatures(i);
-                end
+            filter.parameterValues{1,filter.numberOfFilterParameters+1} = filter.currentScore;
+            filter.parameterValues{1,filter.numberOfFilterParameters+2} = filter.currentTimeStamp;
+            filter.parameterValues{1,filter.numberOfFilterParameters+3} = filter.epochSeconds;
+            filter.parameterValues{1,filter.numberOfFilterParameters+4} = filter.isAtTarget;
+            filter.parameterValues{1,filter.numberOfFilterParameters+5} = filter.targetX;
+            filter.parameterValues{1,filter.numberOfFilterParameters+6} = filter.targetY;
+            filter.parameterValues{1,filter.numberOfFilterParameters+7} = filter.targetZ;
+            filter.parameterValues{1,filter.numberOfFilterParameters+8} = filter.handX;
+            filter.parameterValues{1,filter.numberOfFilterParameters+9} = filter.handY;
+            filter.parameterValues{1,filter.numberOfFilterParameters+10} = filter.handZ;
+            for i=1:length(filter.currentFeatures),
+                filter.parameterValues{1,filter.numberOfFilterParameters+10+i} = filter.currentFeatures(i);
+            end
 
-                vname = sprintf('parameters_timestamp_%i', filter.currentTimeStamp);
-                filter.ssave.(vname) = filter.parameterValues;
-                tstruct = filter.ssave;
-                save([dataPath '/filter_log_' filterName '_' filter.initialTime '.mat'], '-struct', 'tstruct', filter.opt{:});
+            vname = sprintf('parameters_timestamp_%i', filter.currentTimeStamp);
+            filter.ssave.(vname) = filter.parameterValues;
+            tstruct = filter.ssave;
+            save([dataPath '/filter_log_' filterName '_' filter.initialTime '.mat'], '-struct', 'tstruct', filter.opt{:});
         end
     end
 end
