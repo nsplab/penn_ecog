@@ -102,8 +102,6 @@ classdef FilterClass < handle
             vname = sprintf('parameters_timestamp_%i', filter.currentTimeStamp);
             filter.ssave.(vname) = filter.parameterValues;
             tstruct = filter.ssave;
-            tstruct.parameters_timestamp_0
-            class(tstruct)
             save([dataPath '/filter_log_' filterName '_' filter.initialTime '.mat'], '-struct', 'tstruct', filter.opt{:});
         end
 
