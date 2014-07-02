@@ -35,7 +35,7 @@ classdef FilterClass < handle
         handY = 0;
         handZ = 0;
         numberOfFilterParameters = 0;
-        intialTime = '';
+        initialTime = '';
         demoMode = 0;
     end
     methods
@@ -69,7 +69,7 @@ classdef FilterClass < handle
                 filter.parameterNames(end+1) = {'is_at_target'};
                 filter.parameterNames(end+1) = {'target_x'};
                 filter.parameterNames(end+1) = {'target_y'};
-                filter.parameterNames(end+1) = {'target_z'};filter.parameterNames(end+1) = {'hand_z'};
+                filter.parameterNames(end+1) = {'target_z'};
                 filter.parameterNames(end+1) = {'hand_x'};
                 filter.parameterNames(end+1) = {'hand_y'};
                 filter.parameterNames(end+1) = {'hand_z'};
@@ -77,7 +77,7 @@ classdef FilterClass < handle
                 for i=1:length(filter.currentFeatures),
                     columnName = sprintf('feature_%i', i);
                     filter.parameterNames(end+1) = {columnName};
-                    filter.intialTime = datestr(now,'mm_dd_yyyy_HH:MM');
+                    filter.initialTime = datestr(now,'mm_dd_yyyy_HH:MM');
                 end
                 
                 filter.ssave.('parameter_names') = filter.parameterNames;
@@ -101,7 +101,7 @@ classdef FilterClass < handle
                 vname = sprintf('parameters_timestamp_%i', filter.currentTimeStamp);
                 filter.ssave.(vname) = filter.parameterValues;
                 tstruct = filter.ssave;
-                save([dataPath '/filter_log_' filterName '_' filter.intialTime '.mat'], '-struct', 'tstruct', filter.opt{:});
+                save([dataPath '/filter_log_' filterName '_' filter.initialTime '.mat'], '-struct', 'tstruct', filter.opt{:});
         end
     end
 end
