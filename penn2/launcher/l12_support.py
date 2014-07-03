@@ -453,8 +453,8 @@ def RunBCI():
         sys.stdout.flush()
 
         options = {}
-        options['defaultextension'] = '.txt'
-        options['filetypes'] = [('text files', '.txt')]
+        options['defaultextension'] = '.mat'
+        options['filetypes'] = [('text files', '.txt'), ('mat files', '.mat')]
         options['initialdir'] = '../data/'
         #options['initialfile'] = 'myfile.txt'
         #options['parent'] = master
@@ -857,6 +857,8 @@ def RecordBCI(logFile, logFileBackup):
         filterSec['filterType'] = 5
     if algorithm.get() == 'Matlab 4':
         filterSec['filterType'] = 6
+    if algorithm.get() == 'Matlab JointRSE':
+        filterSec['filterType'] = 7
     filterSec['dataPath'] = dataPath
     filterSec['selectedSession'] = selectedSession
     if workspace.get() == "1D-X":

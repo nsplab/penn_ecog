@@ -426,7 +426,7 @@ class Launcher:
 
         self.TCombobox4 = ttk.Combobox (self.TLabelframe1)
         self.TCombobox4.place(relx=0.48,rely=0.09,relheight=0.08,relwidth=0.31)
-        self.value_list = ['Running Average','Training JointRSE','Testing JointRSE', 'Matlab 1', 'Matlab 2', 'Matlab 3', 'Matlab 4']
+        self.value_list = ['Running Average','Training JointRSE','Testing JointRSE', 'Matlab 1', 'Matlab 2', 'Matlab 3', 'Matlab 4', 'Matlab JointRSE']
         self.TCombobox4.configure(values=self.value_list)
         self.TCombobox4.configure(textvariable=l12_support.algorithm)
         self.TCombobox4.configure(takefocus="")

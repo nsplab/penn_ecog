@@ -61,6 +61,10 @@ if strcmp('Matlab 4', filterType),
     filter = Filter4;
     filterName = 'Matlab_4';
 end
+if strcmp('Matlab JointRSE', filterType),
+    filter = FilterJointRSE(3, 3);
+    filterName = 'Matlab_JointRSE';
+end
 
 [keysFilter,sectionsFilter,subsectionsFilter] = inifile('../../config/filter.cfg','readall');
 dataPathIdx = find(strcmp('datapath', keysFilter(:,3)));
