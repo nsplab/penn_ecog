@@ -454,7 +454,7 @@ def RunBCI():
 
         options = {}
         options['defaultextension'] = '.mat'
-        options['filetypes'] = [('text files', '.txt'), ('mat files', '.mat')]
+        options['filetypes'] = [('mat files', '.mat'), ('text files', '.txt')]
         options['initialdir'] = '../data/'
         #options['initialfile'] = 'myfile.txt'
         #options['parent'] = master
