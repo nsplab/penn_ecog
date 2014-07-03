@@ -1,6 +1,13 @@
 function [ A, B, Q, R, L, K ] = trajectory(dimensions, delta, target)
-% dimensions: number of dimensions
-% delta: time step
+% Parameters
+%   - dimensions: number of dimensions
+%   - delta: time step
+%   - target: target state (column vector of dimension (2 * dimensions) - positions and then velocities)
+% Return Values:
+%   - A: matrix to update state
+%   - B: matrix to include control into state
+%   - Q: hard-coded cost on kinematics (positon and velocity)
+%   - R: hard-coded cost on control
 
 % state is [position(1);
 %             ...
