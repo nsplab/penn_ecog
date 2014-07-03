@@ -8,7 +8,7 @@ classdef Filter1 < FilterClass
         imitatorBaseline = 50;
         imitatorAmplifier = 2;
     end
-        methods
+    methods
         % class constructor
         function filter = Filter1(varargin)
             filter.speed = 2;

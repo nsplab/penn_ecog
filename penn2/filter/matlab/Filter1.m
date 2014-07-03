@@ -1,9 +1,14 @@
+% Class definition for Filter1
+% Implements Gaussian Time-Invariant version of JointRSE
+% Authors: Bryan, Ram
+% First Edited: 7/2/2014 5:44 PM
+
 classdef Filter1 < FilterClass
     properties
         imitatorBaseline = 50;
         imitatorAmplifier = 2;
     end
-        methods
+    methods
         % class constructor
         function filter = Filter1(varargin)
             filter.speed = 2;
