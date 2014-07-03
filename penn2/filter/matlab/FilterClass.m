@@ -42,6 +42,7 @@ classdef FilterClass < handle
         % class constructor
         
         function filter = FilterClass(varargin)
+            fprintf('FilterClass\n');
             filter.speed = 1;
         end
         % function that is called every iteration when new
@@ -105,12 +106,12 @@ classdef FilterClass < handle
             save([dataPath '/filter_log_' filterName '_' filter.initialTime '.mat'], '-struct', 'tstruct', filter.opt{:});
         end
 
-        function filter=LoadParameters(filter, dataPath, filterName)
-            filter.ssave = load([dataPath '/filter_log_' filterName '_' filter.initialTime '.mat']);
+        function filter=LoadParameters(filter, selectedSession)
+            filter.ssave = load(selectedSession);
             c = struct2cell(filter.ssave);
             filter.parameterValues = c{end};
             %filter.speed = filter.speed + 1;
-            filter.firstrun = false;
+            filter.firstrun = true;
             %filter.numberOfFilterParameters = length(filter.parameterNames);
             filter.parameterNames = c{1};
         end

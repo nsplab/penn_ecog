@@ -66,6 +66,13 @@ end
 dataPathIdx = find(strcmp('datapath', keysFilter(:,3)));
 dataPath = keysFilter{dataPathIdx, 4};
 
+class(keysFilter)
+selectedSessionIdx = find(strcmp('selectedsession', keysFilter(:,3)));
+selectedSession = keysFilter{selectedSessionIdx, 4};
+%if (~isempty(selectedSession))
+if (~strcmp(selectedSession, '""'))
+    filter.LoadParameters(selectedSession);
+end
 
 % get the value of the demo state from the config file
 demoModeIdx = find(strcmp('demomode', keysFilter(:,3)));
@@ -148,12 +155,14 @@ while ~exit
     control = filter.RunFilter(recvdFeatures);
     filter.LogParameters(dataPath, filterName)
 
-    supervisorData = uint8([num2str(timeStamp) ' ' num2str(control, '%f')]);
+    %supervisorData = uint8([num2str(timeStamp) ' ' num2str(control, '%f')]);
+    %[num2str(timeStamp) ' ' num2str(control, '%f')]
+    %asdknasd
 
-    %controlX = control(1);
-    %controlY = control(2);
-    %controlZ = control(3);
-    %supervisorData = uint8([num2str(timeStamp) ' ' num2str(controlX) ' ' num2str(controlY) ' ' num2str(controlZ)]);
+    controlX = control(1);
+    controlY = control(2);
+    controlZ = control(3);
+    supervisorData = uint8([num2str(timeStamp) ' ' num2str(controlX) ' ' num2str(controlY) ' ' num2str(controlZ)]);
     
     disp('going to send to supervisor');
     nbytes = zmq( 'send', supervisorPipe, supervisorData );
@@ -166,7 +175,7 @@ while ~exit
     tic
     while waitForData
         [recvData, hasMore] = zmq( 'receive', supervisorPipe );
-        recvData
+        %recvData
         if hasMore == 0
             waitForData = false;
         end
