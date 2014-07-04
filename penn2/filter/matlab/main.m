@@ -70,7 +70,7 @@ end
 dataPathIdx = find(strcmp('datapath', keysFilter(:,3)));
 dataPath = keysFilter{dataPathIdx, 4};
 
-class(keysFilter)
+%class(keysFilter)
 selectedSessionIdx = find(strcmp('selectedsession', keysFilter(:,3)));
 selectedSession = keysFilter{selectedSessionIdx, 4};
 %if (~isempty(selectedSession))
@@ -126,7 +126,7 @@ exit = false;
 %while the user hasn't asked the program to stop
 while ~exit
     % receive features from the feature extractor module
-    disp('receive');
+    %disp('receive');
     % wait up to 1 seconds, if there is no data coming in then stop the
     % filter
     
@@ -138,7 +138,7 @@ while ~exit
             waitForData = false;
         end
         if toc > 15.0
-            disp('no data from feature_extractor');
+            %disp('no data from feature_extractor');
             exit = true;
             break;
         end
@@ -153,11 +153,11 @@ while ~exit
     timeStamp = typecast(recvData(1:8),'uint64');
     % extract the features
     recvdFeatures = typecast(recvData(9:end),'single');
-    recvdFeatures
+    %recvdFeatures
     %filter.currentFeatures = recvdFeatures;
     filter.currentTimeStamp = timeStamp;
     control = filter.RunFilter(recvdFeatures);
-    filter.LogParameters(dataPath, filterName)
+    filter.LogParameters(dataPath, filterName);
 
     %supervisorData = uint8([num2str(timeStamp) ' ' num2str(control, '%f')]);
     %[num2str(timeStamp) ' ' num2str(control, '%f')]
@@ -168,11 +168,11 @@ while ~exit
     controlZ = control(3);
     supervisorData = uint8([num2str(timeStamp) ' ' num2str(controlX) ' ' num2str(controlY) ' ' num2str(controlZ)]);
     
-    disp('going to send to supervisor');
+    %disp('going to send to supervisor');
     nbytes = zmq( 'send', supervisorPipe, supervisorData );
-    disp('sent to supervisor');
+    %disp('sent to supervisor');
     
-    disp('receive from supervisor');
+    %disp('receive from supervisor');
     
     waitForData = true;
         
@@ -190,9 +190,17 @@ while ~exit
         end
     end
     
-    disp('received from supervisor');
+    %disp('received from supervisor');
     
     % extract from recvData: score, score/min
+    value = str2double(strsplit(char(recvData')));
+    target = value(1:3);
+    filter.target(1:3) = target; % update filter target position
+    hand = value(4:6);
+    trial = value(7);
+    triaining_test = value(8);
+    attending = value(9);
+
 end
 
 zmq( 'cleanup');
