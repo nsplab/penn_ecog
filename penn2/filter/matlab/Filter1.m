@@ -14,13 +14,15 @@ classdef Filter1 < FilterClass
             filter.speed = 2;
             filter.ssave = struct();
             filter.parameterNames = {'alpha', 'beta'};
+            filter.parameterValues{1,1} = 1;
+            filter.parameterValues{1,2} = 2;
         end
         % function that is called every iteration when new
         % feature values are received from the feature extractor
         function [ control ] = RunFilter(filter, recvdFeatures)
             filter.speed = filter.speed + 1;
-            filter.parameterValues{1,1} = filter.speed;
-            filter.parameterValues{1,2} = filter.speed + 1;
+            filter.parameterValues{1,1} = filter.parameterValues{1,1} + 1;
+            %filter.parameterValues{1,2} = filter.speed + 1;
 
             %control = (recvdFeatures / filter.imitatorAmplifier) .^ 2 - filter.imitatorBaseline;
 
@@ -37,7 +39,7 @@ classdef Filter1 < FilterClass
             controlZ = controlZ - filter.imitatorBaseline;
 
             control = [ controlX controlY controlZ ];
-
+            filter
         end
     end
 end
