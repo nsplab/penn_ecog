@@ -147,7 +147,7 @@ while ~exit
         break;
     end
 
-    disp('received');
+    %disp('received');
     % extract the time stamp from the first 8 bytes and typcast it into a
     % 64 bit integer which contains the time stamp
     timeStamp = typecast(recvData(1:8),'uint64');
@@ -197,6 +197,7 @@ while ~exit
     target = value(1:3);
     filter.target(1:3) = target; % update filter target position
     hand = value(4:6);
+    filter.setHandPos(hand);
     trial = value(7);
     triaining_test = value(8);
     attending = value(9);

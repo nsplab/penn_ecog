@@ -51,7 +51,7 @@ classdef FilterJointRSE < FilterClass
             end
 
             %% Compute matrices for Time-Invariant Trajectories
-            delta = 0.1;
+            delta = 1;
             target = zeros(2 * dimensions, 1);
             [ A, B, Q, R, L, K ] = trajectory(dimensions, delta, target); % TODO: delta and target?
             filter.A = A;
@@ -76,6 +76,11 @@ classdef FilterJointRSE < FilterClass
             x = cell2mat(filter.parameterValues)';
             %x
             %x = [1;1;1;0;0;0];
+            %control = L * (x((dimensions + 1) * features + 1:end) - target)
+            %state = x((dimensions + 1) * features + 1:end)
+            %target
+            %err = state - target
+            %return
 
             F = eye((dimensions + 1) * features + 2 * dimensions);
             F(((dimensions + 1) * features + 1):end,((dimensions + 1) * features + 1):end) = (A + B * L);
@@ -83,6 +88,7 @@ classdef FilterJointRSE < FilterClass
             Q(((dimensions + 1) * features + 1):end,((dimensions + 1) * features + 1):end) = eye(2 * dimensions); % TODO: better choice than identity?
             b = [zeros((dimensions + 1) * features, 1);-B * L * target];
             pred_x = F * x + b;
+            %x
             %pred_x
             pred_cov = F * filter.covariance * F' + Q;
             %for i = 1:100000
@@ -92,29 +98,31 @@ classdef FilterJointRSE < FilterClass
 
             %% Update Step
             pred_uHistory = [pred_x((dimensions + 1) * features + dimensions + 1:end); 1]; % extract predicted velocity and append affine term
-            channelParameters = cell2mat(reshape(filter.parameterValues(1:(dimensions + 1) * features), features, dimensions + 1))
+            channelParameters = cell2mat(reshape(filter.parameterValues(1:(dimensions + 1) * features), features, dimensions + 1));
             %pred_uHistory
-            %channelParameters
+            channelParameters
             estimated_obs = channelParameters * pred_uHistory;
-            estimated_obs
-            obs
+            %estimated_obs
+            %obs
 
             % derivative of the observation vector with respect to the state, evaluated at estimated_obs.
             D_obs = zeros(size(pred_x, 1), features);
-            %D_obs
+            %filter.parameterNames
+            %size(D_obs)
             for c = 1:features
                 % velocity terms
                 D_obs(((c - 1) * dimensions + 1):(c * dimensions), c) = pred_uHistory(1:dimensions, 1);
-                D_obs(((c - 1) * dimensions + 1):(c * dimensions), c) = 1;
+                %D_obs(((c - 1) * dimensions + 1):(c * dimensions), c) = 123;
 %((c - 1) * dimensions + 1):(c * dimensions)
                 for i = 1:dimensions
                     D_obs(size(D_obs, 1) - dimensions + i, c) = pred_x((c - 1) * dimensions + i, 1);
-                    D_obs(size(D_obs, 1) - dimensions + i, c) = 2;
+                    %D_obs(size(D_obs, 1) - dimensions + i, c) = 234;
                 end
                 % affine terms
-                D_obs(features * dimensions, c) = 1;
+                D_obs(features * dimensions + c, c) = 1;
             end
             %D_obs
+            %size(D_obs)
 
             % double derivative of the observation vector with respect to the state, evaluated at estimated_obs.
             DD_obs = zeros(size(pred_x, 1), size(pred_x, 1), features);
@@ -159,9 +167,19 @@ classdef FilterJointRSE < FilterClass
             new_x = pred_x + new_cov * x_adjust;
             filter.parameterValues = mat2cell(new_x, ones((dimensions + 1) * features + 2 * dimensions, 1), 1)';
 
-            control = new_x(dimensions+1:end); % grab velocity
+            control = new_x((dimensions + 1) * features + dimensions+1:end); % grab velocity
+            assert(numel(control) == dimensions);
+            %target
+            %control(end-5:end)-target
+            control
+            %pause(0.5);
             %reshape(filter.parameterNames,10,4)
 
+        end
+        function [ ] = setHandPos(filter, hand)
+            for i = 1:3
+                filter.parameterValues{(filter.dimensions + 1) * filter.features + i} = single(hand(i));
+            end
         end
     end
 end
