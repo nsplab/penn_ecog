@@ -37,6 +37,9 @@ classdef FilterClass < handle
         numberOfFilterParameters = 0;
         initialTime = '';
         demoMode = 0;
+        extra_parameter_names = {};
+        game_state_names = ...%{'score', 'timestamp', 'epoch_seconds', 'is_at_target', 'target_x', 'target_y', 'target_z', 'hand_x', 'hand_y', 'hand_z'};
+                           {'currentScore', 'currentTimeStamp', 'epochSeconds', 'isAtTarget', 'targetX', 'targetY', 'targetZ', 'handX', 'handY', 'handZ'};
     end
     methods
         % class constructor
@@ -62,47 +65,35 @@ classdef FilterClass < handle
             %filter.ssave.('varname') = data;
             filter.ssave = struct();
             if filter.firstrun 
+                filter.initialTime = datestr(now,'mm_dd_yyyy_HH:MM');
                 filter.opt = {};
                 filter.firstrun = false;
-                filter.numberOfFilterParameters = length(filter.parameterNames);
-                filter.parameterNames(end+1) = {'score'};
-                filter.parameterNames(end+1) = {'timestamp'};
-                filter.parameterNames(end+1) = {'epoch_seconds'};
-                filter.parameterNames(end+1) = {'is_at_target'};
-                filter.parameterNames(end+1) = {'target_x'};
-                filter.parameterNames(end+1) = {'target_y'};
-                filter.parameterNames(end+1) = {'target_z'};
-                filter.parameterNames(end+1) = {'hand_x'};
-                filter.parameterNames(end+1) = {'hand_y'};
-                filter.parameterNames(end+1) = {'hand_z'};
-                filter.initialTime = datestr(now,'mm_dd_yyyy_HH:MM');
+
+                filter.ssave.parameter_names = filter.parameterNames;
+                filter.ssave.game_state_names = filter.game_state_names;
+                filter.ssave.extra_parameter_names = filter.extra_parameter_names;
+                filter.ssave.feature_names = cell(1, length(filter.currentFeatures));
                 
                 for i=1:length(filter.currentFeatures),
                     columnName = sprintf('feature_%i', i);
-                    filter.parameterNames(end+1) = {columnName};
+                    filter.feature_names{i} = columnName;
                 end
-                
-                filter.ssave.('parameter_names') = filter.parameterNames;
+
             else
-                %filter.opt = {'-append'};
-            end
-            filter.parameterValues{1,filter.numberOfFilterParameters+1} = filter.currentScore;
-            filter.parameterValues{1,filter.numberOfFilterParameters+2} = filter.currentTimeStamp;
-            filter.parameterValues{1,filter.numberOfFilterParameters+3} = filter.epochSeconds;
-            filter.parameterValues{1,filter.numberOfFilterParameters+4} = filter.isAtTarget;
-            filter.parameterValues{1,filter.numberOfFilterParameters+5} = filter.targetX;
-            filter.parameterValues{1,filter.numberOfFilterParameters+6} = filter.targetY;
-            filter.parameterValues{1,filter.numberOfFilterParameters+7} = filter.targetZ;
-            filter.parameterValues{1,filter.numberOfFilterParameters+8} = filter.handX;
-            filter.parameterValues{1,filter.numberOfFilterParameters+9} = filter.handY;
-            filter.parameterValues{1,filter.numberOfFilterParameters+10} = filter.handZ;
-            for i=1:length(filter.currentFeatures),
-                filter.parameterValues{1,filter.numberOfFilterParameters+10+i} = filter.currentFeatures(i);
+                filter.opt = {'-append'};
             end
 
-            vname = sprintf('parameters_timestamp_%i', filter.currentTimeStamp);
-            filter.ssave.(vname) = filter.parameterValues;
-            tstruct = filter.ssave;
+            filter.ssave.parameter_values = filter.parameterValues;
+            filter.ssave.game_state_values = cell(1, numel(filter.game_state_names));
+            for i = 1:numel(filter.game_state_names)
+                filter.ssave.game_state_values{1,i} = filter.(filter.game_state_names{i});
+            end
+
+            filter.ssave.currentFeatures = filter.currentFeatures;
+
+            vname = sprintf('timestamp_%i', filter.currentTimeStamp);
+            ssave = filter.ssave
+            tstruct.(vname) = filter.ssave;
             if (exist([dataPath '/filter_log_' filterName '_' filter.initialTime '.mat']))
                 filter.opt = {'-append'};
             end
@@ -110,16 +101,25 @@ classdef FilterClass < handle
         end
 
         function filter=LoadParameters(filter, selectedSession)
-            filter.ssave = load(selectedSession);
-            c = struct2cell(filter.ssave);
-            filter.parameterValues = c{end};
-            %class(filter.parameterValues)
-            %filter.speed = filter.speed + 1;
-            filter.firstrun = false;
+            tstruct = load(selectedSession);
+            c = struct2cell(tstruct);
+            filter.ssave = c{end};
+
+            filter.parameterNames = c{1}.parameter_names;
+            filter.game_state_names = c{1}.game_state_names;
+            filter.extra_parameter_names = c{1}.extra_parameter_names;
+
+            filter.parameterValues = filter.ssave.parameter_values;
+            for i = 1:numel(filter.game_state_names)
+                filter.(filter.game_state_names{i}) = filter.ssave.game_state_values{1,i};
+            end
+            filter.currentFeatures = filter.ssave.currentFeatures;
+
+            filter.firstrun = true;
             filter.numberOfFilterParameters = length(filter.parameterNames);
-            filter.parameterNames = c{1};
-            filter.ssave = struct();
-            filter.ssave.('parameter_names') = filter.parameterNames;
+            %filter.parameterNames = c{1};
+            %filter.ssave = struct();
+            %filter.ssave.('parameter_names') = filter.parameterNames;
             filter.initialTime = datestr(now,'mm_dd_yyyy_HH:MM');
         end
     end
