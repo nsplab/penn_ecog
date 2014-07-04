@@ -56,10 +56,10 @@ classdef FilterClass < handle
         end
         
         function filter=LogParameters(filter, dataPath, filterName)
+            % TODO: Save order: game state, extra debug values, number of parameters, number of features, parameters, faetures
            
             %data = struct('value', filter.speed);
             %filter.ssave.('varname') = data;
-            filter.speed = filter.speed + 1;
             filter.ssave = struct();
             if filter.firstrun 
                 filter.opt = {};
@@ -84,7 +84,7 @@ classdef FilterClass < handle
                 
                 filter.ssave.('parameter_names') = filter.parameterNames;
             else
-                filter.opt = {'-append'};
+                %filter.opt = {'-append'};
             end
             filter.parameterValues{1,filter.numberOfFilterParameters+1} = filter.currentScore;
             filter.parameterValues{1,filter.numberOfFilterParameters+2} = filter.currentTimeStamp;
@@ -103,6 +103,9 @@ classdef FilterClass < handle
             vname = sprintf('parameters_timestamp_%i', filter.currentTimeStamp);
             filter.ssave.(vname) = filter.parameterValues;
             tstruct = filter.ssave;
+            if (exist([dataPath '/filter_log_' filterName '_' filter.initialTime '.mat']))
+                filter.opt = {'-append'};
+            end
             save([dataPath '/filter_log_' filterName '_' filter.initialTime '.mat'], '-struct', 'tstruct', filter.opt{:});
         end
 
@@ -110,10 +113,15 @@ classdef FilterClass < handle
             filter.ssave = load(selectedSession);
             c = struct2cell(filter.ssave);
             filter.parameterValues = c{end};
+            %class(filter.parameterValues)
             %filter.speed = filter.speed + 1;
-            filter.firstrun = true;
-            %filter.numberOfFilterParameters = length(filter.parameterNames);
+            filter.firstrun = false;
+            filter.numberOfFilterParameters = length(filter.parameterNames);
             filter.parameterNames = c{1};
+            filter.ssave = struct();
+            filter.ssave.('parameter_names') = filter.parameterNames;
+            filter.initialTime = datestr(now,'mm_dd_yyyy_HH:MM');
         end
     end
 end
+
