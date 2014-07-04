@@ -27,8 +27,9 @@ function [ A, B, Q, R, L, K ] = trajectory(dimensions, delta, target)
     B(i + dimensions, i) = delta; % input is acceleration
   end
 
-  Q = eye(2 * dimensions); % penalty on position / velocity
-  R = eye(dimensions); % penalty on acceleration
+  %Q = eye(2 * dimensions); % penalty on position / velocity
+  Q = blkdiag(eye(dimensions), 25 * eye(dimensions));
+  R = 25 * eye(dimensions); % penalty on acceleration (control)
 
   [L, K] = solve_ricatti(A, B, Q, R);
 
