@@ -45,7 +45,7 @@ classdef FilterClass < handle
         % class constructor
         
         function filter = FilterClass(varargin)
-            fprintf('FilterClass\n');
+            %fprintf('FilterClass\n');
             filter.speed = 1;
         end
         % function that is called every iteration when new
@@ -88,11 +88,15 @@ classdef FilterClass < handle
             for i = 1:numel(filter.game_state_names)
                 filter.ssave.game_state_values{1,i} = filter.(filter.game_state_names{i});
             end
+            filter.ssave.extra_parameter_values = cell(1, numel(filter.extra_parameter_names));
+            for i = 1:numel(filter.extra_parameter_names)
+                filter.ssave.extra_parameter_values{1,i} = filter.(filter.extra_parameter_names{i});
+            end
 
             filter.ssave.currentFeatures = filter.currentFeatures;
 
             vname = sprintf('timestamp_%i', filter.currentTimeStamp);
-            ssave = filter.ssave
+            %ssave = filter.ssave
             tstruct.(vname) = filter.ssave;
             if (exist([dataPath '/filter_log_' filterName '_' filter.initialTime '.mat']))
                 filter.opt = {'-append'};
