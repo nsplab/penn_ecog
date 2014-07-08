@@ -14,15 +14,21 @@ function [f] = plot_parameters(filter_log_file, parameter_name)
     data
     c = struct2cell(data);
     c
-    %names = c{1};
-    %find(names, parameter_name)
-    % TODO: search for parameter_name in names
-    index = 1;
+    c{1}
+    names = c{1}.parameter_names;
+    index = -1;
+    for j = 1:numel(names)
+      if (strcmp(names(j), parameter_name))
+        index = j;
+        break;
+      end
+    end
+    index
     x = 1:numel(c);
     y = zeros(1, numel(c) - 1);
     for j = 2:numel(c)
       c{j}
-      y(j) = c{j}.parameter_values{index};
+      y(j) = c{j}.parameter_values{index}(1)
     end
     scatter(start(i) + x, y);
     hold on;
@@ -33,6 +39,6 @@ function [f] = plot_parameters(filter_log_file, parameter_name)
   for i = 2:numel(filter_log_file)
     plot([start(i) start(i)], yl, 'LineWidth', 3, 'Color', 'black');
   end
-  start
+  start;
 end
 

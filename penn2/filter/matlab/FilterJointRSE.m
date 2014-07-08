@@ -16,6 +16,7 @@ classdef FilterJointRSE < FilterClass
         target;
         covariance;
         innovation;
+        Position = [];
     end
     methods
         % class constructor
@@ -47,8 +48,10 @@ classdef FilterJointRSE < FilterClass
             %% Initialize State Vector with Parameters
             filter.parameterValues = cell(size(filter.parameterNames));
             for i = 1:numel(filter.parameterValues)
-                filter.parameterValues{1, i} = 0;
+                filter.parameterValues{1, i} = 0.0;
             end
+            %filter.parameterValues{1, 1} = 1.2;
+            %filter.parameterValues
 
             %% Compute matrices for Time-Invariant Trajectories
             delta = 1;
@@ -73,7 +76,14 @@ classdef FilterJointRSE < FilterClass
             L = filter.L;
             target = filter.target;
             %% Prediction Step
+            %filter.parameterValues
+            %class(filter.parameterValues{1})
+            %class(filter.parameterValues{2})
+            %class(filter.parameterValues{3})
+            %class(filter.parameterValues{4})
             x = cell2mat(filter.parameterValues)';
+            %filter.parameterNames
+            %filter.parameterValues
             %x
             %x = [1;1;1;0;0;0];
             %control = L * (x((dimensions + 1) * features + 1:end) - target)
@@ -81,6 +91,11 @@ classdef FilterJointRSE < FilterClass
             %target
             %err = state - target
             %return
+            filter_position = x(((dimensions + 1) * features) + (1:dimensions));
+            filter_position
+            filter.Position = [filter.Position filter_position];
+            filter_position = filter.Position;
+            save('filter.mat', 'filter_position');
 
             F = eye((dimensions + 1) * features + 2 * dimensions);
             F(((dimensions + 1) * features + 1):end,((dimensions + 1) * features + 1):end) = (A + B * L);
@@ -88,6 +103,17 @@ classdef FilterJointRSE < FilterClass
             Q(((dimensions + 1) * features + 1):end,((dimensions + 1) * features + 1):end) = eye(2 * dimensions); % TODO: better choice than identity?
             b = [zeros((dimensions + 1) * features, 1);-B * L * target];
             pred_x = F * x + b;
+            %F
+            %b
+            err = target - x(((dimensions + 1) * features + 1):end);
+            vel = err(1:dimensions) / 10;
+            target
+            x
+            vel
+            %obs
+            pred_x((end-dimensions+1):end) = vel;
+pred_x
+obs
             %x
             %pred_x
             pred_cov = F * filter.covariance * F' + Q;
@@ -99,11 +125,12 @@ classdef FilterJointRSE < FilterClass
             %% Update Step
             pred_uHistory = [pred_x((dimensions + 1) * features + dimensions + 1:end); 1]; % extract predicted velocity and append affine term
             channelParameters = cell2mat(reshape(filter.parameterValues(1:(dimensions + 1) * features), features, dimensions + 1));
+            %reshape(filter.parameterNames(1:(dimensions + 1) * features), features, dimensions + 1)
             %pred_uHistory
-            channelParameters
+channelParameters
             estimated_obs = channelParameters * pred_uHistory;
-            %estimated_obs
-            %obs
+estimated_obs
+obs
 
             % derivative of the observation vector with respect to the state, evaluated at estimated_obs.
             D_obs = zeros(size(pred_x, 1), features);
@@ -111,11 +138,13 @@ classdef FilterJointRSE < FilterClass
             %size(D_obs)
             for c = 1:features
                 % velocity terms
-                D_obs(((c - 1) * dimensions + 1):(c * dimensions), c) = pred_uHistory(1:dimensions, 1);
+                %D_obs(((c - 1) * dimensions + 1):(c * dimensions), c) = pred_uHistory(1:dimensions, 1);
                 %D_obs(((c - 1) * dimensions + 1):(c * dimensions), c) = 123;
 %((c - 1) * dimensions + 1):(c * dimensions)
                 for i = 1:dimensions
-                    D_obs(size(D_obs, 1) - dimensions + i, c) = pred_x((c - 1) * dimensions + i, 1);
+                    D_obs((i - 1) * features + c, c) = pred_uHistory(i, 1);
+                    D_obs(size(D_obs, 1) - dimensions + i, c) = pred_x((i - 1) * features + c, 1);
+                    %D_obs(size(D_obs, 1) - dimensions + i, c) = pred_x((c - 1) * dimensions + i, 1);
                     %D_obs(size(D_obs, 1) - dimensions + i, c) = 234;
                 end
                 % affine terms
@@ -124,13 +153,16 @@ classdef FilterJointRSE < FilterClass
             %D_obs
             %size(D_obs)
 
+
             % double derivative of the observation vector with respect to the state, evaluated at estimated_obs.
             DD_obs = zeros(size(pred_x, 1), size(pred_x, 1), features);
             for c = 1:features
                 for i = 1:dimensions
                     % Velocity terms
-                    DD_obs((c - 1) * dimensions + i, size(DD_obs, 2) - dimensions + i, c) = 1;
-                    DD_obs(size(DD_obs, 2) - dimensions + i, (c - 1) * dimensions + i, c) = 1;
+                    %DD_obs((c - 1) * dimensions + i, size(DD_obs, 2) - dimensions + i, c) = 1;
+                    %DD_obs(size(DD_obs, 2) - dimensions + i, (c - 1) * dimensions + i, c) = 1;
+                    DD_obs((i - 1) * features + c, size(DD_obs, 2) - dimensions + i, c) = 1;
+                    DD_obs(size(DD_obs, 2) - dimensions + i, (i - 1) * features + c, c) = 1;
                     % Affine terms
                     % Nothing to do
                     % Taking two derivatives will always result in a 0 (regardless of which two are selected)
@@ -150,13 +182,15 @@ classdef FilterJointRSE < FilterClass
             end
             new_cov_inv = inv(pred_cov) + cov_adjust;
             new_cov = inv(new_cov_inv);
+            %new_cov = pred_cov; % THIS IS DEBUG CODE 7/4/14 4:45
+            %new_cov
 
             x_adjust = zeros(size(pred_x));
             innovation = zeros(features, 1);
             for c = 1:features
                 if(~isnan(estimated_obs(c, 1)))
-                    x_adjust = x_adjust + 1 / channelVariances(c) * (obs(c) - estimated_obs(c, 1)) * D_obs(:, c);
-                    innovation(c, 1) = (obs(c) - estimated_obs(c, 1)) / channelVariances(c);
+                    innovation(c, 1) = (obs(c) - estimated_obs(c, 1));
+                    x_adjust = x_adjust + 1 / channelVariances(c) * innovation(c, 1) * D_obs(:, c);
                 end
                 %fprintf(['novel_' int2str(c) ': ' num2str(obs(c) -  estimated_obs(c, 1)) '\n']);
             end
@@ -164,21 +198,27 @@ classdef FilterJointRSE < FilterClass
 
 
 
+            %num2str(new_cov / channelVariances(1))
             new_x = pred_x + new_cov * x_adjust;
-            filter.parameterValues = mat2cell(new_x, ones((dimensions + 1) * features + 2 * dimensions, 1), 1)';
+            %obs(c)
+            %estimated_obs(c, 1)
+%innovation
+            %num2str(new_cov / channelVariances(1))
+            filter.parameterValues = mat2cell(double(new_x), ones((dimensions + 1) * features + 2 * dimensions, 1), 1)';
 
             control = new_x((dimensions + 1) * features + dimensions+1:end); % grab velocity
             assert(numel(control) == dimensions);
             %target
             %control(end-5:end)-target
-            control
+%control
             %pause(0.5);
             %reshape(filter.parameterNames,10,4)
 
         end
         function [ ] = setHandPos(filter, hand)
-            for i = 1:3
-                filter.parameterValues{(filter.dimensions + 1) * filter.features + i} = single(hand(i));
+            for i = 1:filter.dimensions
+                %filter.parameterValues{(filter.dimensions + 1) * filter.features + i} = single(hand(i));
+                filter.parameterValues{(filter.dimensions + 1) * filter.features + i} = hand(i);
             end
         end
     end

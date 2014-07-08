@@ -62,7 +62,8 @@ if strcmp('Matlab 4', filterType),
     filterName = 'Matlab_4';
 end
 if strcmp('Matlab JointRSE', filterType),
-    filter = FilterJointRSE(3, 3);
+    dimensions = 1;
+    filter = FilterJointRSE(dimensions, dimensions);
     filterName = 'Matlab_JointRSE';
 end
 
@@ -123,6 +124,7 @@ recvFeatures = [];
 %launcher
 exit = false;
 
+Imitator_pos = [];
 %while the user hasn't asked the program to stop
 while ~exit
     % receive features from the feature extractor module
@@ -153,37 +155,53 @@ while ~exit
     timeStamp = typecast(recvData(1:8),'uint64');
     % extract the features
     recvdFeatures = typecast(recvData(9:end),'single');
-    %recvdFeatures
-    %filter.currentFeatures = recvdFeatures;
-    filter.currentTimeStamp = timeStamp;
-    control = filter.RunFilter(recvdFeatures);
-    filter.LogParameters(dataPath, filterName);
+    %size(recvData)
+    imitator_pos = double(recvdFeatures(7))
+
+%%%%%%%%%%%%%%%%%%%
+% DEBUG CODE 7/7/14
+filter.target(1:dimensions) = recvdFeatures(4); % update filter target position
+filter.setHandPos(imitator_pos);
+    Imitator_pos = [Imitator_pos imitator_pos];
+    save('imitator.mat', 'Imitator_pos');
+recvdFeatures
+%%%%%%%%%%%%%%%%%%%
+
+    %% Run filter for one time step (including predict step and update step) with new features
+    filter.currentTimeStamp = timeStamp; %log the timestamp in the filter object
+    recvdFeatures = recvdFeatures(1);    %extract the features for the timestep
+    %TODO: log number of features / number of parameters
+    control = filter.RunFilter(recvdFeatures); % run predict and update for filter
+    filter.LogParameters(dataPath, filterName); % save parameters and features to file
 
     %supervisorData = uint8([num2str(timeStamp) ' ' num2str(control, '%f')]);
     %[num2str(timeStamp) ' ' num2str(control, '%f')]
     %asdknasd
 
-    controlX = control(1);
+    %% Send decoded velocity to supervisor; store this value in a string for sending through ZMQ
+    control = [control 0 0];   %DEBUG CODE: specific hardcoded for 1D case
+    controlX = control(1);     %x,y, and z decoded velocities stored separately
     controlY = control(2);
     controlZ = control(3);
     supervisorData = uint8([num2str(timeStamp) ' ' num2str(controlX) ' ' num2str(controlY) ' ' num2str(controlZ)]);
     
     %disp('going to send to supervisor');
-    nbytes = zmq( 'send', supervisorPipe, supervisorData );
+    nbytes = zmq( 'send', supervisorPipe, supervisorData ); %command to zmq to send decoded velocity to supervisor
     %disp('sent to supervisor');
     
     %disp('receive from supervisor');
     
+    % loop to receive data from supervisor about the game state (specifically the actual virtual arm position)
     waitForData = true;
         
     tic
     while waitForData
         [recvData, hasMore] = zmq( 'receive', supervisorPipe );
         %recvData
-        if hasMore == 0
-            waitForData = false;
+        if hasMore == 0   %if the zmq function indicates the data has been completely received,
+            waitForData = false; %then set waitForData to break this while loop
         end
-        if toc > 15.0
+        if toc > 15.0 %if you've been waiting without data from supervisor for more than 15 seconds, then exit the matlab function, because this means that the supervisor module is not running, likely because the user has stopped the bci task
             disp('no data from supervisor');
             exit = true;
             break;
@@ -195,7 +213,7 @@ while ~exit
     % extract from recvData: score, score/min
     value = str2double(strsplit(char(recvData')));
     target = value(1:3);
-    filter.target(1:3) = target; % update filter target position
+    filter.target(1:dimensions) = target(1:dimensions); % update filter target position
     hand = value(4:6);
     filter.setHandPos(hand);
     trial = value(7);
