@@ -73,6 +73,8 @@ classdef FilterClass < handle
                 filter.ssave.game_state_names = filter.game_state_names; % cell array of game state names {'currentScore', 'currentTimeStamp', 'epochSeconds', 'isAtTarget', 'targetX', 'targetY', 'targetZ', 'handX', 'handY', 'handZ'}
                 filter.ssave.extra_parameter_names = filter.extra_parameter_names; % cell array of extra parameters (innovation)
                 filter.ssave.feature_names = cell(1, length(filter.currentFeatures)); % cell array of feature names
+                filter.ssave.number_of_parameters = numel(filter.ssave.parameter_names);
+                filter.ssave.number_of_features = numel(filter.ssave.feature_names);
 
                 for i=1:length(filter.currentFeatures),
                     columnName = sprintf('feature_%i', i);
