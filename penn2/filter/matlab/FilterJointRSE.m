@@ -54,14 +54,19 @@ classdef FilterJointRSE < FilterClass
             %filter.parameterValues
 
             %% Compute matrices for Time-Invariant Trajectories
-            delta = 1;
+            delta = 0.033;
             target = zeros(2 * dimensions, 1);
             [ A, B, Q, R, L, K ] = trajectory(dimensions, delta, target); % TODO: delta and target?
             filter.A = A;
             filter.B = B;
             filter.target = target;
             filter.L = L;
-            filter.covariance = eye((dimensions + 1) * features + 2 * dimensions); % TODO: more systematic choice than identity?
+            parameter_variance = 10;
+            covariance_neural = parameter_variance * eye((dimensions + 1) * features); % TODO: more systematic choice than identity?
+            position_var = 1e-7;
+            velocity_var = 1e-7;
+            covariance_cursor = blkdiag(position_var * eye(dimensions), velocity_var * eye(dimensions));
+            filter.covariance = blkdiag(covariance_neural, covariance_cursor);
             filter.extra_parameter_names = {'innovation'};
         end
         % function that is called every iteration when new
@@ -92,31 +97,63 @@ classdef FilterJointRSE < FilterClass
             %err = state - target
             %return
             filter_position = x(((dimensions + 1) * features) + (1:dimensions));
-            filter_position
+            %filter_position
             filter.Position = [filter.Position filter_position];
             filter_position = filter.Position;
             save('filter.mat', 'filter_position');
 
-            F = eye((dimensions + 1) * features + 2 * dimensions);
-            F(((dimensions + 1) * features + 1):end,((dimensions + 1) * features + 1):end) = (A + B * L);
-            Q = zeros((dimensions + 1) * features + 2 * dimensions);
-            Q(((dimensions + 1) * features + 1):end,((dimensions + 1) * features + 1):end) = eye(2 * dimensions); % TODO: better choice than identity?
+            % http://nsplab.org/docs/kowalski_he_srinivasan_NECO_2013.pdf
+            F_neural = eye((dimensions + 1) * features); % 2.20
+            Q_neural = zeros((dimensions + 1) * features); % 2.20
+            %Q_neural = 3 * eye((dimensions + 1) * features); % 2.20
+            %Q_neural(1,1) = 1;
+
+            delta = 0.033;
+            F_tilde = eye(2 * dimensions); % 2.10 % this is filter.A
+            F_tilde(1:dimensions, dimensions + (1:dimensions)) = delta * eye(dimensions);
+
+            delta = 1e-3;
+            Q_tilde = zeros(2 * dimensions); % 2.11
+            Q_tilde(dimensions + (1:dimensions), dimensions + (1:dimensions)) = delta * eye(dimensions);
+
+            % 2.24
+            alpha = 1e-6;
+            beta = 1e-8;
+            Pi = eye(2 * dimensions);
+            Pi((1:dimensions), (1:dimensions)) = alpha * eye(dimensions);
+            Pi(dimensions + (1:dimensions), dimensions + (1:dimensions)) = beta * eye(dimensions);
+
+            %F_cursor = (eye(2 * dimensions) - Q_tilde * inv(Pi)) * F_tilde; % 2.22
+            %Q_cursor = Q_tilde - Q_tilde * inv(Pi) * Q_tilde'; % 2.23
+            F_cursor = A + B * L;
+            %Q_cursor = 1e-3 * eye(dimensions); % increment uncertainty in velocity TODO: better choice than identity?
+            Q_cursor = Q_tilde;
+
+            F = blkdiag(F_neural, F_cursor);
+            Q = blkdiag(Q_neural, Q_cursor);
+            %F = eye((dimensions + 1) * features + 2 * dimensions);
+            %F(((dimensions + 1) * features + 1):end,((dimensions + 1) * features + 1):end) = (A + B * L);
+            %Q = zeros((dimensions + 1) * features + 2 * dimensions);
+            %%Q(((dimensions + 1) * features + 1):end,((dimensions + 1) * features + 1):end) = eye(2 * dimensions); % TODO: better choice than identity?
+            %Q(((dimensions + 1) * features + dimensions + 1):end,((dimensions + 1) * features + dimensions + 1):end) = 1e-3 * eye(dimensions); % increment uncertainty in velocity TODO: better choice than identity?
             b = [zeros((dimensions + 1) * features, 1);-B * L * target];
             pred_x = F * x + b;
             %F
             %b
             err = target - x(((dimensions + 1) * features + 1):end);
             vel = err(1:dimensions) / 10;
-            target
-            x
-            vel
+            %vel = obs;
+%target
+%x
             %obs
             pred_x((end-dimensions+1):end) = vel;
-pred_x
-obs
+%pred_x
+%obs
             %x
             %pred_x
             pred_cov = F * filter.covariance * F' + Q;
+%pred_cov
+%pred_cov
             %for i = 1:100000
             %    pred_cov = F * pred_cov * F' + Q;
             %end
@@ -129,8 +166,9 @@ obs
             %pred_uHistory
 channelParameters
             estimated_obs = channelParameters * pred_uHistory;
-estimated_obs
-obs
+%estimated_obs
+%obs
+%vel
 
             % derivative of the observation vector with respect to the state, evaluated at estimated_obs.
             D_obs = zeros(size(pred_x, 1), features);
@@ -150,7 +188,7 @@ obs
                 % affine terms
                 D_obs(features * dimensions + c, c) = 1;
             end
-            %D_obs
+%D_obs
             %size(D_obs)
 
 
@@ -168,7 +206,7 @@ obs
                     % Taking two derivatives will always result in a 0 (regardless of which two are selected)
                 end
             end
-            %DD_obs
+%DD_obs
 
             baseVariance = 1.0;
             channelVariances = baseVariance * ones(features, 1);
@@ -178,8 +216,12 @@ obs
                     cov_adjust = cov_adjust + 1 / channelVariances(c) * ...
                                               (D_obs(:, c) * D_obs(:, c)' + ...
                                               (estimated_obs(c, 1) - obs(c)) * DD_obs(:, :, c));
+                else
+                    assert(false)
                 end
             end
+%cov_adjust
+%cov_adjust
             new_cov_inv = inv(pred_cov) + cov_adjust;
             new_cov = inv(new_cov_inv);
             %new_cov = pred_cov; % THIS IS DEBUG CODE 7/4/14 4:45
@@ -199,8 +241,11 @@ obs
 
 
 
+%new_cov
+%x_adjust
             %num2str(new_cov / channelVariances(1))
             new_x = pred_x + new_cov * x_adjust;
+            %new_cov
             %obs(c)
             %estimated_obs(c, 1)
 %innovation
