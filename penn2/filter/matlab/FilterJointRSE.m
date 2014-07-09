@@ -183,7 +183,8 @@ obs
             new_cov_inv = inv(pred_cov) + cov_adjust;
             new_cov = inv(new_cov_inv);
             %new_cov = pred_cov; % THIS IS DEBUG CODE 7/4/14 4:45
-            %new_cov
+            filter.covariance = new_cov;
+%new_cov
 
             x_adjust = zeros(size(pred_x));
             innovation = zeros(features, 1);
