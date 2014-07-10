@@ -21,7 +21,6 @@ classdef FilterJointRSE < FilterClass
     methods
         % class constructor
         function filter = FilterJointRSE(dimensions, features)
-            fprintf('FilterJointRSE\n');
             filter.dimensions = dimensions;
             filter.features = features;
             %% Set parameter names
@@ -50,8 +49,6 @@ classdef FilterJointRSE < FilterClass
             for i = 1:numel(filter.parameterValues)
                 filter.parameterValues{1, i} = 0.0;
             end
-            %filter.parameterValues{1, 1} = 1.2;
-            %filter.parameterValues
 
             %% Compute matrices for Time-Invariant Trajectories
             delta = 0.033;
@@ -61,7 +58,7 @@ classdef FilterJointRSE < FilterClass
             filter.B = B;
             filter.target = target;
             filter.L = L;
-            parameter_variance = 10;
+            parameter_variance = 1;
             covariance_neural = parameter_variance * eye((dimensions + 1) * features); % TODO: more systematic choice than identity?
             position_var = 1e-7;
             velocity_var = 1e-7;
@@ -81,23 +78,8 @@ classdef FilterJointRSE < FilterClass
             L = filter.L;
             target = filter.target;
             %% Prediction Step
-            %filter.parameterValues
-            %class(filter.parameterValues{1})
-            %class(filter.parameterValues{2})
-            %class(filter.parameterValues{3})
-            %class(filter.parameterValues{4})
             x = cell2mat(filter.parameterValues)';
-            %filter.parameterNames
-            %filter.parameterValues
-            %x
-            %x = [1;1;1;0;0;0];
-            %control = L * (x((dimensions + 1) * features + 1:end) - target)
-            %state = x((dimensions + 1) * features + 1:end)
-            %target
-            %err = state - target
-            %return
             filter_position = x(((dimensions + 1) * features) + (1:dimensions));
-            %filter_position
             filter.Position = [filter.Position filter_position];
             filter_position = filter.Position;
             save('filter.mat', 'filter_position');
@@ -112,9 +94,11 @@ classdef FilterJointRSE < FilterClass
             F_tilde = eye(2 * dimensions); % 2.10 % this is filter.A
             F_tilde(1:dimensions, dimensions + (1:dimensions)) = delta * eye(dimensions);
 
-            delta = 1e-3;
-            Q_tilde = zeros(2 * dimensions); % 2.11
-            Q_tilde(dimensions + (1:dimensions), dimensions + (1:dimensions)) = delta * eye(dimensions);
+            delta_p = 1e-3;
+            delta_v = 1e-3;
+            Q_tilde = blkdiag(delta_p * eye(dimensions), delta_v * eye(dimensions));
+            %Q_tilde = zeros(2 * dimensions); % 2.11
+            %Q_tilde(dimensions + (1:dimensions), dimensions + (1:dimensions)) = delta * eye(dimensions);
 
             % 2.24
             alpha = 1e-6;
@@ -138,42 +122,24 @@ classdef FilterJointRSE < FilterClass
             %Q(((dimensions + 1) * features + dimensions + 1):end,((dimensions + 1) * features + dimensions + 1):end) = 1e-3 * eye(dimensions); % increment uncertainty in velocity TODO: better choice than identity?
             b = [zeros((dimensions + 1) * features, 1);-B * L * target];
             pred_x = F * x + b;
-            %F
-            %b
             err = target - x(((dimensions + 1) * features + 1):end);
+
+            % DEBUG For Control Policy
             vel = err(1:dimensions) / 10;
-            %vel = obs;
-%target
-%x
-            %obs
             pred_x((end-dimensions+1):end) = vel;
 
             % Reset covariance related to cursor kinematics to zero
             filter.covariance(((dimensions + 1) * features + 1):end, :) = 0;
             filter.covariance(:, ((dimensions + 1) * features + 1):end) = 0;
             pred_cov = F * filter.covariance * F' + Q;
-%pred_cov
-%pred_cov
-            %for i = 1:100000
-            %    pred_cov = F * pred_cov * F' + Q;
-            %end
-            %pred_cov
 
             %% Update Step
             pred_uHistory = [pred_x((dimensions + 1) * features + dimensions + 1:end); 1]; % extract predicted velocity and append affine term
             channelParameters = cell2mat(reshape(filter.parameterValues(1:(dimensions + 1) * features), features, dimensions + 1));
-            %reshape(filter.parameterNames(1:(dimensions + 1) * features), features, dimensions + 1)
-            %pred_uHistory
-channelParameters
             estimated_obs = channelParameters * pred_uHistory;
-%estimated_obs
-%obs
-%vel
 
             % derivative of the observation vector with respect to the state, evaluated at estimated_obs.
             D_obs = zeros(size(pred_x, 1), features);
-            %filter.parameterNames
-            %size(D_obs)
             for c = 1:features
                 % velocity terms
                 %D_obs(((c - 1) * dimensions + 1):(c * dimensions), c) = pred_uHistory(1:dimensions, 1);
@@ -206,7 +172,6 @@ channelParameters
                     % Taking two derivatives will always result in a 0 (regardless of which two are selected)
                 end
             end
-%DD_obs
 
             baseVariance = 1.0;
             channelVariances = baseVariance * ones(features, 1);
@@ -220,13 +185,10 @@ channelParameters
                     assert(false)
                 end
             end
-%cov_adjust
-%cov_adjust
             new_cov_inv = inv(pred_cov) + cov_adjust;
             new_cov = inv(new_cov_inv);
             %new_cov = pred_cov; % THIS IS DEBUG CODE 7/4/14 4:45
             filter.covariance = new_cov;
-%new_cov
 
             x_adjust = zeros(size(pred_x));
             innovation = zeros(features, 1);
