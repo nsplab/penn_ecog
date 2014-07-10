@@ -17,6 +17,7 @@ classdef FilterJointRSE < FilterClass
         covariance;
         innovation;
         Position = [];
+        channelVariances;
     end
     methods
         % class constructor
@@ -86,7 +87,7 @@ classdef FilterJointRSE < FilterClass
             % Covariance matrix of neural parameters
             % Currently multiple of identity
             % Could be changed to have higher/lower variance for affine term
-            parameter_variance = 1;
+            parameter_variance = 10;
             covariance_neural = parameter_variance * eye((dimensions + 1) * features); % TODO: more systematic choice than identity?
             % Covariance matrix for kinematics
             position_var = 1e-7;
@@ -94,6 +95,10 @@ classdef FilterJointRSE < FilterClass
             covariance_cursor = blkdiag(position_var * eye(dimensions), velocity_var * eye(dimensions));
             % Neural parameters and kinematics have zero covariance between each other
             filter.covariance = blkdiag(covariance_neural, covariance_cursor);
+
+            % Placeholder channel variance
+            baseVariance = 1.0; % Variance of channels (should load later from calibration file)
+            filter.channelVariances = baseVariance * ones(features, 1);
 
             %% Extra values to log
             filter.extra_parameter_names = {'innovation'};
@@ -153,6 +158,7 @@ classdef FilterJointRSE < FilterClass
             %% Update Step
             pred_uHistory = [pred_x((dimensions + 1) * features + dimensions + 1:end); 1]; % extract predicted velocity and append affine term
             channelParameters = cell2mat(reshape(filter.parameterValues(1:(dimensions + 1) * features), features, dimensions + 1)); % extract neural parameters
+channelParameters
             estimated_obs = channelParameters * pred_uHistory; % affine observation equation
 
             % derivative of the observation vector with respect to the state, evaluated at estimated_obs.
@@ -186,8 +192,7 @@ classdef FilterJointRSE < FilterClass
                 end
             end
 
-            baseVariance = 1.0; % Variance of channels (TODO: need to load from calibration file)
-            channelVariances = baseVariance * ones(features, 1);
+            channelVariances = filter.channelVariances;
 
             %% compute summation for updating covariance
             cov_adjust = zeros(size(pred_cov));
@@ -227,6 +232,17 @@ classdef FilterJointRSE < FilterClass
             for i = 1:filter.dimensions
                 filter.parameterValues{(filter.dimensions + 1) * filter.features + i} = hand(i);
             end
+        end
+
+        function [] = load_baseline(filter)
+            baseline = load('../../feature_extraction/feature_extract_cpp/build/baseline.txt');
+            parameter_mean = baseline(:, 1);
+            parameter_variance = baseline(:, 2);
+            % Copy mean into channel parameters
+            for i = 1:filter.features
+                filter.parameterValues{filter.dimensions * filter.features + i} = parameter_mean(i);
+            end
+            filter.channelVariances = parameter_variance;
         end
     end
 end
