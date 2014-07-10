@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from Xlib import display
 import zmq
 
