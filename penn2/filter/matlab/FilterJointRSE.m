@@ -147,10 +147,10 @@ classdef FilterJointRSE < FilterClass
 %x
             %obs
             pred_x((end-dimensions+1):end) = vel;
-%pred_x
-%obs
-            %x
-            %pred_x
+
+            % Reset covariance related to cursor kinematics to zero
+            filter.covariance(((dimensions + 1) * features + 1):end, :) = 0;
+            filter.covariance(:, ((dimensions + 1) * features + 1):end) = 0;
             pred_cov = F * filter.covariance * F' + Q;
 %pred_cov
 %pred_cov
