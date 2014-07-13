@@ -304,7 +304,7 @@ int main(int argc, char** argv)
                     if (baseline == 1) {
                         acc[ch](pwr);
                     }
-                    cout<<"ch: "<<ch<<" pwr:"<<pwr<<"\t";
+                    cout<<"ch: "<<ch<<" pwr: "<<pwr<<"\n";
                 }
 
                 if (baseline == 1) {
