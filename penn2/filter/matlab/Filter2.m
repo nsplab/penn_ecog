@@ -1,7 +1,7 @@
 classdef Filter2 < FilterClass
     properties
     end
-        methods
+    methods
         % class constructor
         function filter = Filter2(varargin)
             filter.speed = 2;
