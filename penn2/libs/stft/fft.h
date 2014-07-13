@@ -57,10 +57,10 @@ private:
   T* inTmp;
   T* winFunc;
   fftwf_plan plan_forward;
+  size_t windowSize;
   windowFunc winf;
   double winFuncSum;
   size_t frq;
-  size_t windowSize;
   std::vector<T*> tapers;
   std::vector<T> tapersWeights;
   static const std::string dpssVectors;

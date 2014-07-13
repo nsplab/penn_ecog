@@ -156,8 +156,8 @@ int main(int argc, char** argv)
     //Fft<float> fft(fftWinSizeSamples, Fft<float>::windowFunc::BLACKMAN_HARRIS, samplingRate/2.0, numFeatureChannels);
     Fft<float> fft(fftWinSizeSamples, Fft<float>::windowFunc::BLACKMAN_HARRIS, samplingRate/2.0, numChannels);
 
-    unsigned binFrom = fft.GetBin(frqRangeFrom);
-    unsigned binTo = fft.GetBin(frqRangeTo);
+    //unsigned binFrom = fft.GetBin(frqRangeFrom);
+    //unsigned binTo = fft.GetBin(frqRangeTo);
 
     for (unsigned i=0; i<ecogFrqs.size(); i++) {
         ecogFrqs[i][0] = fft.GetBin(ecogFrqs[i][0]);
@@ -184,7 +184,7 @@ int main(int argc, char** argv)
     vector<float> spatiallyFilteredPoints(numFeatureChannels);
 
     size_t numberOfSamplesSkip = samplingRate / outputRate / 2; // / 2 due to downsampling
-    size_t prevProcSample = 0;
+    //size_t prevProcSample = 0;
 
     unsigned freqRange = fftWinSizeSamples / 2 + 1;
     /*vector<vector<float> > powers(numFeatureChannels);
@@ -196,8 +196,8 @@ int main(int argc, char** argv)
         powers[i].resize(freqRange);
     }
 
-    float alpha = 0.1;
-    float movingAvg = 0.0;
+    //float alpha = 0.1;
+    //float movingAvg = 0.0;
 
     Decimate decimater(numChannels);
 
@@ -290,7 +290,7 @@ int main(int argc, char** argv)
                     for (unsigned ec=0; ec<ecogChannels[ch].size(); ec++) {
                         //cout<<"ec: "<<ec<<endl;
                         //cout<<"ecogChannels[ch][ec]: "<<ecogChannels[ch][ec]<<endl;
-                        for (unsigned bin=ecogFrqs[ch][0]; bin<=ecogFrqs[ch][1]; bin++) {
+                        for (int bin=ecogFrqs[ch][0]; bin<=ecogFrqs[ch][1]; bin++) {
                             pwr += powers[ecogChannels[ch][ec]-1][bin];
                             cout<<"ch: "<<ch<<"  ec: "<<ec<<"  bin:"<<bin<<"  pwr:"<<powers[ecogChannels[ch][ec]][bin]<<endl;
                         }
@@ -308,7 +308,7 @@ int main(int argc, char** argv)
                 }
 
                 if (baseline == 1) {
-                    for (int i = 0; i < numFeatureChannels; i++) {
+                    for (size_t i = 0; i < numFeatureChannels; i++) {
                         baselineDataFile<<pwrFeature[i]<<"\t";
                         baselineDataFileCopy<<pwrFeature[i]<<"\t";
                     }
@@ -365,7 +365,7 @@ int main(int argc, char** argv)
             //cout<<"features: "<<features<<endl;
 
 
-            /*if (isnan(features(0))) {
+            if (isnan(features(0))) {
                 cout<<"NaN"<<endl;
 
                 cout<<"features "<<features<<endl;
