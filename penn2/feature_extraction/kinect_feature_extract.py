@@ -5,7 +5,7 @@ import numpy as np
 context = zmq.Context()
 
 subscriber = context.socket(zmq.SUB)
-subscriber.connect("ipc:///tmp/signal.pipe")
+subscriber.connect("ipc:///tmp/ksignal.pipe")
 subscriber.setsockopt(zmq.SUBSCRIBE, '')
 
 context_p = zmq.Context()
@@ -17,7 +17,7 @@ coefficients = np.array([1.0,1.0,1.0])
 
 while True:
   vec_str = subscriber.recv()
-  vec = vec_str.split(",")
+  vec = vec_str.split(" ")
 
   features = np.array([0.0,0.0,0.0])
   features[0] = coefficients[0] * vec[0]
