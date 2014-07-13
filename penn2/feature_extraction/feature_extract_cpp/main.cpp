@@ -308,8 +308,12 @@ int main(int argc, char** argv)
                 }
 
                 if (baseline == 1) {
-                    baselineDataFile<<pwrFeature[0]<<endl;
-                    baselineDataFileCopy<<pwrFeature[0]<<endl;
+                    for (int i = 0; i < numFeatureChannels; i++) {
+                        baselineDataFile<<pwrFeature[i]<<"\t";
+                        baselineDataFileCopy<<pwrFeature[i]<<"\t";
+                    }
+                    baselineDataFile<<endl;
+                    baselineDataFileCopy<<endl;
                 }
                 cout<<endl;
 
@@ -440,6 +444,7 @@ int main(int argc, char** argv)
 
     return 0;
 }
+
 
 int parsConfig(string& signalConfig, string& matrixFile, size_t& fftWinSize,
                size_t& fftWinType, size_t& outputRate, string& spatialFilterFile,
