@@ -49,7 +49,7 @@ reachStateEquation::reachStateEquation(size_t maxTimeSteps, size_t reachTimeStep
     // as the values for the state evolution matrix F.
     cube b_prefix = zeros<cube>(F.n_rows, F.n_cols, reachTimeSteps);
     cube new_F = zeros<cube>(F.n_rows, F.n_cols, reachTimeSteps);
-    for(int t = 0; t < reachTimeSteps; t++)
+    for(size_t t = 0; t < reachTimeSteps; t++)
     {
         b_prefix.slice(t) = Q * inv(Pi_t_T.slice(t));
         new_F.slice(t) = F - b_prefix.slice(t) * F;
@@ -59,7 +59,7 @@ reachStateEquation::reachStateEquation(size_t maxTimeSteps, size_t reachTimeStep
     // somewhere other than the origin.
     cube b = zeros<cube>(reachTarget.n_rows, 1, reachTimeSteps);
     // Eq. 28
-    for(int t = 0; t < reachTimeSteps; t++)
+    for(size_t t = 0; t < reachTimeSteps; t++)
     {
         b.slice(t) = Q * inv(Pi_t_T.slice(t)) * phi_t_T.slice(t) * reachTarget;
     }

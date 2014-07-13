@@ -18,6 +18,8 @@ using namespace Eigen;
 float x=0, y=0, z=0;
 float prevx=0, prevy=0, prevz=0;
 float diffx=0.0, diffy=0.0, diffz=0.0;
+    vector<float> target(3);
+    vector<float> handPos(3);
 
 //launcher calls the main function below to set direct = true or false based on user preference
 // direct = true runs a mode where output of the imitator is the actual intended velocity, rather than
@@ -45,7 +47,7 @@ void GenerateSignal() {
     if (!direct)
         publisher.bind("ipc:///tmp/signal.pipe");
     else {
-        cout<<"bypass feature extractor"<<endl;
+        //cout<<"bypass feature extractor"<<endl;
         publisher.bind("ipc:///tmp/features.pipe");
     }
 
@@ -68,7 +70,7 @@ void GenerateSignal() {
                     0, 0, 1,
                     1, 1, 1;
 
-    Matrix<float, Dynamic, Dynamic> signal(numberOfChannels,1); // output signal
+    Matrix<float, Dynamic, Dynamic> signal(numberOfChannels+6,1); // output signal
     //Matrix<float, Dynamic, Dynamic> tsignal(60,1); // output signal
     Vector3f sample; // synthetic signal based on x,y,z from kinect
 
@@ -95,7 +97,7 @@ void GenerateSignal() {
         else if (dz <= -maxSpeed)
             dz = -maxSpeed;
 
-        float noiseToSignalRatio = 2.0;
+        //float noiseToSignalRatio = 2.0;
         // add noise ~ gaussian(0,1)
         arma::vec v = arma::randn<arma::vec>(3);
         //sample(0) += v(0);
@@ -113,7 +115,9 @@ void GenerateSignal() {
         sample(1) = cos(2.0*M_PI * float(i)/float(samplingRate) * ySignalFrq) * ySignalAmp * sqrt(dy+baselinePower);// + v(1) * noiseToSignalRatio);
         sample(2) = cos(2.0*M_PI * float(i)/float(samplingRate) * zSignalFrq) * zSignalAmp * sqrt(dz+baselinePower);// + v(2) * noiseToSignalRatio);
 
-        signal = mixingMatrix * sample;
+        if (!direct) {
+            signal = mixingMatrix * sample;
+        }
         //cout<<"signal: "<<signal<<endl;
         //cout<<"numberOfChannels "<<numberOfChannels<<endl;
         //cout<<"t: "<<timeStamp<<endl;
@@ -122,22 +126,29 @@ void GenerateSignal() {
             signal(0) = xSignalAmp * sqrt(dx+baselinePower);
             signal(1) = ySignalAmp * sqrt(dy+baselinePower);
             signal(2) = zSignalAmp * sqrt(dz+baselinePower);
+            signal(3) = target[0];
+            signal(4) = target[1];
+            signal(5) = target[2];
+            signal(6) = handPos[0];
+            signal(7) = handPos[1];
+            signal(8) = handPos[2];
         }
 
-        //message_t zmqMessage(sizeof(float)*numberOfChannels+sizeof(size_t));
         message_t zmqMessage(sizeof(float)*numberOfChannels+sizeof(size_t));
+        //message_t zmqMessage(sizeof(float)*(numberOfChannels+6)+sizeof(size_t));
         memcpy(zmqMessage.data(), &timeStamp, sizeof(size_t));
+        //memcpy(static_cast<size_t*>(zmqMessage.data())+1, signal.data(), sizeof(float)*(numberOfChannels+6));
         memcpy(static_cast<size_t*>(zmqMessage.data())+1, signal.data(), sizeof(float)*numberOfChannels);
         //memcpy(static_cast<size_t*>(zmqMessage.data())+1, tsignal.data(), sizeof(float)*60);
 
-        //cout<<"signal: "<<signal<<endl;
+        cout<<"signal: "<<signal<<endl;
         publisher.send(zmqMessage);
 
         if (!direct) {
             this_thread::sleep_for(chrono::microseconds(static_cast<int>(1.0/samplingRate * 1000000.0)));
         } else {
             // direct mode imitator: introduce a delay between features issued by the imitator in order to avoid flooding the receiving filter with features.
-            this_thread::sleep_for(chrono::microseconds(static_cast<int>(100000.0)));
+            this_thread::sleep_for(chrono::microseconds(static_cast<int>(10000.0)));
         }
     }
 }
@@ -171,13 +182,13 @@ void BroadcastStatus() {
 
         if ((dataBeingStreamed) && (status == '0')) {
             status = '1';
-            cout<<"published status 1"<<endl;
+            //cout<<"published status 1"<<endl;
 
         } else {
             std::chrono::duration<double> elapsed_seconds = chrono::system_clock::now()-lastReceiveTime;
             if ((status == '1') && (elapsed_seconds.count()>3.0)) {
                 status = '0';
-                cout<<"published status 0"<<endl;
+                //cout<<"published status 0"<<endl;
             }
         }
 
@@ -193,20 +204,20 @@ void BroadcastStatus() {
 
 int main(int argc, char** argv)
 {
-    cout<<"argc: "<<argc<<endl;
+    //cout<<"argc: "<<argc<<endl;
     if (argc == 2) {
         direct = true;
     }
 
     thread broadcast(GenerateSignal);
 
-    double timeBin = 0.1;
-    const double reachTimeSteps = 5.0/timeBin;
-    const double maxTimeSteps = 10.0/timeBin;
-    size_t dim = 3;
-    double diagQ=1.0e-3;
-    double finalPosCov=1.0e-6;
-    double finalVelCov=1.0e-8;
+    //double timeBin = 0.1;
+    //const double reachTimeSteps = 5.0/timeBin;
+    //const double maxTimeSteps = 10.0/timeBin;
+    //size_t dim = 3;
+    //double diagQ=1.0e-3;
+    //double finalPosCov=1.0e-6;
+    //double finalVelCov=1.0e-8;
 
     //reachStateEquation rseComputer(maxTimeSteps, reachTimeSteps, reachTarget, timeBin);
     RSEMatrixStruct rseParams;// = rseComputer.returnAnswer();
@@ -214,19 +225,17 @@ int main(int argc, char** argv)
     socket_t supervisor(context, ZMQ_REQ);
     supervisor.connect("ipc:///tmp/supervisor.pipe");
 
-    unsigned prevTrial = -1;
+    //unsigned prevTrial = -1;
     unsigned currentTrial = -1;
     
     string sendMsg("pass");
 
-    vector<float> target(3);
-    vector<float> handPos(3);
 
 
 
     arma::vec handState;
 
-    int timeStep = 0;
+    //int timeStep = 0;
 
     // storing the old velocity values and limit the acceleration in the controler
     float diffxOld, diffyOld, diffzOld;
@@ -242,21 +251,21 @@ int main(int argc, char** argv)
 
         message_t zmq_message(sendMsg.length());
         memcpy((char *) zmq_message.data(), sendMsg.c_str(), sendMsg.length());
-        cout<<"before supervisor.send"<<endl;
+        //cout<<"before supervisor.send"<<endl;
         supervisor.send(zmq_message);
-        cout<<"after supervisor.send"<<endl;
+        //cout<<"after supervisor.send"<<endl;
 
         message_t supervisor_msg;
-        cout<<"before supervisor.recv"<<endl;
+        //cout<<"before supervisor.recv"<<endl;
         supervisor.recv(&supervisor_msg);
-        cout<<"after supervisor.recv"<<endl;
+        //cout<<"after supervisor.recv"<<endl;
 
         string recvMsg;
         recvMsg.resize(supervisor_msg.size(),'\0');
         recvMsg.assign((char *)supervisor_msg.data(),supervisor_msg.size());
-        cout<<"recvMsg "<<recvMsg<<endl;
+        //cout<<"recvMsg "<<recvMsg<<endl;
         stringstream ss(recvMsg);
-        cout<<"timeStep "<<timeStep<<endl;
+        //cout<<"timeStep "<<timeStep<<endl;
         
         // extract target position, hand position, trial ID, mode (training/testing)
         // and attending value from supervisor's message
@@ -339,13 +348,14 @@ int main(int argc, char** argv)
 
 
 
-        cout<<"diffx "<<diffx<<endl;
-        cout<<"diffy "<<diffy<<endl;
-        cout<<"diffz "<<diffz<<endl;
+        //cout<<"diffx "<<diffx<<endl;
+        //cout<<"diffy "<<diffy<<endl;
+        //cout<<"diffz "<<diffz<<endl;
 
-        this_thread::sleep_for(chrono::microseconds(static_cast<int>(timeBin * 1000000.0)));
-        fprintf(stderr, "argc: %d > 2?\n", argc);
-        if (argc > 2) {
+        //this_thread::sleep_for(chrono::microseconds(static_cast<int>(timeBin * 1000000.0))); // using boost library - insert a delay in microseconds
+        //fprintf(stderr, "argc: %d > 2?\n", argc);
+        if (argc > 2) { // debug code to allow code to exit after 1 iteration
+            // occurs only when the function has a second command-line argument
             quit = true;
             broadcast.join();
             return 0;
