@@ -47,14 +47,14 @@ File / Import Appliance - allows you to import the Windows 7 environment with th
               - _deviceSerial - this number needs to match the serial number from the top of the machine
 
           - ZMQ broadcasting in gHIampDemo.cpp
-            __________________________________________________________
+            
             Quick note about ZMQ: 
             Overall, we only use 2 ZMQ protocols (only the first one in gHIampDemo.cpp)
             (1) ZMQ_PUB / ZMQ_SUB - broadcasting with infinite buffering (limited by system memory) / subscribing to that broadcast
 
             (2) ZMQ_REQ / ZMQ_REP  - peer to peer, one requests and the other responds; the receivers can be blocking (waits to receive message before proceeding) or nonblocking
-            __________________________________________________________
-
+            
+            
             - gHIampDemo.cpp sets up ZMQ broadcasting using TCP protocol. We used TCP for this particular program instead of IPC (which we used for all of the penn2 modules) because we’re broadcasting from Windows and receiving on Linux (windows doesn’t have IPC).
             - The windows virtual machine's local network adapter is configured with a static IP, which is needed to run ZMQ TCP protocol. As a result, the virtual machine is not connected to the internet, i.e. is not sharing the internet connection of the host OS (Ubuntu). This way the code on Linux connects to the socket with the static IP.
             - To share files between the Windows and the Linux machine, there is a shared directory set in the virtual box. 
