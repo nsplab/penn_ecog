@@ -18,6 +18,8 @@ classdef FilterJointRSE < FilterClass
         innovation;
         Position = [];
         channelVariances;
+        obs;
+        estimated_obs;
     end
     methods
         % class constructor
@@ -101,14 +103,16 @@ classdef FilterJointRSE < FilterClass
             filter.channelVariances = baseVariance * ones(features, 1);
 
             %% Extra values to log
-            filter.extra_parameter_names = {'innovation'};
+            filter.extra_parameter_names = {'innovation', 'obs', 'estimated_obs'};
+            % TODO: hand position, target, score
         end
 
         % function that is called every iteration when new
         % feature values are received from the feature extractor
         function [ control ] = RunFilter(filter, recvdFeatures)
             %% Conversion from imitator mapping
-            obs = (recvdFeatures / filter.imitatorAmplifier) .^ 2 - filter.imitatorBaseline;
+            %obs = (recvdFeatures / filter.imitatorAmplifier) .^ 2 - filter.imitatorBaseline;
+            obs = recvdFeatures;
 
             %% Copy filter variables for convenience
             dimensions = filter.dimensions;
@@ -145,9 +149,9 @@ classdef FilterJointRSE < FilterClass
             pred_x = F * x + b; % predict the neural parameters, position, and velocity in next time step
 
             % DEBUG For Control Policy
-            err = target - x(((dimensions + 1) * features + 1):end);
-            vel = err(1:dimensions) / 10;
-            pred_x((end-dimensions+1):end) = vel;
+            %err = target - x(((dimensions + 1) * features + 1):end);
+            %vel = err(1:dimensions) / 10;
+            %pred_x((end-dimensions+1):end) = vel;
             % END DEBUG
 
             % Reset covariance related to cursor kinematics to zero
@@ -160,6 +164,7 @@ classdef FilterJointRSE < FilterClass
             channelParameters = cell2mat(reshape(filter.parameterValues(1:(dimensions + 1) * features), features, dimensions + 1)); % extract neural parameters
 channelParameters
             estimated_obs = channelParameters * pred_uHistory; % affine observation equation
+            filter.estimated_obs = estimated_obs;
 
             % derivative of the observation vector with respect to the state, evaluated at estimated_obs.
             D_obs = zeros(size(pred_x, 1), features);
@@ -219,6 +224,7 @@ channelParameters
                 end
             end
             filter.innovation = innovation; % store innovation
+            filter.obs = obs;
             new_x = pred_x + new_cov * x_adjust; % compute updated state
             filter.parameterValues = mat2cell(double(new_x), ones((dimensions + 1) * features + 2 * dimensions, 1), 1)'; % store updated state
 
