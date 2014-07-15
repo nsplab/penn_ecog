@@ -64,14 +64,14 @@ File / Import Appliance - allows you to import the Windows 7 environment with th
             - tcp://192.168.56.110:5556 - this is the specific TCP socket that is used, specifically a socket of the ZMQ type: ZMQ_PUB
             - impedance_measure - measures impedances - an infinite loop measures impedances (resistance at 1 kHz (?)) of channels one at a time and prints them in the terminal.
 
-            - gRecorder Shortcut - shortcut to gRecorder given by g.tech for recording and live viewing of signals. This program needs the usb key that is taped to the g.Hiamp, which is properly detected in the Windows virtual environment.Recording from the g.tech in Linux
+            - gRecorder Shortcut - shortcut to gRecorder given by g.tech for recording and live viewing of signals. This program needs the usb key that is taped to the g.Hiamp, which is properly detected in the Windows virtual environment.Recording from the g.tech in Linux:
 
-             (1) Make sure the Windows7 virtual environment is running, and that you’ve started ghiamp_record from the Windows desktop.
+             1. Make sure the Windows7 virtual environment is running, and that you’ve started ghiamp_record from the Windows desktop.
 
-             (2) On LInux, in terminal, change to the directory containing the relevant Linux code for signal_acquisition from the g.Hiamp
+             2. On LInux, in terminal, change to the directory containing the relevant Linux code for signal_acquisition from the g.Hiamp
              $ cd penn_ecog/penn2/signal_acquisition/gtec/build/
 
-             (3) Begin recording (default hard-coded 64 analog channels @ 9600 Hz, set in the Windows code, described above).
+             3. Begin recording (default hard-coded 64 analog channels @ 9600 Hz, set in the Windows code, described above).
 
              To include the Digital-In channel in the recording (make sure you’ve written ENABLE_TRIGGER=TRUE in the windows code), run this command:
 
@@ -90,7 +90,8 @@ File / Import Appliance - allows you to import the Windows 7 environment with th
 
              When this command comes in, a new data file is created in the directory ‘/penn2/data/’  with filename ‘data_STRING-SENT-IN_RECORD-COMMAND_timestamp
              ’.
-             (3)  To stop recording, you will need to send a stop command ‘stop’ (in all lower case without quotes) at the Linux terminal. For example, in Easter, this command is executed in Python (file: , line number: , location: ):
+             
+             4.  To stop recording, you will need to send a stop command ‘stop’ (in all lower case without quotes) at the Linux terminal. For example, in Easter, this command is executed in Python (file: , line number: , location: ):
              recording/vep/record_VEP.py
 
 
