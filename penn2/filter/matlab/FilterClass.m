@@ -65,7 +65,7 @@ classdef FilterClass < handle
             %filter.ssave.('varname') = data;
             filter.ssave = struct();
             if filter.firstrun 
-                filter.initialTime = datestr(now,'mm_dd_yyyy_HH:MM');
+                filter.initialTime = datestr(now,'yyyy_mm_dd_HH:MM:SS');
                 filter.opt = {};
                 filter.firstrun = false;
 
@@ -103,7 +103,7 @@ classdef FilterClass < handle
             if (exist([dataPath '/filter_log_' filterName '_' filter.initialTime '.mat']))
                 filter.opt = {'-append'};
             end
-            save([dataPath '/filter_log_' filterName '_' filter.initialTime '.mat'], '-struct', 'tstruct', filter.opt{:});
+            save([dataPath '/' filter.initialTime '_filter_log_' filterName '.mat'], '-struct', 'tstruct', filter.opt{:});
         end
 
         function filter=LoadParameters(filter, selectedSession)

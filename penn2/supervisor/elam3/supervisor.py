@@ -123,7 +123,7 @@ supervisorSec = supervisorCfg['supervisor']
 
 
 # create the data log file to store the parameters of the game and the score
-filename = supervisorSec['dataPath'] + '/supervisor_event_%s.txt' % datetime.datetime.utcnow().strftime("%Y-%m-%d-%H%M%S")
+filename = supervisorSec['dataPath'] + '/%s_supervisor_event.txt' % datetime.datetime.now().strftime("%Y_%m_%d_%H:%M:%S")
 f = open(filename, 'w')
 
 f.write("timestamp")
