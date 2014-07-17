@@ -34,12 +34,15 @@ classdef FilterClass < handle
         handX = 0;
         handY = 0;
         handZ = 0;
+        trial;
+        training_test;
+        attending;
         numberOfFilterParameters = 0;
         initialTime = '';
         demoMode = 0;
         extra_parameter_names = {};
         game_state_names = ...%{'score', 'timestamp', 'epoch_seconds', 'is_at_target', 'target_x', 'target_y', 'target_z', 'hand_x', 'hand_y', 'hand_z'};
-                           {'currentScore', 'currentTimeStamp', 'epochSeconds', 'isAtTarget', 'targetX', 'targetY', 'targetZ', 'handX', 'handY', 'handZ'};
+                           {'currentScore', 'currentTimeStamp', 'epochSeconds', 'isAtTarget', 'targetX', 'targetY', 'targetZ', 'handX', 'handY', 'handZ', 'trial', 'training_test', 'attending'};
     end
     methods
         % class constructor

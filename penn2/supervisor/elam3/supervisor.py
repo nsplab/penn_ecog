@@ -283,7 +283,7 @@ while run:
     filterState.hand_pos[2] = gameState.hand_pos[2]
 
     if not gameState.pause:
-        ssocket.send(filterState.serialize())
+        ssocket.send(filterState.serialize() + " " + gameState.serialize())
 
     print 'filterState.serialize() ', filterState.serialize()
 

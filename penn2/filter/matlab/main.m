@@ -215,16 +215,26 @@ recvdFeatures
     target = value(1:3);
     filter.target(1:dimensions) = target(1:dimensions); % update filter target position
     hand = value(4:6);
+    trial = value(7);
+    training_test = value(8);
+    attending = value(9);
+    score = value(16);
     filter.targetX = target(1);
     filter.targetY = target(2);
     filter.targetZ = target(3);
     filter.handX = hand(1);
     filter.handY = hand(2);
     filter.handZ = hand(3);
+    filter.trial = trial;
+    filter.training_test = training_test;
+    filter.attending = attending;
+    filter.currentScore = score;
+if strcmp('Matlab JointRSE', filterType),
+    % extract from recvData: score, score/min
+    value = str2double(strsplit(char(recvData')));
+    filter.target(1:dimensions) = target(1:dimensions); % update filter target position
     filter.setHandPos(hand);
-    trial = value(7);
-    triaining_test = value(8);
-    attending = value(9);
+end
 
 end
 

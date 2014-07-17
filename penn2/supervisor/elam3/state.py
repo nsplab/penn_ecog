@@ -63,6 +63,7 @@ class GameState(object):
         self.blockLengthTime = blockLengthTime
         self.blockWidth = blockWidth
         self.workspaceRadius = workspaceRadius
+        self.isAtTarget = 0 # Using a number rather than true/false for transmitting to MATLAB filter
 
     # generate 1000 target bars prior to running the game
     def generateBlocks(self, workspace_axis):
@@ -107,9 +108,9 @@ class GameState(object):
             self.accumTime += elapsed_time
         for x in range(0, 1000):
             # accum_time += self.startingTimes(x)
-            print 'x ', x
-            print self.startingTimes[x]
-            print 'self.accumTime ', self.accumTime
+            #print 'x ', x
+            #print self.startingTimes[x]
+            #print 'self.accumTime ', self.accumTime
             if self.accumTime < self.startingTimes[x]:
                 break
             cBlock = x
@@ -160,7 +161,7 @@ class GameState(object):
 
             svalue += (str(self.blockWidth) + " ")
             self.box_pos = np.zeros(3)
-            self.box_pos[2] = 15
+            #self.box_pos[2] = 15
 
         # update the score
         distanceHandToBlock = math.sqrt((self.box_pos[0] - self.hand_pos[0]) *
@@ -170,17 +171,19 @@ class GameState(object):
                                         (self.box_pos[2] - self.hand_pos[2]) *
                                         (self.box_pos[2] - self.hand_pos[2]))
 
-        print "********************************"
-        print "********************************"
-        print "distanceHandToBlock: ", distanceHandToBlock
-        print "********************************"
+        #print "********************************"
+        #print "********************************"
+        #print "distanceHandToBlock: ", distanceHandToBlock
+        #print "********************************"
 
+        self.isAtTarget = 0
         if not self.pause:
             if distanceHandToBlock < (self.blockWidth / 100.0):
                 if cBlock > -1:
                     if self.scoreRefTime > 0.0:
                         self.score += config.scoreIncrement * (time.time() - self.scoreRefTime)
-                        print 'scoring'
+                        self.isAtTarget = 1
+                        #print 'scoring'
         if cBlock > -1:
             self.scoreRefTime = time.time()
             if self.scorePlotRefTime > 0.0:
@@ -212,7 +215,8 @@ class GameState(object):
         svalue += (str(self.score) + " " +
                    str(self.scorePlot) + " " +
                    str(self.sublevel) + " " +
-                   str(self.trial))
+                   str(self.trial)) + " "
+        svalue += (str(self.isAtTarget))
         return svalue
 
     def updateState(self):
@@ -251,11 +255,17 @@ class FilterState(object):
         self.attending = attending
         self.mode = triainingTestSeq[0]
         self.paused = False
+        self.index = 0
 
     def serialize(self):
         if self.paused:
             svalue = "paused"
             return svalue
+        #self.index += 1
+        #if (self.index % 100 == 0):
+        #    self.target_pos[0] = random.uniform(0.0, 1.0)
+        #    self.target_pos[1] = random.uniform(0.0, 1.0)
+        #    self.target_pos[2] = random.uniform(0.0, 1.0)
         svalue = (str(self.target_pos[0]) + " " +
                   str(self.target_pos[1]) + " " +
                   str(self.target_pos[2]) + " ")
